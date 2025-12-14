@@ -8,7 +8,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddControllers();
 
-// Add PlatformDbContext as a di singltone service
+// Add PlatformDbContext as a di singltone service --> this why we did not implement singltone logic in PlatformDbContext class
 builder.Services.AddDbContext<Platform.Data.PlatformDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("PlatformDbConnection")));
 

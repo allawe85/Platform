@@ -1,6 +1,6 @@
 @Platform.Api_HostAddress = http://localhost:5228
 
-GET {{Platform.Api_HostAddress}}/weatherforecast/
+GET {{Platform.Api_HostAddress}}/swagger/
 Accept: application/json
 
 ###
