@@ -40,6 +40,7 @@ namespace Platform.Data
 
 
         #region HierarchyLevel - CRUD Operations
+
         public async Task<List<HierarchyLevel>> GetAllHierarchyLevelsAsync()
         {
             return await HierarchyLevels
