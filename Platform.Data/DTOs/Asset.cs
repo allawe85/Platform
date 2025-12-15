@@ -1,4 +1,3 @@
-csharp Platform.Data\DTOs\Asset.cs
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
