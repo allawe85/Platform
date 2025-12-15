@@ -437,6 +437,11 @@ namespace Platform.Data
             return true;
         }
 
+        public async Task GetAssetController(int id)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }
