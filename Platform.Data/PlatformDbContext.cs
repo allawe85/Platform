@@ -229,6 +229,8 @@ namespace Platform.Data
             if (existing == null) return null;
             // copy scalar properties
             existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
             AssetTypes.Update(existing);
             await SaveChangesAsync();
             return existing;
@@ -272,6 +274,8 @@ namespace Platform.Data
             if (existing == null) return null;
             // copy scalar properties
             existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
             AssetStatuses.Update(existing);
             await SaveChangesAsync();
             return existing;
@@ -369,8 +373,11 @@ namespace Platform.Data
         {
             var existing = await DocumentTypes.FindAsync(entity.Id);
             if (existing == null) return null;
+            
             // copy scalar properties
             existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
             DocumentTypes.Update(existing);
             await SaveChangesAsync();
             return existing;

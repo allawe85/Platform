@@ -14,6 +14,9 @@ namespace Platform.Data.DTOs
         [Column("name")]
         public string Name { get; set; }
 
+        [Column("name_ar")]
+        public string NameAr { get; set; }
+
         // Navigation
         public ICollection<Asset>? Assets { get; set; } = new List<Asset>();
     }

@@ -14,6 +14,8 @@ namespace Platform.Data.DTOs
         [Column("name")]
         public string Name { get; set; }
 
+        [Column("name_ar")]
+        public string NameAr { get; set; }
         // Adding a list from the Document table while document type id is foriegn to support getting documents by document type id
         public ICollection<Document>? Documents { get; set; } = new List<Document>();
     }
