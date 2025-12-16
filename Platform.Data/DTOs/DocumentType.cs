@@ -9,15 +9,12 @@ namespace Platform.Data.DTOs
     {
         [Key]
         [Column("id")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
         [Column("name")]
-        [StringLength(100)]
         public string Name { get; set; }
 
-        // Navigation
-        public ICollection<Document> Documents { get; set; } = new List<Document>();
+        // Adding a list from the Document table while document type id is foriegn to support getting documents by document type id
+        public ICollection<Document>? Documents { get; set; } = new List<Document>();
     }
 }

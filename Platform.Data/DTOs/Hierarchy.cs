@@ -23,6 +23,6 @@ namespace Platform.Data.DTOs
         [Column("hierarchy_level_id")]
         public int HierarchyLevelId { get; set; }
 
-        public HierarchyLevel HierarchyLevel { get; set; }
+        public HierarchyLevel? HierarchyLevel { get; set; }
     }
 }

@@ -9,15 +9,12 @@ namespace Platform.Data.DTOs
     {
         [Key]
         [Column("id")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required]
         [Column("name")]
-        [StringLength(50)]
         public string Name { get; set; }
 
         // Navigation
-        public ICollection<Asset> Assets { get; set; } = new List<Asset>();
+        public ICollection<Asset>? Assets { get; set; } = new List<Asset>();
     }
 }
