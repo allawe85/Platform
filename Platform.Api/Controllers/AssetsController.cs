@@ -14,7 +14,7 @@ namespace Platform.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAssetsController()
+        public async Task<IActionResult> GetAllAssets()
         {
             var AllAssets = await _context.GetAllAssetsAsync();
             return Ok(AllAssets);
@@ -22,7 +22,7 @@ namespace Platform.Api.Controllers
 
         [HttpGet]
         [Route("{id:int}")]
-        public async Task<IActionResult> GetAssetsControllerById(int id)
+        public async Task<IActionResult> GetAssetById(int id)
         {
             var Asset = await _context.GetAssetByIdAsync(id);
             if (Asset == null)
@@ -33,39 +33,39 @@ namespace Platform.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAssetsController([FromBody] Data.DTOs.Asset AssetsController)
+        public async Task<IActionResult> CreateAsset([FromBody] Data.DTOs.Asset asset)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var createdAssetsController = await _context.AddAssetAsync(AssetsController);
-            return CreatedAtAction(nameof(GetAssetsControllerById), new { id = createdAssetsController.Id }, createdAssetsController);
+            var createdAsset = await _context.AddAssetAsync(asset);
+            return CreatedAtAction(nameof(GetAssetById), new { id = createdAsset.Id }, createdAsset);
         }
 
         [HttpPut]
         [Route("{id:int}")]
-        public async Task<IActionResult> UpdateAssetsController(int id, [FromBody] Data.DTOs.Asset AssetsController)
+        public async Task<IActionResult> UpdateAsset(int id, [FromBody] Data.DTOs.Asset asset)
         {
-            if (id != AssetsController.Id)
+            if (id != asset.Id)
             {
-                return BadRequest("Hierarchy Level ID mismatch");
+                return BadRequest("Asset ID mismatch");
             }
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var updatedAssetsController = await _context.UpdateAssetAsync(AssetsController);
-            if (updatedAssetsController == null)
+            var updatedAsset = await _context.UpdateAssetAsync(asset);
+            if (updatedAsset == null)
             {
                 return NotFound();
             }
-            return Ok(updatedAssetsController);
+            return Ok(updatedAsset);
         }
 
         [HttpDelete]
         [Route("{id:int}")]
-        public async Task<IActionResult> DeleteAssetsController(int id)
+        public async Task<IActionResult> DeleteAsset(int id)
         {
             var deleted = await _context.DeleteAssetAsync(id);
             if (!deleted)

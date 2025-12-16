@@ -16,7 +16,7 @@ namespace Platform.Api.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetAllEmployeeInfo()
+        public async Task<IActionResult> GetAllEmployeesInfo()
         {
             var employeeInfos = await _context.GetAllEmployeesAsync();
             return Ok(employeeInfos);

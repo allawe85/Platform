@@ -24,7 +24,7 @@ namespace Platform.Api.Controllers
 
         [HttpGet]
         [Route("{id:int}")]
-        public async Task<IActionResult> GetdocumentByID(int id)
+        public async Task<IActionResult> GetDocumentByID(int id)
         {
 
             var Document = await _context.GetDocumentByIdAsync(id);
@@ -45,8 +45,7 @@ namespace Platform.Api.Controllers
             }
             var createdDocument = await _context.AddDocumentAsync(document);
 
-
-            return CreatedAtAction(nameof(GetdocumentByID), new { id = createdDocument.Id }, createdDocument);
+            return CreatedAtAction(nameof(GetDocumentByID), new { id = createdDocument.Id }, createdDocument);
         }
 
 
