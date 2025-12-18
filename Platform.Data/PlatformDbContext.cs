@@ -450,5 +450,51 @@ namespace Platform.Data
         }
 
         #endregion
+
+        #region ApplicationUser - CRUD Operations
+        public async Task<List<ApplicationUser>> GetAllApplicationUsersAsync()
+        {
+            return await Set<ApplicationUser>()
+                         .AsNoTracking()
+                         .ToListAsync();
+        }
+
+        public async Task<ApplicationUser?> GetApplicationUserByIdAsync(string id)
+        {
+            return await Set<ApplicationUser>()
+                         .AsNoTracking()
+                         .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
+        public async Task<ApplicationUser> AddApplicationUserAsync(ApplicationUser entity)
+        {
+            var entry = await Set<ApplicationUser>().AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<ApplicationUser?> UpdateApplicationUserAsync(ApplicationUser entity)
+        {
+            var existing = await Set<ApplicationUser>().FindAsync(entity.Id);
+            if (existing == null) return null;
+            // copy scalar properties
+            existing.UserName = entity.UserName;
+            existing.Email = entity.Email;
+            existing.PhoneNumber = entity.PhoneNumber;
+            Set<ApplicationUser>().Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteApplicationUserAsync(string id)
+        {
+            var existing = await Set<ApplicationUser>().FindAsync(id);
+            if (existing == null) return false;
+            Set<ApplicationUser>().Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
     }
 }
