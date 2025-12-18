@@ -57,7 +57,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorDev", policy =>
     {
-        policy.WithOrigins("https://localhost:5002") // Blazor client origin
+        policy.WithOrigins("http://localhost:5000", "http://localhost:5228") // Blazor client origin
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -77,6 +77,8 @@ if (app.Environment.IsDevelopment())
     // 2. Serves the interactive Swagger UI (e.g., /swagger)
     app.UseSwaggerUI();
 }
+
+app.UseRouting();
 
 app.UseCors("AllowBlazorDev");
 

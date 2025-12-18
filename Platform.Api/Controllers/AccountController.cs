@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Platform.Api.Models;
 using Platform.Api.Services;
 using Platform.Data.DTOs;
 
@@ -30,7 +29,7 @@ namespace Platform.Api.Controllers
                 EmailConfirmed = true
             };
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(user, model.Password); 
             if (!result.Succeeded)
             {
                 var errors = result.Errors.Select(e => e.Description);

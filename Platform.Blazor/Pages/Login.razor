@@ -1,0 +1,41 @@
+﻿@page "/login"
+@inject IAuthService Auth
+@inject NavigationManager Nav
+
+<h3>Login</h3>
+
+<div>
+    <label>Username or Email</label>
+    <input @bind="Model.UserNameOrEmail" />
+</div>
+<div>
+    <label>Password</label>
+    <input type="password" @bind="Model.Password" />
+</div>
+<div>
+    <button @onclick="DoLogin">Login</button>
+</div>
+
+@if (!string.IsNullOrEmpty(Error))
+{
+    <p style="color:red">@Error</p>
+}
+
+@code {
+    LoginRequest Model = new("", "");
+    string? Error;
+
+    async Task DoLogin()
+    {
+        Error = null;
+        var token = await Auth.LoginAsync(Model);
+        if (token != null)
+        {
+            Nav.NavigateTo("/dashboard");
+        }
+        else
+        {
+            Error = "Login failed";
+        }
+    }
+}

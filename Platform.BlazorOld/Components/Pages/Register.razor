@@ -1,0 +1,23 @@
+﻿@page "/register"
+@inject Platform.Blazor.Services.IAuthService Auth
+@inject NavigationManager Nav
+
+<h3>Register</h3>
+
+<input @bind="UserName" placeholder="Username" />
+<input @bind="Email" placeholder="Email" />
+<input type="password" @bind="Password" placeholder="Password" />
+<button @onclick="DoRegister">Register</button>
+
+@code {
+    string UserName = "";
+    string Email = "";
+    string Password = "";
+
+    async Task DoRegister()
+    {
+        var ok = await Auth.RegisterAsync(new Platform.Api.Models.RegisterRequest(UserName, Email, Password));
+        if (ok) Nav.NavigateTo("/login");
+        else Console.WriteLine("Register failed");
+    }
+}

@@ -1,0 +1,14 @@
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Platform.Blazor.Layout.MainLayout)">
+                <NotAuthorized>
+                    <p class="text-danger">You are not authorized. <a href="login">Login</a></p>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <h1>Page not found</h1>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

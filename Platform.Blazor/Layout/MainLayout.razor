@@ -1,0 +1,12 @@
+﻿@using Platform.Blazor.Shared
+@inherits LayoutComponentBase
+
+<div class="d-flex vh-100">
+    <aside class="bg-light border-end p-3" style="width:220px;">
+        <NavMenu />
+    </aside>
+
+    <section class="flex-grow-1 p-4">
+        @Body
+    </section>
+</div>
