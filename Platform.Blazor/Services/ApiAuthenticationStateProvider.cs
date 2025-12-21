@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace Platform.Blazor.Services
 {
@@ -24,13 +25,7 @@ namespace Platform.Blazor.Services
                     return new AuthenticationState(_anonymous);
                 }
 
-                // Minimal token-aware identity; decode claims if you need richer info.
-                var identity = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.Name, "user")
-                }, "jwt");
-
-                var user = new ClaimsPrincipal(identity);
+                var user = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
                 return new AuthenticationState(user);
             }
             catch
@@ -41,18 +36,41 @@ namespace Platform.Blazor.Services
 
         public void MarkUserAuthenticated(string token)
         {
-            var identity = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, "user")
-            }, "jwt");
-
-            var user = new ClaimsPrincipal(identity);
+            var user = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
         }
 
         public void MarkUserLoggedOut()
         {
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
+        }
+
+        private IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
+        {
+            var claims = new List<Claim>();
+            var payload = jwt.Split('.')[1];
+            var jsonBytes = ParseBase64WithoutPadding(payload);
+            var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+
+            if (keyValuePairs != null)
+            {
+                foreach (var kvp in keyValuePairs)
+                {
+                    claims.Add(new Claim(kvp.Key, kvp.Value.ToString() ?? ""));
+                }
+            }
+
+            return claims;
+        }
+
+        private byte[] ParseBase64WithoutPadding(string base64)
+        {
+            switch (base64.Length % 4)
+            {
+                case 2: base64 += "=="; break;
+                case 3: base64 += "="; break;
+            }
+            return Convert.FromBase64String(base64);
         }
     }
 }

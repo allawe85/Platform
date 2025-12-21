@@ -1,29 +1,32 @@
 ﻿@page "/register"
+@layout Platform.Blazor.Layout.LoginLayout
 @inject IAuthService Auth
 @inject NavigationManager Nav
 
-<h3>Register</h3>
-
-<div>
-    <label>Username</label>
-    <input @bind="Model.UserName" />
-</div>
-<div>
-    <label>Email</label>
-    <input @bind="Model.Email" />
-</div>
-<div>
-    <label>Password</label>
-    <input type="password" @bind="Model.Password" />
-</div>
-<div>
-    <button @onclick="DoRegister">Register</button>
-</div>
-
-@if (!string.IsNullOrEmpty(Error))
-{
-    <p style="color:red">@Error</p>
-}
+<MudGrid Justify="Justify.Center" Class="mt-10">
+    <MudItem xs="12" sm="8" md="4">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5" Align="Align.Center">Register</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField @bind-Value="Model.UserName" Label="Username" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="Model.Email" Label="Email" InputType="InputType.Email" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="Model.Password" Label="Password" InputType="InputType.Password" Variant="Variant.Outlined" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="DoRegister" Class="mb-3">Register</MudButton>
+                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Secondary" FullWidth="true" Href="/login">Back to Login</MudButton>
+            </MudCardActions>
+        </MudCard>
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2">@Error</MudAlert>
+        }
+    </MudItem>
+</MudGrid>
 
 @code {
     RegisterRequest Model = new("", "", "");
@@ -32,8 +35,14 @@
     async Task DoRegister()
     {
         Error = null;
-        var ok = await Auth.RegisterAsync(Model);
-        if (ok) Nav.NavigateTo("/login");
-        else Error = "Register failed";
+        var result = await Auth.RegisterAsync(Model);
+        if (result.Successful)
+        {
+            Nav.NavigateTo("/login");
+        }
+        else
+        {
+            Error = string.Join("\n", result.Errors);
+        }
     }
 }

@@ -1,4 +1,8 @@
-﻿<CascadingAuthenticationState>
+﻿<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
             <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Platform.Blazor.Layout.MainLayout)">

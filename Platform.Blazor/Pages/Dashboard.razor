@@ -1,5 +1,6 @@
 ﻿@page "/dashboard"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@attribute [Authorize]
 
-<h3>Dashboard</h3>
-<p>Welcome — this is an empty dashboard for now.</p>
+<MudText Typo="Typo.h3" GutterBottom="true">Dashboard</MudText>
+<MudText Class="mb-8">Welcome to your new dashboard!</MudText>
+<MudAlert Severity="Severity.Normal">You are logged in.</MudAlert>

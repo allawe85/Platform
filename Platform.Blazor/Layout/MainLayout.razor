@@ -1,12 +1,52 @@
-﻿@using Platform.Blazor.Shared
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
+@inject IAuthService Auth
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
 
-<div class="d-flex vh-100">
-    <aside class="bg-light border-end p-3" style="width:220px;">
-        <NavMenu />
-    </aside>
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h6" Class="ml-3">Platform</MudText>
+        <MudSpacer />
+        @if (!string.IsNullOrEmpty(_username))
+        {
+            <MudText Class="mr-4">Welcome, @_username</MudText>
+        }
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End">
+            <MudMenuItem OnClick="Logout">Logout</MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <MudNavMenu>
+            <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-    <section class="flex-grow-1 p-4">
-        @Body
-    </section>
-</div>
+@code {
+    bool _drawerOpen = true;
+    string? _username;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        _username = state.User.Identity?.Name;
+    }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+}
