@@ -1,0 +1,178 @@
+@page "/hierarchies"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Pages.Hierarchies.Components
+@inject IHierarchiesService HierarchiesService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Hierarchies</MudText>
+
+<MudTable Items="@HierarchyList" Hover="true" Loading="@_loading">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Hierarchies</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddHierarchy">Add Hierarchy</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Name (Arabic)</MudTh>
+        <MudTh>Level</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
+        <MudTd DataLabel="Level">@(context.HierarchyLevel?.Name ?? context.HierarchyLevelId.ToString())</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditHierarchy(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteHierarchy(context))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@_dialogTitle</MudText>
+        <MudStack Spacing="2">
+            <MudTextField Label="Name" @bind-Value="_currentHierarchy.Name" For="@(() => _currentHierarchy.Name)" />
+            <MudTextField Label="Name (Arabic)" @bind-Value="_currentHierarchy.NameAr" For="@(() => _currentHierarchy.NameAr)" />
+            <MudSelect T="int" Label="Hierarchy Level" @bind-Value="_currentHierarchy.HierarchyLevelId" AnchorOrigin="Origin.BottomCenter">
+                @foreach (var level in Levels)
+                {
+                    <MudSelectItem Value="@level.Id">@level.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="CancelDialog">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitHierarchy">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    private List<Hierarchy> HierarchyList = new();
+    private List<HierarchyLevel> Levels = new();
+    private bool _loading = true;
+
+    // Dialog State
+    private bool _showDialog;
+    private Hierarchy _currentHierarchy = new();
+    private string _dialogTitle = "Add Hierarchy";
+    private bool _isEdit = false;
+    private DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadHierarchies();
+        await LoadLevels();
+    }
+
+    private async Task LoadHierarchies()
+    {
+        _loading = true;
+        try
+        {
+            HierarchyList = await HierarchiesService.GetHierarchiesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading hierarchies: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+    
+    private async Task LoadLevels()
+    {
+        try
+        {
+            Levels = await HierarchiesService.GetLevelsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading levels: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void AddHierarchy()
+    {
+        _currentHierarchy = new Hierarchy();
+        _dialogTitle = "Add Hierarchy";
+        _isEdit = false;
+        _showDialog = true;
+    }
+
+    private void EditHierarchy(Hierarchy hierarchy)
+    {
+         // Clone to avoid editing directly
+        _currentHierarchy = new Hierarchy { 
+            Id = hierarchy.Id, 
+            Name = hierarchy.Name, 
+            NameAr = hierarchy.NameAr,
+            HierarchyLevelId = hierarchy.HierarchyLevelId
+        };
+        _dialogTitle = "Edit Hierarchy";
+        _isEdit = true;
+        _showDialog = true;
+    }
+
+    private void CancelDialog()
+    {
+        _showDialog = false;
+    }
+
+    private async Task SubmitHierarchy()
+    {
+        await SaveHierarchy(_currentHierarchy);
+    }
+
+    private async Task SaveHierarchy(Hierarchy hierarchy)
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await HierarchiesService.UpdateHierarchyAsync(hierarchy.Id, hierarchy);
+                Snackbar.Add("Hierarchy updated", Severity.Success);
+            }
+            else
+            {
+                await HierarchiesService.CreateHierarchyAsync(hierarchy);
+                Snackbar.Add("Hierarchy created", Severity.Success);
+            }
+            _showDialog = false;
+            await LoadHierarchies();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving hierarchy: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteHierarchy(Hierarchy hierarchy)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning", 
+            $"Deleting {hierarchy.Name} can not be undone!", 
+            yesText:"Delete!", cancelText:"Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await HierarchiesService.DeleteHierarchyAsync(hierarchy.Id);
+                Snackbar.Add("Hierarchy deleted", Severity.Success);
+                await LoadHierarchies();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting hierarchy: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

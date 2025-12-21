@@ -20,6 +20,10 @@
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
             <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+        <MudNavGroup Title="Hierarchies Management" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
+                <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">Levels</MudNavLink>
+                <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">Hierarchies</MudNavLink>
+            </MudNavGroup>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>

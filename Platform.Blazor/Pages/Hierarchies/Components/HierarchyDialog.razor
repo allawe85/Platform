@@ -1,0 +1,62 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services
+@using MudBlazor
+@inject IHierarchiesService HierarchiesService
+@inject ISnackbar Snackbar
+
+<MudDialog @bind-IsVisible="Visible" Options="DialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="Name" @bind-Value="Model.Name" For="@(() => Model.Name)" />
+        <MudTextField Label="Name (Arabic)" @bind-Value="Model.NameAr" For="@(() => Model.NameAr)" />
+        
+        <MudSelect T="int" Label="Hierarchy Level" @bind-Value="Model.HierarchyLevelId" AnchorOrigin="Origin.BottomCenter">
+            @foreach (var level in Levels)
+            {
+                <MudSelectItem Value="@level.Id">@level.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    
+    [Parameter] public Hierarchy Model { get; set; } = new();
+    [Parameter] public string Title { get; set; } = "Hierarchy";
+
+    [Parameter] public EventCallback<Hierarchy> OnSave { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private List<HierarchyLevel> Levels = new();
+    private DialogOptions DialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Levels = await HierarchiesService.GetLevelsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading levels: {ex.Message}", Severity.Error);
+        }
+    }
+
+    async Task Submit()
+    {
+        await OnSave.InvokeAsync(Model);
+    }
+
+    async Task Cancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

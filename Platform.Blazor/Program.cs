@@ -18,6 +18,7 @@ builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddMudServices();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IHierarchiesService, HierarchiesService>();
 builder.Services.AddScoped<ApiAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ApiAuthenticationStateProvider>());
 
