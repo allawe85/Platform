@@ -2,7 +2,7 @@ using Platform.Data.DTOs;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Platform.Blazor.Services
+namespace Platform.Blazor.Services.Hierarchies
 {
     public interface IHierarchiesService
     {

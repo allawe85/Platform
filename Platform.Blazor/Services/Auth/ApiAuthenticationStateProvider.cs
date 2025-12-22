@@ -3,7 +3,7 @@ using Microsoft.JSInterop;
 using System.Security.Claims;
 using System.Text.Json;
 
-namespace Platform.Blazor.Services
+namespace Platform.Blazor.Services.Auth
 {
     public class ApiAuthenticationStateProvider : AuthenticationStateProvider
     {

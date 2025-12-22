@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Components.Authorization;
 
-namespace Platform.Blazor.Services
+namespace Platform.Blazor.Services.Auth
 {
     public class AuthService : IAuthService
     {

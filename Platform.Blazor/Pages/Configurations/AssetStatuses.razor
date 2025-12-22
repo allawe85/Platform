@@ -1,0 +1,150 @@
+@page "/asset-statuses"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Lookups
+@using MudBlazor
+@inject ILookupsService LookupsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Asset Statuses</MudText>
+
+<MudTable Items="@Statuses" Hover="true" Loading="@_loading">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Statuses</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddStatus">Add Status</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Name (Arabic)</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditStatus(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteStatus(context))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@_dialogTitle</MudText>
+        <MudStack Spacing="2">
+            <MudTextField Label="Name" @bind-Value="_currentStatus.Name" For="@(() => _currentStatus.Name)" />
+            <MudTextField Label="Name (Arabic)" @bind-Value="_currentStatus.NameAr" For="@(() => _currentStatus.NameAr)" />
+        </MudStack>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="CancelDialog">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitStatus">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    private List<AssetStatus> Statuses = new();
+    private bool _loading = true;
+
+    // Dialog State
+    private bool _showDialog;
+    private AssetStatus _currentStatus = new();
+    private string _dialogTitle = "Add Status";
+    private bool _isEdit = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatuses();
+    }
+
+    private async Task LoadStatuses()
+    {
+        _loading = true;
+        try
+        {
+            Statuses = await LookupsService.GetAssetStatusesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading statuses: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void AddStatus()
+    {
+        _currentStatus = new AssetStatus();
+        _dialogTitle = "Add Status";
+        _isEdit = false;
+        _showDialog = true;
+    }
+
+    private void EditStatus(AssetStatus status)
+    {
+        _currentStatus = new AssetStatus { Id = status.Id, Name = status.Name, NameAr = status.NameAr };
+        _dialogTitle = "Edit Status";
+        _isEdit = true;
+        _showDialog = true;
+    }
+
+    private void CancelDialog()
+    {
+        _showDialog = false;
+    }
+
+    private async Task SubmitStatus()
+    {
+        await SaveStatus(_currentStatus);
+    }
+
+    private async Task SaveStatus(AssetStatus status)
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await LookupsService.UpdateAssetStatusAsync(status.Id, status);
+                Snackbar.Add("Status updated", Severity.Success);
+            }
+            else
+            {
+                await LookupsService.CreateAssetStatusAsync(status);
+                Snackbar.Add("Status created", Severity.Success);
+            }
+            _showDialog = false;
+            await LoadStatuses();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving status: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteStatus(AssetStatus status)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning", 
+            $"Deleting {status.Name} can not be undone!", 
+            yesText:"Delete!", cancelText:"Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await LookupsService.DeleteAssetStatusAsync(status.Id);
+                Snackbar.Add("Status deleted", Severity.Success);
+                await LoadStatuses();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting status: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

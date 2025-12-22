@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-namespace Platform.Blazor.Services
+namespace Platform.Blazor.Services.Hierarchies
 {
     public class HierarchiesService : IHierarchiesService
     {

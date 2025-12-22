@@ -1,0 +1,150 @@
+@page "/asset-types"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Lookups
+@using MudBlazor
+@inject ILookupsService LookupsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Asset Types</MudText>
+
+<MudTable Items="@Types" Hover="true" Loading="@_loading">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Types</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddType">Add Type</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Name (Arabic)</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditType(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteType(context))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@_dialogTitle</MudText>
+        <MudStack Spacing="2">
+            <MudTextField Label="Name" @bind-Value="_currentType.Name" For="@(() => _currentType.Name)" />
+            <MudTextField Label="Name (Arabic)" @bind-Value="_currentType.NameAr" For="@(() => _currentType.NameAr)" />
+        </MudStack>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="CancelDialog">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitType">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    private List<AssetType> Types = new();
+    private bool _loading = true;
+
+    // Dialog State
+    private bool _showDialog;
+    private AssetType _currentType = new();
+    private string _dialogTitle = "Add Type";
+    private bool _isEdit = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTypes();
+    }
+
+    private async Task LoadTypes()
+    {
+        _loading = true;
+        try
+        {
+            Types = await LookupsService.GetAssetTypesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading types: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void AddType()
+    {
+        _currentType = new AssetType();
+        _dialogTitle = "Add Type";
+        _isEdit = false;
+        _showDialog = true;
+    }
+
+    private void EditType(AssetType type)
+    {
+        _currentType = new AssetType { Id = type.Id, Name = type.Name, NameAr = type.NameAr };
+        _dialogTitle = "Edit Type";
+        _isEdit = true;
+        _showDialog = true;
+    }
+
+    private void CancelDialog()
+    {
+        _showDialog = false;
+    }
+
+    private async Task SubmitType()
+    {
+        await SaveType(_currentType);
+    }
+
+    private async Task SaveType(AssetType type)
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await LookupsService.UpdateAssetTypeAsync(type.Id, type);
+                Snackbar.Add("Type updated", Severity.Success);
+            }
+            else
+            {
+                await LookupsService.CreateAssetTypeAsync(type);
+                Snackbar.Add("Type created", Severity.Success);
+            }
+            _showDialog = false;
+            await LoadTypes();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving type: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteType(AssetType type)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning", 
+            $"Deleting {type.Name} can not be undone!", 
+            yesText:"Delete!", cancelText:"Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await LookupsService.DeleteAssetTypeAsync(type.Id);
+                Snackbar.Add("Type deleted", Severity.Success);
+                await LoadTypes();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting type: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

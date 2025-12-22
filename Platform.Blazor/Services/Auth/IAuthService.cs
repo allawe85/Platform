@@ -1,6 +1,6 @@
 using Platform.Data.DTOs;
 
-namespace Platform.Blazor.Services
+namespace Platform.Blazor.Services.Auth
 {
     public interface IAuthService
     {

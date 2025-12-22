@@ -3,6 +3,7 @@
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthStateProvider
 @using System.Security.Claims
+@using Platform.Blazor.Services.Auth
 
 <MudLayout>
     <MudAppBar Elevation="1">
@@ -23,6 +24,11 @@
         <MudNavGroup Title="Hierarchies Management" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
                 <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">Levels</MudNavLink>
                 <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">Hierarchies</MudNavLink>
+            </MudNavGroup>
+            <MudNavGroup Title="Configurations" Icon="@Icons.Material.Filled.Settings" Expanded="true">
+                <MudNavLink Href="/asset-statuses" Icon="@Icons.Material.Filled.List">Asset Statuses</MudNavLink>
+                <MudNavLink Href="/asset-types" Icon="@Icons.Material.Filled.Category">Asset Types</MudNavLink>
+                <MudNavLink Href="/document-types" Icon="@Icons.Material.Filled.Description">Document Types</MudNavLink>
             </MudNavGroup>
         </MudNavMenu>
     </MudDrawer>
