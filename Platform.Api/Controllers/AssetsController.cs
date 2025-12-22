@@ -32,6 +32,14 @@ namespace Platform.Api.Controllers
             return Ok(Asset);
         }
 
+        [HttpGet]
+        [Route("ByEmployee/{employeeId:int}")]
+        public async Task<IActionResult> GetAssetsByEmployeeId(int employeeId)
+        {
+            var assets = await _context.GetAssetsByEmployeeIdAsync(employeeId);
+            return Ok(assets);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateAsset([FromBody] Data.DTOs.Asset asset)
         {

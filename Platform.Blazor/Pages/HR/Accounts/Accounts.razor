@@ -1,0 +1,60 @@
+@page "/accounts"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Auth
+@inject IApplicationUsersService UsersService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Accounts Management</MudText>
+
+<MudTable Items="@_users" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="new Func<ApplicationUser,bool>(FilterFunc)" Elevation="4">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">System Accounts</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="Search by Username, Email, Phone..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Username</MudTh>
+        <MudTh>Email</MudTh>
+        <MudTh>Phone Number</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Username">@context.UserName</MudTd>
+        <MudTd DataLabel="Email">@context.Email</MudTd>
+        <MudTd DataLabel="Phone Number">@context.PhoneNumber</MudTd>
+        <MudTd DataLabel="Actions">
+             <MudText>Managed via Registration</MudText>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<ApplicationUser> _users = new();
+    private string _searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _users = await UsersService.GetAllUsersAsync();
+    }
+
+    private bool FilterFunc(ApplicationUser element)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        if (element.UserName != null && element.UserName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Email != null && element.Email.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.PhoneNumber != null && element.PhoneNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}

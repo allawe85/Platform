@@ -1,0 +1,159 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Assets
+@using Platform.Blazor.Services.Lookups
+@using Platform.Blazor.Services.Employees
+@using MudBlazor
+@inject IAssetsService AssetsService
+@inject ILookupsService LookupsService
+@inject IEmployeesService EmployeesService
+@inject ISnackbar Snackbar
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Asset" : "Add Asset")</MudText>
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_asset.Details" Label="Details" Required="true" Lines="3" />
+                
+                <MudSelect T="int" @bind-Value="_asset.AssetTypeId" Label="Asset Type" Required="true" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var type in _assetTypes)
+                    {
+                        <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="int" @bind-Value="_asset.StatusId" Label="Status" Required="true" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var status in _assetStatuses)
+                    {
+                        <MudSelectItem Value="@status.Id">@status.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="int?" @bind-Value="_asset.EmployeeId" Label="Assigned Employee" Clearable="true" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var emp in _employees)
+                    {
+                        <MudSelectItem Value="@((int?)emp.Id)">@emp.CivilId - @emp.EmployeeId</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudDatePicker Label="Receive Date" @bind-Date="_receiveDate" />
+                <MudDatePicker Label="Return Date" @bind-Date="_returnDate" Clearable="true" />
+            </MudStack>
+        </MudForm>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? "Update" : "Create")</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter] public int? AssetId { get; set; }
+    [Parameter] public int? PreselectedEmployeeId { get; set; }
+
+    private Asset _asset = new Asset();
+    private List<AssetType> _assetTypes = new();
+    private List<AssetStatus> _assetStatuses = new();
+    private List<EmployeeInfo> _employees = new();
+    
+    private DateTime? _receiveDate;
+    private DateTime? _returnDate;
+
+    private MudForm _form;
+    private bool _success;
+    private bool _isEdit => AssetId.HasValue;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible)
+        {
+            if (AssetId.HasValue)
+            {
+                var asset = await AssetsService.GetAssetByIdAsync(AssetId.Value);
+                if (asset != null)
+                {
+                    _asset = asset;
+                    _receiveDate = _asset.ReceiveDate;
+                    _returnDate = _asset.ReturnDate;
+                }
+            }
+            else
+            {
+                _asset = new Asset();
+                _receiveDate = DateTime.Today;
+                _returnDate = null;
+                
+                if (PreselectedEmployeeId.HasValue)
+                {
+                    _asset.EmployeeId = PreselectedEmployeeId.Value;
+                }
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var typesTask = LookupsService.GetAssetTypesAsync();
+        var statusesTask = LookupsService.GetAssetStatusesAsync();
+        var employeesTask = EmployeesService.GetAllEmployeesAsync();
+
+        await Task.WhenAll(typesTask, statusesTask, employeesTask);
+
+        _assetTypes = await typesTask;
+        _assetStatuses = await statusesTask;
+        _employees = await employeesTask;
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_success)
+        {
+            if (_receiveDate.HasValue) _asset.ReceiveDate = _receiveDate.Value;
+            if (_returnDate.HasValue) _asset.ReturnDate = _returnDate;
+            else _asset.ReturnDate = null;
+
+            if (_isEdit)
+            {
+                var result = await AssetsService.UpdateAssetAsync(_asset.Id, _asset);
+                if (result != null)
+                {
+                    Snackbar.Add("Asset updated successfully", Severity.Success);
+                    await Close(true);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to update asset", Severity.Error);
+                }
+            }
+            else
+            {
+                try
+                {
+                    _asset.Id = 0;
+                    await AssetsService.CreateAssetAsync(_asset);
+                    Snackbar.Add("Asset created successfully", Severity.Success);
+                    await Close(true);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Failed to create asset: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+    }
+
+    private async Task Close(bool success = false)
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync(success);
+    }
+    
+    private async Task Cancel() => await Close(false);
+}

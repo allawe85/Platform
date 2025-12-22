@@ -7,6 +7,9 @@ using System.Net.Http;
 using Platform.Blazor.Services.Auth;
 using Platform.Blazor.Services.Hierarchies;
 using Platform.Blazor.Services.Lookups;
+using Platform.Blazor.Services.Employees;
+using Platform.Blazor.Services.Assets;
+using Platform.Blazor.Services.Documents;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -24,5 +27,10 @@ builder.Services.AddScoped<IHierarchiesService, HierarchiesService>();
 builder.Services.AddScoped<ILookupsService, LookupsService>();
 builder.Services.AddScoped<ApiAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<ApiAuthenticationStateProvider>());
+
+builder.Services.AddScoped<IApplicationUsersService, ApplicationUsersService>();
+builder.Services.AddScoped<IEmployeesService, EmployeesService>();
+builder.Services.AddScoped<IAssetsService, AssetsService>();
+builder.Services.AddScoped<IDocumentsService, DocumentsService>();
 
 await builder.Build().RunAsync();

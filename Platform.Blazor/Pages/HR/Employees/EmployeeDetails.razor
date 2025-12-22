@@ -1,0 +1,237 @@
+@page "/employees/{EmployeeId:int}"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Employees
+@using Platform.Blazor.Services.Assets
+@using Platform.Blazor.Services.Documents
+@using Platform.Blazor.Pages.HR.Assets.Components
+@using Platform.Blazor.Pages.HR.Documents.Components
+@inject IEmployeesService EmployeesService
+@inject IAssetsService AssetsService
+@inject IDocumentsService DocumentsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<MudText Typo="Typo.h5" Class="mb-4">Employee Details</MudText>
+
+@if (_employee == null)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudCard Class="mb-4">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">@_employee.CivilId - @_employee.EmployeeId</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                 <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="GoBack">Back to List</MudButton>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+             <MudGrid>
+                <MudItem xs="12" sm="6">
+                    <MudText><b>Civil ID:</b> @_employee.CivilId</MudText>
+                    <MudText><b>Employee ID:</b> @_employee.EmployeeId</MudText>
+                    <MudText><b>Hierarchy:</b> @_employee.HierarchyName</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText><b>Email:</b> @_employee.Email</MudText>
+                    <MudText><b>Phone:</b> @_employee.PhoneNumber</MudText>
+                    <MudText><b>User Account:</b> @_employee.UserName</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <MudTabPanel Text="Assets">
+            <MudTable Items="@_assets" Dense="true" Hover="true" Bordered="true" Striped="true" Elevation="0">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Assigned Assets</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsset" StartIcon="@Icons.Material.Filled.Add">Add Asset</MudButton>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Details</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Receive Date</MudTh>
+                    <MudTh>Return Date</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Details">@context.Details</MudTd>
+                    <MudTd DataLabel="Type">@context.AssetType?.Name</MudTd>
+                    <MudTd DataLabel="Status">@context.Status?.Name</MudTd>
+                    <MudTd DataLabel="Receive Date">@context.ReceiveDate.ToShortDateString()</MudTd>
+                    <MudTd DataLabel="Return Date">@(context.ReturnDate?.ToShortDateString())</MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditAsset(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsset(context))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+        <MudTabPanel Text="Documents">
+            <MudTable Items="@_documents" Dense="true" Hover="true" Bordered="true" Striped="true" Elevation="0">
+                 <ToolBarContent>
+                    <MudText Typo="Typo.h6">Employee Documents</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddDocument" StartIcon="@Icons.Material.Filled.Add">Add Document</MudButton>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Title</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Expiry Date</MudTh>
+                    <MudTh>Details</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Title">@context.Title</MudTd>
+                    <MudTd DataLabel="Type">@context.DocumentType?.Name</MudTd>
+                    <MudTd DataLabel="Expiry Date">
+                        @if (context.ExpiryDate < DateTime.Today.AddDays(30))
+                        {
+                             <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small" Class="mr-1"/>
+                        }
+                        @context.ExpiryDate.ToShortDateString()
+                    </MudTd>
+                    <MudTd DataLabel="Details">@context.Details</MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditDocument(context))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteDocument(context))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+<AssetDialog @bind-Visible="_showAssetDialog" AssetId="_selectedAssetId" PreselectedEmployeeId="EmployeeId" OnClose="OnAssetDialogClose" />
+<DocumentDialog @bind-Visible="_showDocumentDialog" DocumentId="_selectedDocumentId" PreselectedEmployeeId="EmployeeId" OnClose="OnDocumentDialogClose" />
+
+
+@code {
+    [Parameter] public int EmployeeId { get; set; }
+
+    private EmployeeInfo? _employee;
+    private List<Asset> _assets = new();
+    private List<Document> _documents = new();
+    
+    private bool _showAssetDialog;
+    private int? _selectedAssetId;
+    
+    private bool _showDocumentDialog;
+    private int? _selectedDocumentId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _employee = await EmployeesService.GetEmployeeInfoByIdAsync(EmployeeId);
+        
+        var assetsTask = AssetsService.GetAssetsByEmployeeIdAsync(EmployeeId);
+        var docsTask = DocumentsService.GetDocumentsByEmployeeIdAsync(EmployeeId);
+        
+        await Task.WhenAll(assetsTask, docsTask);
+        
+        _assets = await assetsTask;
+        _documents = await docsTask;
+    }
+    
+    private void GoBack()
+    {
+        Nav.NavigateTo("/employees");
+    }
+
+    // Asset Actions
+    private void AddAsset()
+    {
+        _selectedAssetId = null;
+        _showAssetDialog = true;
+    }
+
+    private void EditAsset(Asset asset)
+    {
+        _selectedAssetId = asset.Id;
+        _showAssetDialog = true;
+    }
+
+    private async Task OnAssetDialogClose(bool success)
+    {
+        if (success)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteAsset(Asset asset)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Delete Confirmation",
+            $"Are you sure you want to delete asset {asset.Details}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var success = await AssetsService.DeleteAssetAsync(asset.Id);
+            if (success)
+            {
+                Snackbar.Add("Asset deleted successfully", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add("Failed to delete asset", Severity.Error);
+            }
+        }
+    }
+
+    // Document Actions
+    private void AddDocument()
+    {
+        _selectedDocumentId = null;
+        _showDocumentDialog = true;
+    }
+
+    private void EditDocument(Document doc)
+    {
+        _selectedDocumentId = doc.Id;
+        _showDocumentDialog = true;
+    }
+
+    private async Task OnDocumentDialogClose(bool success)
+    {
+        if (success)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteDocument(Document doc)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Delete Confirmation",
+            $"Are you sure you want to delete document {doc.Title}?",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var success = await DocumentsService.DeleteDocumentAsync(doc.Id);
+            if (success)
+            {
+                Snackbar.Add("Document deleted successfully", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add("Failed to delete document", Severity.Error);
+            }
+        }
+    }
+}

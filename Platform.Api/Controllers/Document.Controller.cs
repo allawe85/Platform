@@ -35,6 +35,14 @@ namespace Platform.Api.Controllers
             }
             return Ok(Document);
         }
+
+        [HttpGet]
+        [Route("ByEmployee/{employeeId:int}")]
+        public async Task<IActionResult> GetDocumentsByEmployeeId(int employeeId)
+        {
+            var documents = await _context.GetDocumentsByEmployeeIdAsync(employeeId);
+            return Ok(documents);
+        }
         [HttpPost]
         public async Task<IActionResult> CreateDocument([FromBody] Data.DTOs.Document document)
         {

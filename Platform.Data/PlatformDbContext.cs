@@ -345,6 +345,17 @@ namespace Platform.Data
             return true;
         }
 
+        public async Task<List<Asset>> GetAssetsByEmployeeIdAsync(int employeeId)
+        {
+            return await Assets
+                         .AsNoTracking()
+                         .Include(a => a.AssetType)
+                         .Include(a => a.Status)
+                         .Include(a => a.Employee)
+                         .Where(a => a.EmployeeId == employeeId)
+                         .ToListAsync();
+        }
+
         #endregion
 
 
@@ -447,6 +458,16 @@ namespace Platform.Data
         public async Task GetAssetController(int id)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<List<Document>> GetDocumentsByEmployeeIdAsync(int employeeId)
+        {
+            return await Documents
+                         .AsNoTracking()
+                         .Include(d => d.Employee)
+                         .Include(d => d.DocumentType)
+                         .Where(d => d.EmployeeId == employeeId)
+                         .ToListAsync();
         }
 
         #endregion
