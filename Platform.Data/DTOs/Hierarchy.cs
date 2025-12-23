@@ -23,6 +23,12 @@ namespace Platform.Data.DTOs
         [Column("hierarchy_level_id")]
         public int HierarchyLevelId { get; set; }
 
+        [Column("parent_id")]
+        public int ParentId { get; set; }
+
         public HierarchyLevel? HierarchyLevel { get; set; }
+
+        [NotMapped]
+        public List<Hierarchy> Children { get; set; } = new();
     }
 }

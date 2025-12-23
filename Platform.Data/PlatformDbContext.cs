@@ -117,6 +117,7 @@ namespace Platform.Data
             existing.Name = entity.Name;
             existing.NameAr = entity.NameAr;
             existing.HierarchyLevelId = entity.HierarchyLevelId;
+            existing.ParentId = entity.ParentId;
 
             Hierarchies.Update(existing);
             await SaveChangesAsync();

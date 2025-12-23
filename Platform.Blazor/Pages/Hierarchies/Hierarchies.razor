@@ -9,30 +9,34 @@
 
 <MudText Typo="Typo.h5" Class="mb-4">Hierarchies</MudText>
 
-<MudTable Items="@HierarchyList" Hover="true" Loading="@_loading">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Hierarchies</MudText>
+<MudPaper Class="pa-4" Style="overflow-x: auto;">
+    <MudToolBar>
+        <MudText Typo="Typo.h6">Organization Chart</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddHierarchy">Add Hierarchy</MudButton>
-    </ToolBarContent>
-    <HeaderContent>
-        <MudTh>Id</MudTh>
-        <MudTh>Name</MudTh>
-        <MudTh>Name (Arabic)</MudTh>
-        <MudTh>Level</MudTh>
-        <MudTh>Actions</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Id">@context.Id</MudTd>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
-        <MudTd DataLabel="Level">@(context.HierarchyLevel?.Name ?? context.HierarchyLevelId.ToString())</MudTd>
-        <MudTd DataLabel="Actions">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditHierarchy(context))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteHierarchy(context))" />
-        </MudTd>
-    </RowTemplate>
-</MudTable>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">Add Root</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">Add Child</MudButton>
+        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="EditSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" />
+        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" />
+    </MudToolBar>
+
+    @if (_loading)
+    {
+        <MudProgressCircular Indeterminate="true" Class="ma-4" />
+    }
+    else
+    {
+        <div class="org-tree">
+            <ul>
+               @RenderTree(TreeRoots)
+            </ul>
+        </div>
+        
+        @if (TreeRoots.Count == 0)
+        {
+             <MudText Class="ma-4">No hierarchies found. Add a root hierarchy to get started.</MudText>
+        }
+    }
+</MudPaper>
 
 <MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
@@ -40,10 +44,19 @@
         <MudStack Spacing="2">
             <MudTextField Label="Name" @bind-Value="_currentHierarchy.Name" For="@(() => _currentHierarchy.Name)" />
             <MudTextField Label="Name (Arabic)" @bind-Value="_currentHierarchy.NameAr" For="@(() => _currentHierarchy.NameAr)" />
+            
             <MudSelect T="int" Label="Hierarchy Level" @bind-Value="_currentHierarchy.HierarchyLevelId" AnchorOrigin="Origin.BottomCenter">
                 @foreach (var level in Levels)
                 {
                     <MudSelectItem Value="@level.Id">@level.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="int" Label="Parent" @bind-Value="_currentHierarchy.ParentId" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="0">Root</MudSelectItem>
+                @foreach (var h in HierarchyList.Where(x => x.Id != _currentHierarchy.Id)) 
+                {
+                    <MudSelectItem Value="@h.Id">@h.Name</MudSelectItem>
                 }
             </MudSelect>
         </MudStack>
@@ -56,6 +69,7 @@
 
 @code {
     private List<Hierarchy> HierarchyList = new();
+    private List<Hierarchy> TreeRoots = new();
     private List<HierarchyLevel> Levels = new();
     private bool _loading = true;
 
@@ -64,7 +78,9 @@
     private Hierarchy _currentHierarchy = new();
     private string _dialogTitle = "Add Hierarchy";
     private bool _isEdit = false;
-    private DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
+    
+    // Selection
+    private Hierarchy? _selectedHierarchy;
 
     protected override async Task OnInitializedAsync()
     {
@@ -78,6 +94,7 @@
         try
         {
             HierarchyList = await HierarchiesService.GetHierarchiesAsync();
+            BuildTree();
         }
         catch (Exception ex)
         {
@@ -89,6 +106,30 @@
         }
     }
     
+    private void BuildTree()
+    {
+         foreach(var item in HierarchyList) item.Children.Clear();
+
+         TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
+         
+         foreach(var item in HierarchyList)
+         {
+             if (item.ParentId != 0)
+             {
+                 var parent = HierarchyList.FirstOrDefault(x => x.Id == item.ParentId);
+                 if (parent != null)
+                 {
+                     parent.Children.Add(item);
+                 }
+                 else 
+                 {
+                     if (!TreeRoots.Contains(item))
+                        TreeRoots.Add(item);
+                 }
+             }
+         }
+    }
+
     private async Task LoadLevels()
     {
         try
@@ -101,22 +142,44 @@
         }
     }
 
-    private void AddHierarchy()
+    private void AddRootHierarchy()
     {
-        _currentHierarchy = new Hierarchy();
-        _dialogTitle = "Add Hierarchy";
+        _currentHierarchy = new Hierarchy { ParentId = 0 };
+        _dialogTitle = "Add Root Hierarchy";
         _isEdit = false;
         _showDialog = true;
     }
 
+    private void AddChildHierarchy()
+    {
+        if (_selectedHierarchy == null) return;
+        
+        _currentHierarchy = new Hierarchy { ParentId = _selectedHierarchy.Id };
+        _dialogTitle = $"Add Child to {_selectedHierarchy.Name}";
+        _isEdit = false;
+        _showDialog = true;
+    }
+
+    private void EditSelectedHierarchy()
+    {
+        if (_selectedHierarchy == null) return;
+        EditHierarchy(_selectedHierarchy);
+    }
+    
+    private void DeleteSelectedHierarchy()
+    {
+        if (_selectedHierarchy == null) return;
+        DeleteHierarchy(_selectedHierarchy);
+    }
+
     private void EditHierarchy(Hierarchy hierarchy)
     {
-         // Clone to avoid editing directly
         _currentHierarchy = new Hierarchy { 
             Id = hierarchy.Id, 
             Name = hierarchy.Name, 
             NameAr = hierarchy.NameAr,
-            HierarchyLevelId = hierarchy.HierarchyLevelId
+            HierarchyLevelId = hierarchy.HierarchyLevelId,
+            ParentId = hierarchy.ParentId
         };
         _dialogTitle = "Edit Hierarchy";
         _isEdit = true;
@@ -148,7 +211,7 @@
                 Snackbar.Add("Hierarchy created", Severity.Success);
             }
             _showDialog = false;
-            await LoadHierarchies();
+            await LoadHierarchies(); 
         }
         catch (Exception ex)
         {
@@ -170,11 +233,46 @@
                 await HierarchiesService.DeleteHierarchyAsync(hierarchy.Id);
                 Snackbar.Add("Hierarchy deleted", Severity.Success);
                 await LoadHierarchies();
+                _selectedHierarchy = null; 
             }
             catch (Exception ex)
             {
                 Snackbar.Add($"Error deleting hierarchy: {ex.Message}", Severity.Error);
             }
         }
+    }
+
+    private void OnSelectNode(Hierarchy node)
+    {
+        _selectedHierarchy = node;
+    }
+
+    // Recursively render Nodes as <li> with <div class="node-card">
+    private RenderFragment RenderTree(List<Hierarchy> nodes) => __builder =>
+    {
+        foreach (var node in nodes)
+        {
+            <li>
+                <div class="@GetNodeClass(node)" @onclick="() => OnSelectNode(node)">
+                    <div class="node-title">@node.Name</div>
+                    <div class="node-title">@node.NameAr</div>
+                    <div class="node-subtitle">@(node.HierarchyLevel?.Name ?? "")</div>
+                </div>
+                @if (node.Children != null && node.Children.Count > 0)
+                {
+                    <ul>
+                      @RenderTree(node.Children)
+                    </ul>
+                }
+            </li>
+        }
+    };
+
+    private string GetNodeClass(Hierarchy node)
+    {
+        var css = "node-card";
+        if (_selectedHierarchy != null && _selectedHierarchy.Id == node.Id)
+            css += " selected";
+        return css;
     }
 }
