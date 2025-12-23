@@ -30,5 +30,8 @@ namespace Platform.Data.DTOs
 
         [NotMapped]
         public List<Hierarchy> Children { get; set; } = new();
+
+        [NotMapped]
+        public bool IsExpanded { get; set; } = true;
     }
 }
