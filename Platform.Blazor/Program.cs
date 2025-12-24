@@ -13,6 +13,8 @@ using Microsoft.JSInterop;
 using Platform.Blazor.Services.Employees;
 using Platform.Blazor.Services.Assets;
 using Platform.Blazor.Services.Documents;
+using Platform.Blazor.Services.Events;
+using Platform.Blazor.Services.Polls;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -37,6 +39,8 @@ builder.Services.AddScoped<IApplicationUsersService, ApplicationUsersService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesService>();
 builder.Services.AddScoped<IAssetsService, AssetsService>();
 builder.Services.AddScoped<IDocumentsService, DocumentsService>();
+builder.Services.AddScoped<IEventsService, EventsService>();
+builder.Services.AddScoped<IPollsService, PollsService>();
 
 var host = builder.Build();
 

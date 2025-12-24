@@ -1,0 +1,273 @@
+@page "/events"
+@using Platform.Blazor.Services.Events
+@using Platform.Data.DTOs
+@inject IEventsService EventsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Event Calendar</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange" PlaceholderStart="Start Date" PlaceholderEnd="End Date" />
+        </MudItem>
+        <MudItem xs="12" md="4">
+             <MudSelect T="int?" Label="Event Type" @bind-Value="_selectedEventTypeId" Clearable="true">
+                @foreach (var type in _eventTypes)
+                {
+                    <MudSelectItem Value="@((int?)type.Id)">@type.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="4" Class="d-flex align-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadEvents" Class="mr-2">Filter</MudButton>
+             <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddEvent">Add Event</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+}
+else
+{
+    <MudPaper Class="pa-4">
+        @if (_events.Any())
+        {
+            <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
+                @foreach (var evt in _events)
+                {
+                    <MudTimelineItem Color="@GetColorForType(evt.EventTypeId)" Size="Size.Small">
+                        <ItemOpposite>
+                            <MudText Color="Color.Default" Typo="Typo.caption">@evt.StartDate.ToShortDateString()</MudText>
+                            <MudText Color="Color.Default" Typo="Typo.caption">@evt.StartDate.ToShortTimeString()</MudText>
+                        </ItemOpposite>
+                        <ItemContent>
+                            <MudCard Elevation="2" Class="mb-3">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.body1"><b>@evt.Name</b></MudText>
+                                        <MudText Typo="Typo.caption">@evt.Location</MudText>
+                                    </CardHeaderContent>
+                                    <CardHeaderActions>
+                                          <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => EditEvent(evt))" />
+                                          <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteEvent(evt))" />
+                                    </CardHeaderActions>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2">@evt.Description</MudText>
+                                    @if (!string.IsNullOrEmpty(evt.NameAr))
+                                    {
+                                         <MudText Typo="Typo.caption" Class="mt-1 d-block" Style="color: #888;">@evt.NameAr - @evt.LocationAr</MudText>
+                                    }
+                                     <MudChip T="string" Size="Size.Small" Color="@GetColorForType(evt.EventTypeId)" Class="mt-2">
+                                        @(evt.EventType?.Name ?? "Unknown")
+                                    </MudChip>
+                                </MudCardContent>
+                            </MudCard>
+                        </ItemContent>
+                    </MudTimelineItem>
+                }
+            </MudTimeline>
+        }
+        else
+        {
+             <MudText Class="ma-4">No events found for the selected range.</MudText>
+        }
+    </MudPaper>
+}
+
+<MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-6" Style="width: 500px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Event" : "Add Event")</MudText>
+        
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudStack Spacing="3">
+                <MudTextField Label="Name" @bind-Value="_currentEvent.Name" Required="true" />
+                <MudTextField Label="Name (Arabic)" @bind-Value="_currentEvent.NameAr" Required="true" />
+                
+                <MudDateRangePicker Label="Period" @bind-DateRange="_dialogDateRange" Required="true" />
+                <MudTimePicker Label="Start Time" @bind-Time="_startTime" />
+                 <MudTimePicker Label="End Time" @bind-Time="_endTime" />
+
+                <MudTextField Label="Location" @bind-Value="_currentEvent.Location" Required="true" />
+                <MudTextField Label="Location (Arabic)" @bind-Value="_currentEvent.LocationAr" Required="true" />
+                
+                <MudSelect T="int" Label="Type" @bind-Value="_currentEvent.EventTypeId" AnchorOrigin="Origin.BottomCenter" Required="true">
+                    @foreach (var type in _eventTypes)
+                    {
+                        <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudTextField Label="Description" @bind-Value="_currentEvent.Description" Lines="3" />
+            </MudStack>
+        </MudForm>
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-6">
+            <MudButton OnClick="CancelDialog">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitEvent" Disabled="@(!_success)">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    private List<Event> _events = new();
+    private List<EventType> _eventTypes = new();
+    private bool _loading = true;
+    private DateRange _dateRange = new DateRange(DateTime.Now.Date, DateTime.Now.Date.AddDays(30));
+    private int? _selectedEventTypeId;
+
+    // Dialog
+    private bool _showDialog;
+    private bool _isEdit;
+    private Event _currentEvent = new();
+    private MudForm _form;
+    private bool _success;
+    private DateRange _dialogDateRange = new DateRange(DateTime.Now, DateTime.Now.AddHours(1));
+    private TimeSpan? _startTime = DateTime.Now.TimeOfDay;
+    private TimeSpan? _endTime = DateTime.Now.AddHours(1).TimeOfDay;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEventTypes();
+        await LoadEvents();
+    }
+
+    private async Task LoadEventTypes()
+    {
+        try
+        {
+            _eventTypes = await EventsService.GetEventTypesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading types: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task LoadEvents()
+    {
+        _loading = true;
+        try
+        {
+            if (_dateRange.Start.HasValue && _dateRange.End.HasValue)
+            {
+                var events = await EventsService.GetEventsByRangeAsync(_dateRange.Start.Value, _dateRange.End.Value);
+                
+                if (_selectedEventTypeId.HasValue)
+                {
+                    events = events.Where(e => e.EventTypeId == _selectedEventTypeId.Value).ToList();
+                }
+
+                _events = events.OrderBy(e => e.StartDate).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading events: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Color GetColorForType(int typeId)
+    {
+        // Simple hashing for color distinctness
+        var colors = new[] { Color.Primary, Color.Secondary, Color.Tertiary, Color.Info, Color.Success, Color.Warning, Color.Error };
+        return colors[typeId % colors.Length];
+    }
+
+    // --- Actions ---
+
+    private void AddEvent()
+    {
+        _currentEvent = new Event { StartDate = DateTime.Now, EndDate = DateTime.Now.AddHours(1) };
+        _dialogDateRange = new DateRange(DateTime.Now.Date, DateTime.Now.Date);
+        _startTime = DateTime.Now.TimeOfDay;
+        _endTime = DateTime.Now.AddHours(1).TimeOfDay;
+        
+        _isEdit = false;
+        _showDialog = true;
+    }
+
+    private void EditEvent(Event e)
+    {
+        _currentEvent = new Event
+        {
+            Id = e.Id,
+            Name = e.Name,
+            NameAr = e.NameAr,
+            Location = e.Location,
+            LocationAr = e.LocationAr,
+            Description = e.Description,
+            DescriptionAr = e.DescriptionAr,
+            EventTypeId = e.EventTypeId,
+            StartDate = e.StartDate,
+            EndDate = e.EndDate
+        };
+
+        _dialogDateRange = new DateRange(_currentEvent.StartDate.Date, _currentEvent.EndDate.Date);
+        _startTime = _currentEvent.StartDate.TimeOfDay;
+        _endTime = _currentEvent.EndDate.TimeOfDay;
+
+        _isEdit = true;
+        _showDialog = true;
+    }
+
+    private void DeleteEvent(Event e)
+    {
+        // Add confirmation logic here if needed
+         Task.Run(async () => {
+             try {
+                await EventsService.DeleteEventAsync(e.Id);
+                Snackbar.Add("Event deleted", Severity.Success);
+                await LoadEvents();
+             } catch (Exception ex) {
+                 Snackbar.Add(ex.Message, Severity.Error);
+             }
+         });
+    }
+
+    private void CancelDialog()
+    {
+        _showDialog = false;
+    }
+
+    private async Task SubmitEvent()
+    {
+        try
+        {
+            // Combine Date and Time
+            var startBase = _dialogDateRange.Start ?? DateTime.Now.Date;
+            var endBase = _dialogDateRange.End ?? startBase;
+            
+            _currentEvent.StartDate = startBase.Date + (_startTime ?? TimeSpan.Zero);
+            _currentEvent.EndDate = endBase.Date + (_endTime ?? TimeSpan.Zero);
+
+            if (_isEdit)
+            {
+                await EventsService.UpdateEventAsync(_currentEvent.Id, _currentEvent);
+                Snackbar.Add("Event updated", Severity.Success);
+            }
+            else
+            {
+                await EventsService.CreateEventAsync(_currentEvent);
+                Snackbar.Add("Event created", Severity.Success);
+            }
+
+            _showDialog = false;
+            await LoadEvents();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving event: {ex.Message}", Severity.Error);
+        }
+    }
+}

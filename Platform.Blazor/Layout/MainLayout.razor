@@ -28,6 +28,14 @@
         <MudNavGroup Title="@Loc["HierarchiesManagement"]" Icon="@Icons.Material.Filled.AccountTree">
                 <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">@Loc["Levels"]</MudNavLink>
                 <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">@Loc["Hierarchies"]</MudNavLink>
+            <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudNavGroup Title="Events" Icon="@Icons.Material.Filled.Event" Expanded="true">
+                <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Calendar</MudNavLink>
+                <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">Event Types</MudNavLink>
+            </MudNavGroup>
+        <MudNavGroup Title="Hierarchies Management" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
+                <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">Levels</MudNavLink>
+                <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">Hierarchies</MudNavLink>
             </MudNavGroup>
             <MudNavGroup Title="@Loc["HRManagement"]" Icon="@Icons.Material.Filled.People">
                 <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.Badge">@Loc["Employees"]</MudNavLink>
@@ -39,6 +47,10 @@
                 <MudNavLink Href="/asset-statuses" Icon="@Icons.Material.Filled.List">@Loc["AssetStatuses"]</MudNavLink>
                 <MudNavLink Href="/asset-types" Icon="@Icons.Material.Filled.Category">@Loc["AssetTypes"]</MudNavLink>
                 <MudNavLink Href="/document-types" Icon="@Icons.Material.Filled.Description">@Loc["DocumentTypes"]</MudNavLink>
+            </MudNavGroup>
+            <MudNavGroup Title="Polls" Icon="@Icons.Material.Filled.Poll">
+                <MudNavLink Href="/polls-management" Icon="@Icons.Material.Filled.List">Management</MudNavLink>
+                <MudNavLink Href="/poll-vote" Icon="@Icons.Material.Filled.HowToVote">Vote</MudNavLink>
             </MudNavGroup>
         </MudNavMenu>
     </MudDrawer>

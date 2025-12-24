@@ -122,7 +122,7 @@
 @code {
     private List<Hierarchy> HierarchyList = new();
     private List<Hierarchy> TreeRoots = new();
-    private HashSet<TreeItemData<Hierarchy>> TreeItems { get; set; } = new();
+    private HashSet<TreeItemData<Hierarchy>> TreeItems = new();
     private List<HierarchyLevel> Levels = new();
     private bool _loading = true;
 
@@ -285,8 +285,6 @@
         }
     }
     
-    // Return solid color for chips (extracting from gradient somewhat or just provide a solid fallback if needed, 
-    // but styles will handle the gradient if passed to background)
     private string GetLevelColor(int levelId) 
     {
         return _levelColors.ContainsKey(levelId) ? _levelColors[levelId] : "#999"; 
@@ -468,4 +466,28 @@
     {
         return (_selectedHierarchy != null && _selectedHierarchy.Id == node.Id) ? "node-card selected" : "node-card";
     }
+
+    // 2. MudTree Render
+    private RenderFragment RenderMudTree(List<Hierarchy> nodes) => __builder =>
+    {
+        foreach (var node in nodes)
+        {
+             <MudTreeViewItem Value="@node" @bind-Expanded="@node.IsExpanded">
+                <Content>
+                     <div class="d-flex align-center justify-space-between flex-grow-1" style="width: 100%;">
+                        <MudText>@node.Name</MudText>
+                         <MudChip T="string" Size="Size.Small" Style="@($"background: {GetLevelColor(node.HierarchyLevelId)}; color: white; margin-right: 0;")">
+                            @(node.HierarchyLevel?.Name ?? "")
+                        </MudChip>
+                    </div>
+                </Content>
+                <ChildContent>
+                     @if (node.Children != null && node.Children.Count > 0)
+                    {
+                        @RenderMudTree(node.Children)
+                    }
+                </ChildContent>
+            </MudTreeViewItem>
+        }
+    };
 }

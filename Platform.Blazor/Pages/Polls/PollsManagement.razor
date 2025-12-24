@@ -1,0 +1,306 @@
+@page "/polls-management"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Polls
+@using MudBlazor
+@inject IPollsService PollsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Polls Management</MudText>
+
+<MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="AddPoll" Class="mb-4">Add New Poll</MudButton>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="@_polls" Hover="true" Striped="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Question</MudTh>
+            <MudTh>Question (Ar)</MudTh>
+            <MudTh>Active</MudTh>
+            <MudTh>Options</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Question">@context.Question</MudTd>
+            <MudTd DataLabel="Question (Ar)">@context.QuestionAr</MudTd>
+            <MudTd DataLabel="Active">
+                @if (context.IsActive)
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Default" Size="Size.Small">Inactive</MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Options">@context.Options?.Count</MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditPoll(context))" Size="Size.Small" />
+                <MudIconButton Icon="@Icons.Material.Filled.BarChart" Color="Color.Secondary" OnClick="@(() => ShowResults(context))" Size="Size.Small" Title="Results" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeletePoll(context))" Size="Size.Small" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+<!-- Edit/Create Overlay -->
+<MudOverlay @bind-Visible="_showEditDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+        <MudText Typo="Typo.h6" Class="mb-4">@_dialogTitle</MudText>
+        <MudForm Model="@_currentPoll" @ref="_form">
+            <MudTextField Label="Question" @bind-Value="_currentPoll.Question" Required="true" RequiredError="Question is required" />
+            <MudTextField Label="Question (Arabic)" @bind-Value="_currentPoll.QuestionAr" Required="true" RequiredError="Question (Arabic) is required" />
+            <MudCheckBox T="bool" @bind-Value="_currentPoll.IsActive" Label="Active" Color="Color.Primary" For="@(() => _currentPoll.IsActive)"></MudCheckBox>
+
+            <MudText Typo="Typo.h6" Class="mt-4">Options</MudText>
+            @if (_currentPoll.Options != null)
+            {
+                 <MudList T="string">
+                    @foreach (var option in _currentPoll.Options)
+                    {
+                        <MudListItem>
+                            <MudStack Row="true" AlignItems="AlignItems.Center"> 
+                                <MudTextField Label="Option" @bind-Value="option.OptionText" Required="true" RequiredError="Option text is required" />
+                                <MudTextField Label="Option (Arabic)" @bind-Value="option.OptionTextAr" Required="true" RequiredError="Option text (Arabic) is required" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveOption(option))" Color="Color.Error" />
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOption" Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-2">Add Option</MudButton>
+        </MudForm>
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="CancelEditDialog">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitPoll">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+<!-- Results Overlay -->
+<MudOverlay @bind-Visible="_showResultsDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
+     <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+         <MudText Typo="Typo.h6" Class="mb-4">Results</MudText>
+         
+         @if (_loadingResults)
+         {
+             <MudProgressCircular Indeterminate="true" />
+         }
+         else if (_resultsPoll != null)
+         {
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">@_resultsPoll.Question</MudText>
+            <MudText Typo="Typo.body2" Class="mb-4">Total Votes: @_totalVotes</MudText>
+
+            @foreach (var option in _resultsPoll.Options)
+            {
+                var count = _results.ContainsKey(option.Id) ? _results[option.Id] : 0;
+                var percentage = _totalVotes > 0 ? (double)count / _totalVotes * 100 : 0;
+
+                <div class="mb-2">
+                    <div class="d-flex justify-space-between">
+                        <MudText>@option.OptionText</MudText>
+                        <MudText>@count votes (@percentage.ToString("F1")%)</MudText>
+                    </div>
+                    <MudProgressLinear Color="Color.Primary" Value="@percentage" Class="my-1" />
+                </div>
+            }
+         }
+         
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="CloseResultsDialog">Close</MudButton>
+        </MudStack>
+     </MudPaper>
+</MudOverlay>
+
+@code {
+    private List<Poll> _polls = new();
+    private bool _loading = true;
+
+    // Edit/Create Dialog State
+    private bool _showEditDialog;
+    private string _dialogTitle = "Add New Poll";
+    private Poll _currentPoll = new();
+    private bool _isEdit = false;
+    private MudForm _form;
+
+    // Results Dialog State
+    private bool _showResultsDialog;
+    private bool _loadingResults;
+    private Poll _resultsPoll;
+    private Dictionary<int, int> _results = new();
+    private int _totalVotes = 0;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPolls();
+    }
+
+    private async Task LoadPolls()
+    {
+        _loading = true;
+        try
+        {
+            _polls = await PollsService.GetAllPollsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading polls: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    // --- Actions ---
+
+    private void AddPoll()
+    {
+        _currentPoll = new Poll { Options = new List<PollOption>(), IsActive = true };
+        _dialogTitle = "Add New Poll";
+        _isEdit = false;
+        _showEditDialog = true;
+    }
+
+    private void EditPoll(Poll poll)
+    {
+        // Deep copy to avoid editing the table row directly before save
+        _currentPoll = new Poll 
+        { 
+            Id = poll.Id, 
+            Question = poll.Question, 
+            QuestionAr = poll.QuestionAr, 
+            IsActive = poll.IsActive,
+            Options = new List<PollOption>()
+        };
+
+        if (poll.Options != null)
+        {
+            foreach(var opt in poll.Options)
+            {
+                _currentPoll.Options.Add(new PollOption 
+                { 
+                    Id = opt.Id, 
+                    PollId = opt.PollId, 
+                    OptionText = opt.OptionText, 
+                    OptionTextAr = opt.OptionTextAr 
+                });
+            }
+        }
+
+        _dialogTitle = "Edit Poll";
+        _isEdit = true;
+        _showEditDialog = true;
+    }
+
+    private void CancelEditDialog()
+    {
+        _showEditDialog = false;
+    }
+
+    private void AddOption()
+    {
+        if (_currentPoll.Options == null) _currentPoll.Options = new List<PollOption>();
+        _currentPoll.Options.Add(new PollOption());
+    }
+
+    private void RemoveOption(PollOption option)
+    {
+        _currentPoll.Options.Remove(option);
+    }
+
+    private async Task SubmitPoll()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        if (_currentPoll.Options == null || _currentPoll.Options.Count < 2)
+        {
+            Snackbar.Add("Poll must have at least 2 options.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            if (_isEdit)
+            {
+                await PollsService.UpdatePollAsync(_currentPoll.Id, _currentPoll);
+                Snackbar.Add("Poll updated successfully", Severity.Success);
+            }
+            else
+            {
+                await PollsService.AddPollAsync(_currentPoll);
+                Snackbar.Add("Poll added successfully", Severity.Success);
+            }
+            _showEditDialog = false;
+            await LoadPolls();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving poll: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeletePoll(Poll poll)
+    {
+         bool? result = await DialogService.ShowMessageBox(
+            "Warning", 
+            $"Deleting {poll.Question} can not be undone!", 
+            yesText:"Delete!", cancelText:"Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await PollsService.DeletePollAsync(poll.Id);
+                Snackbar.Add("Poll deleted successfully", Severity.Success);
+                await LoadPolls();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting poll: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    // --- Results Logic ---
+
+    private async Task ShowResults(Poll poll)
+    {
+        _resultsPoll = poll;
+        _showResultsDialog = true;
+        _loadingResults = true;
+        _results.Clear();
+        _totalVotes = 0;
+
+        try 
+        {
+             _results = await PollsService.GetPollResultsAsync(poll.Id);
+             _totalVotes = _results.Sum(x => x.Value);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading results: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loadingResults = false;
+        }
+    }
+
+    private void CloseResultsDialog()
+    {
+        _showResultsDialog = false;
+    }
+}
