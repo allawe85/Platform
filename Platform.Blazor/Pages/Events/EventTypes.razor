@@ -1,0 +1,172 @@
+@page "/event-types"
+@using Platform.Blazor.Services.Events
+@using Platform.Data.DTOs
+@inject IEventsService EventsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Event Types</MudText>
+
+<MudPaper Class="pa-4">
+    <MudTable Items="@_eventTypes" Hover="true" Loading="@_loading" Filter="new Func<EventType,bool>(FilterFunc)">
+         <ToolBarContent>
+            <MudText Typo="Typo.h6">Manage Types</MudText>
+            <MudSpacer />
+            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddType" Class="ml-3">Add Type</MudButton>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh>Name</MudTh>
+             <MudTh>Name (Arabic)</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+             <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditType(context))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteType(context))" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+             <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+<MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-6" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Type" : "Add Type")</MudText>
+        
+        <MudForm @ref="_form" @bind-IsValid="_success">
+             <MudStack Spacing="3">
+                <MudTextField Label="Name" @bind-Value="_currentType.Name" Required="true" />
+                <MudTextField Label="Name (Arabic)" @bind-Value="_currentType.NameAr" Required="true" />
+             </MudStack>
+        </MudForm>
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-6">
+            <MudButton OnClick="CancelDialog">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitType" Disabled="@(!_success)">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    private List<EventType> _eventTypes = new();
+    private bool _loading = true;
+    private string _searchString = "";
+
+    // Dialog
+    private bool _showDialog;
+    private bool _isEdit;
+    private EventType _currentType = new();
+    private MudForm _form;
+    private bool _success;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTypes();
+    }
+
+    private async Task LoadTypes()
+    {
+        _loading = true;
+        try
+        {
+            _eventTypes = await EventsService.GetEventTypesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading types: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool FilterFunc(EventType type)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        if (type.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (type.NameAr.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    // --- Actions ---
+
+    private void AddType()
+    {
+        _currentType = new EventType();
+        _isEdit = false;
+        _showDialog = true;
+    }
+
+    private void EditType(EventType type)
+    {
+        _currentType = new EventType
+        {
+            Id = type.Id,
+            Name = type.Name,
+            NameAr = type.NameAr
+        };
+        _isEdit = true;
+        _showDialog = true;
+    }
+
+    private void DeleteType(EventType type)
+    {
+        Task.Run(async () => {
+             bool? result = await DialogService.ShowMessageBox(
+                "Warning", 
+                $"Deleting {type.Name} will remove links to existing events. Continue?", 
+                yesText:"Delete!", cancelText:"Cancel");
+
+             if (result == true)
+             {
+                 try {
+                    await EventsService.DeleteEventTypeAsync(type.Id);
+                    Snackbar.Add("Event Type deleted", Severity.Success);
+                    await LoadTypes();
+                 } catch (Exception ex) {
+                     Snackbar.Add(ex.Message, Severity.Error);
+                 }
+             }
+         });
+    }
+
+    private void CancelDialog()
+    {
+        _showDialog = false;
+    }
+
+    private async Task SubmitType()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await EventsService.UpdateEventTypeAsync(_currentType.Id, _currentType);
+                Snackbar.Add("Event Type updated", Severity.Success);
+            }
+            else
+            {
+                await EventsService.CreateEventTypeAsync(_currentType);
+                Snackbar.Add("Event Type created", Severity.Success);
+            }
+
+            _showDialog = false;
+            await LoadTypes();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving type: {ex.Message}", Severity.Error);
+        }
+    }
+}

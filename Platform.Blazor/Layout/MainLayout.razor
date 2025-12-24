@@ -21,7 +21,10 @@
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
             <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-            <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Event">Event Calendar</MudNavLink>
+            <MudNavGroup Title="Events" Icon="@Icons.Material.Filled.Event" Expanded="true">
+                <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Calendar</MudNavLink>
+                <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">Event Types</MudNavLink>
+            </MudNavGroup>
         <MudNavGroup Title="Hierarchies Management" Icon="@Icons.Material.Filled.AccountTree" Expanded="true">
                 <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">Levels</MudNavLink>
                 <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">Hierarchies</MudNavLink>
