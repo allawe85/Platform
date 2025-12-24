@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Dashboard" xml:space="preserve">
+    <value>الأنظمة</value>
+  </data>
+  <data name="Hierarchies" xml:space="preserve">
+    <value>التسلسل الهرمي</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>المستويات</value>
+  </data>
+  <data name="Employees" xml:space="preserve">
+    <value>الموظفين</value>
+  </data>
+  <data name="Assets" xml:space="preserve">
+    <value>الأصول</value>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>المستندات</value>
+  </data>
+  <data name="Accounts" xml:space="preserve">
+    <value>الحسابات</value>
+  </data>
+  <data name="Configurations" xml:space="preserve">
+    <value>الأصول</value>
+  </data>
+  <data name="AssetStatuses" xml:space="preserve">
+    <value>حالات الأصول</value>
+  </data>
+  <data name="AssetTypes" xml:space="preserve">
+    <value>أنواع الأصول</value>
+  </data>
+  <data name="DocumentTypes" xml:space="preserve">
+    <value>أنواع المستندات</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>تسجيل الخروج</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>مرحباً</value>
+  </data>
+    <data name="HierarchiesManagement" xml:space="preserve">
+    <value>إدارة الهياكل</value>
+  </data>
+    <data name="HRManagement" xml:space="preserve">
+    <value>الموارد البشرية</value>
+  </data>
+</root>

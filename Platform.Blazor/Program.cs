@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Localization;
+using System.Globalization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Platform.Blazor;
 using MudBlazor.Services;
@@ -7,6 +9,7 @@ using System.Net.Http;
 using Platform.Blazor.Services.Auth;
 using Platform.Blazor.Services.Hierarchies;
 using Platform.Blazor.Services.Lookups;
+using Microsoft.JSInterop;
 using Platform.Blazor.Services.Employees;
 using Platform.Blazor.Services.Assets;
 using Platform.Blazor.Services.Documents;
@@ -14,6 +17,8 @@ using Platform.Blazor.Services.Events;
 using Platform.Blazor.Services.Polls;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+builder.Services.AddLocalization();
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
@@ -37,4 +42,24 @@ builder.Services.AddScoped<IDocumentsService, DocumentsService>();
 builder.Services.AddScoped<IEventsService, EventsService>();
 builder.Services.AddScoped<IPollsService, PollsService>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+var js = host.Services.GetRequiredService<IJSRuntime>();
+var culture = new CultureInfo("en-US");
+try
+{
+    var result = await js.InvokeAsync<string>("localStorage.getItem", "culture");
+    if (!string.IsNullOrEmpty(result))
+    {
+        culture = new CultureInfo(result);
+    }
+}
+catch (Exception)
+{
+    // Fallback to default culture if access fails
+}
+
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+await host.RunAsync();
