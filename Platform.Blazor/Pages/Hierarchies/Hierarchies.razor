@@ -52,10 +52,36 @@
         }
         else
         {
-            <MudTreeView T="Hierarchy" SelectedValue="_selectedHierarchy" SelectedValueChanged="OnSelectionChanged" Hover="true">
-                @RenderMudTree(TreeRoots)
+            <MudTreeView T="Hierarchy" Items="@TreeItems" SelectedValue="_selectedHierarchy" SelectedValueChanged="OnSelectionChanged" Hover="true">
+                <ItemTemplate Context="item">
+                    <MudTreeViewItem Items="@item.Children" Value="@item.Value" @bind-Expanded="@item.Expanded">
+                        <Content>
+                             <div class="d-flex align-center justify-space-between flex-grow-1" style="width: 100%; cursor: pointer; padding: 8px 0;" @onclick="@(() => item.Expanded = !item.Expanded)">
+                                <div class="d-flex align-center">
+                                    <MudText Typo="Typo.h6" Style="@($"font-weight: bold; margin-right: 8px; color: {GetLevelTextColor(item.Value.HierarchyLevelId)}")">
+                                        @GetHierarchyNumber(item.Value.Id)
+                                    </MudText>
+                                     @if (item.Children?.Any() == true)
+                                     {
+                                         <MudIcon Icon="@Icons.Material.Filled.ChevronRight" 
+                                                  Style="@($"transform: rotate({(item.Expanded ? "90deg" : "0deg")}); transition: transform 0.2s; color: {GetLevelTextColor(item.Value.HierarchyLevelId)}; margin-right: 4px; font-size: 1.5rem;")" />
+                                     }
+                                     else
+                                     {
+                                         <div style="width: 28px;"></div>
+                                     }
+                                    <MudText Typo="Typo.h6" Style="@($"color: {GetLevelTextColor(item.Value.HierarchyLevelId)}; font-weight: bold;")">@item.Value.Name</MudText>
+                                </div>
+                                 <MudChip T="string" Size="Size.Small" Style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}; color: white; margin-right: 0;")">
+                                    @(item.Value.HierarchyLevel?.Name ?? "")
+                                </MudChip>
+                            </div>
+                        </Content>
+                    </MudTreeViewItem>
+                </ItemTemplate>
             </MudTreeView>
         }
+
         
         @if (TreeRoots.Count == 0)
         {
@@ -114,6 +140,7 @@
 
     // Colors mapping
     private Dictionary<int, string> _levelColors = new();
+    private Dictionary<int, string> _levelTextColors = new();
     private List<string> _palette = new() 
     { 
         "linear-gradient(180deg, #4a90e2 0%, #0056b3 100%)", // Blue
@@ -123,6 +150,17 @@
         "linear-gradient(180deg, #e74c3c 0%, #c0392b 100%)", // Red
         "linear-gradient(180deg, #34495e 0%, #2c3e50 100%)", // Dark Blue/Grey
         "linear-gradient(180deg, #1abc9c 0%, #16a085 100%)"  // Teal
+    };
+    
+    private List<string> _solidPalette = new() 
+    { 
+        "#0056b3", // Blue
+        "#2e8b57", // Green
+        "#d35400", // Orange
+        "#8e44ad", // Purple
+        "#c0392b", // Red
+        "#2c3e50", // Dark Blue/Grey
+        "#16a085"  // Teal
     };
 
     protected override async Task OnInitializedAsync()
@@ -162,6 +200,62 @@
                  else if (!TreeRoots.Contains(item)) TreeRoots.Add(item);
              }
          }
+         
+         CalculateHierarchyNumbers();
+         UpdateTreeItems();
+    }
+
+    private Dictionary<int, string> _hierarchyNumbers = new();
+
+    private void CalculateHierarchyNumbers()
+    {
+        _hierarchyNumbers.Clear();
+        int index = 1;
+        foreach (var root in TreeRoots)
+        {
+            AssignNumbers(root, $"{index}");
+            index++;
+        }
+    }
+
+    private void AssignNumbers(Hierarchy node, string prefix)
+    {
+        _hierarchyNumbers[node.Id] = prefix;
+        if (node.Children != null && node.Children.Any())
+        {
+            int childIndex = 1;
+            foreach (var child in node.Children)
+            {
+                AssignNumbers(child, $"{prefix}.{childIndex}");
+                childIndex++;
+            }
+        }
+    }
+
+    private string GetHierarchyNumber(int id)
+    {
+        return _hierarchyNumbers.ContainsKey(id) ? _hierarchyNumbers[id] : "";
+    }
+
+    private void UpdateTreeItems()
+    {
+        TreeItems = ConvertToTreeItems(TreeRoots);
+    }
+
+    private HashSet<TreeItemData<Hierarchy>> ConvertToTreeItems(List<Hierarchy> nodes)
+    {
+        var items = new HashSet<TreeItemData<Hierarchy>>();
+        foreach (var node in nodes)
+        {
+            items.Add(new TreeItemData<Hierarchy>
+            {
+                Value = node,
+                Text = node.Name,
+                Expanded = false,
+                Children = node.Children.Any() ? ConvertToTreeItems(node.Children).ToList() : null
+            });
+        }
+        return items;
     }
 
     private async Task LoadLevels()
@@ -180,10 +274,12 @@
     private void AssignColors()
     {
         _levelColors.Clear();
+        _levelTextColors.Clear();
         int i = 0;
         foreach(var level in Levels.OrderBy(l => l.Id))
         {
             _levelColors[level.Id] = _palette[i % _palette.Count];
+            _levelTextColors[level.Id] = _solidPalette[i % _solidPalette.Count];
             i++;
         }
     }
@@ -191,6 +287,11 @@
     private string GetLevelColor(int levelId) 
     {
         return _levelColors.ContainsKey(levelId) ? _levelColors[levelId] : "#999"; 
+    }
+
+    private string GetLevelTextColor(int levelId) 
+    {
+        return _levelTextColors.ContainsKey(levelId) ? _levelTextColors[levelId] : "#333"; 
     }
 
     // --- Actions ---
