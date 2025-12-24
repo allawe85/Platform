@@ -40,6 +40,10 @@ namespace Platform.Data
 
         public DbSet<Event> Events { get; set; }
 
+        public DbSet<Poll> Polls { get; set; }
+        public DbSet<PollOption> PollOptions { get; set; }
+        public DbSet<PollVote> PollVotes { get; set; }
+
         #endregion
 
 
@@ -630,6 +634,117 @@ namespace Platform.Data
             Events.Remove(existing);
             await SaveChangesAsync();
             return true;
+        }
+
+        #endregion
+
+        #region Poll - CRUD Operations
+
+        public async Task<List<Poll>> GetAllPollsAsync()
+        {
+            return await Polls
+                .AsNoTracking()
+                .Include(p => p.Options)
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+        }
+
+        public async Task<Poll?> GetPollByIdAsync(int id)
+        {
+            return await Polls
+                .Include(p => p.Options)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public async Task<Poll> AddPollAsync(Poll entity)
+        {
+            var entry = await Polls.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<Poll?> UpdatePollAsync(Poll entity)
+        {
+            var existing = await Polls
+                .Include(p => p.Options)
+                .FirstOrDefaultAsync(p => p.Id == entity.Id);
+
+            if (existing == null) return null;
+
+            existing.Question = entity.Question;
+            existing.QuestionAr = entity.QuestionAr;
+            existing.IsActive = entity.IsActive;
+
+            // Handle Poll Options Update
+            if (entity.Options != null)
+            {
+                // Identify options to remove
+                var existingOptionIds = existing.Options.Select(o => o.Id).ToList();
+                var newOptionIds = entity.Options.Select(o => o.Id).ToList();
+                var optionsToRemove = existing.Options.Where(o => !newOptionIds.Contains(o.Id)).ToList();
+
+                foreach (var option in optionsToRemove)
+                {
+                    // Assuming Cascade Delete is handled by DB FK or EF Core tracking
+                    // We explicitly remove from context
+                    existing.Options.Remove(option);
+                    // Or PollOptions.Remove(option) if attached
+                }
+
+                // Add or Update
+                foreach (var option in entity.Options)
+                {
+                    var existingOption = existing.Options.FirstOrDefault(o => o.Id == option.Id);
+                    if (existingOption != null)
+                    {
+                        existingOption.OptionText = option.OptionText;
+                        existingOption.OptionTextAr = option.OptionTextAr;
+                    }
+                    else
+                    {
+                        // New option, ensure PollId is set if needed or add to collection
+                        existing.Options.Add(option);
+                    }
+                }
+            }
+
+            Polls.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeletePollAsync(int id)
+        {
+            var existing = await Polls.FindAsync(id);
+            if (existing == null) return false;
+
+            Polls.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<PollVote> AddPollVoteAsync(PollVote entity)
+        {
+            var entry = await PollVotes.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<bool> HasEmployeeVotedAsync(int pollId, int employeeId)
+        {
+            return await PollVotes
+                .AnyAsync(pv => pv.PollId == pollId && pv.EmployeeId == employeeId);
+        }
+
+        public async Task<Dictionary<int, int>> GetPollResultsAsync(int pollId)
+        {
+            var results = await PollVotes
+                .Where(pv => pv.PollId == pollId)
+                .GroupBy(pv => pv.PollOptionId)
+                .Select(g => new { OptionId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.OptionId, x => x.Count);
+
+            return results;
         }
 
         #endregion

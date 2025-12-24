@@ -1,0 +1,191 @@
+@page "/poll-vote"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Polls
+@using Platform.Blazor.Services.Employees
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IPollsService PollsService
+@inject IEmployeesService EmployeesService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Active Polls Details</MudText>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (_currentEmployeeId == null)
+{
+    <MudAlert Severity="Severity.Warning">You are not linked to an employee record. Please contact HR.</MudAlert>
+}
+else if (_activePolls.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">There are no active polls at the moment.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        @foreach (var poll in _activePolls)
+        {
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@poll.Question</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@poll.QuestionAr</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (_hasVoted.ContainsKey(poll.Id) && _hasVoted[poll.Id])
+                        {
+                            <MudAlert Severity="Severity.Success">You have already voted on this poll.</MudAlert>
+                        }
+                        else
+                        {
+                            <MudRadioGroup T="int" @bind-Value="@GetSelectionForPoll(poll.Id).SelectedOptionId">
+                                @foreach (var option in poll.Options)
+                                {
+                                    <MudRadio Value="@option.Id" Color="Color.Primary" Class="d-block mb-2">
+                                        @option.OptionText <span class="mud-text-secondary ms-2">@option.OptionTextAr</span>
+                                    </MudRadio>
+                                }
+                            </MudRadioGroup>
+                        }
+                    </MudCardContent>
+                    <MudCardActions>
+                        @if (!_hasVoted.ContainsKey(poll.Id) || !_hasVoted[poll.Id])
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Vote(poll))" Disabled="@(_processingVote == poll.Id)">
+                                @if (_processingVote == poll.Id)
+                                {
+                                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                                    <span class="ms-2">Voting...</span>
+                                }
+                                else
+                                {
+                                    <MudText>Vote</MudText>
+                                }
+                            </MudButton>
+                        }
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private List<Poll> _activePolls = new();
+    private bool _loading = true;
+    private int? _currentEmployeeId;
+    private Dictionary<int, SelectionModel> _selections = new();
+    private Dictionary<int, bool> _hasVoted = new();
+    private int? _processingVote = null;
+
+    private class SelectionModel
+    {
+        public int SelectedOptionId { get; set; }
+    }
+
+    private SelectionModel GetSelectionForPoll(int pollId)
+    {
+        if (!_selections.ContainsKey(pollId))
+            _selections[pollId] = new SelectionModel();
+        return _selections[pollId];
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        try
+        {
+            await IdentifyEmployee();
+            if (_currentEmployeeId != null)
+            {
+                _activePolls = await PollsService.GetActivePollsAsync();
+                
+                // Ideally check which ones user voted on?
+                // The API doesn't support bulk check easily.
+                // We'll just assume not voted or check on vote attempt (for simple MVP).
+                // Or I can filter out voted polls if I had the endpoint.
+                // For now, I'll let them try to vote, if it fails "Already Voted", I'll mark it locally.
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task IdentifyEmployee()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            // Try to find claim
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst("sub")?.Value;
+            // Also check standard "id" claim from Identity
+            if (userId == null) userId = user.FindFirst("id")?.Value;
+
+            if (userId != null)
+            {
+                var employees = await EmployeesService.GetAllEmployeesAsync();
+                var emp = employees.FirstOrDefault(e => e.AspnetusersId == userId);
+                if (emp != null)
+                {
+                    _currentEmployeeId = emp.Id;
+                }
+            }
+        }
+        
+        // Fallback for demo/testing if not found? No, better warn user as done in markup.
+    }
+
+    private async Task Vote(Poll poll)
+    {
+        var selection = GetSelectionForPoll(poll.Id);
+        if (selection.SelectedOptionId == 0)
+        {
+            Snackbar.Add("Please select an option.", Severity.Warning);
+            return;
+        }
+
+        _processingVote = poll.Id;
+        try
+        {
+            var vote = new PollVote
+            {
+                PollId = poll.Id,
+                PollOptionId = selection.SelectedOptionId,
+                EmployeeId = _currentEmployeeId.Value
+            };
+
+            await PollsService.VoteAsync(vote);
+            _hasVoted[poll.Id] = true;
+            Snackbar.Add("Vote recorded successfully!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+             if (ex.Message.Contains("already voted"))
+             {
+                 _hasVoted[poll.Id] = true;
+                 Snackbar.Add("You have already voted on this poll.", Severity.Warning);
+             }
+             else
+             {
+                 Snackbar.Add($"Error voting: {ex.Message}", Severity.Error);
+             }
+        }
+        finally
+        {
+            _processingVote = null;
+        }
+    }
+}
