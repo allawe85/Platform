@@ -10,6 +10,7 @@ using Platform.Blazor.Services.Lookups;
 using Platform.Blazor.Services.Employees;
 using Platform.Blazor.Services.Assets;
 using Platform.Blazor.Services.Documents;
+using Platform.Blazor.Services.Events;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -32,5 +33,6 @@ builder.Services.AddScoped<IApplicationUsersService, ApplicationUsersService>();
 builder.Services.AddScoped<IEmployeesService, EmployeesService>();
 builder.Services.AddScoped<IAssetsService, AssetsService>();
 builder.Services.AddScoped<IDocumentsService, DocumentsService>();
+builder.Services.AddScoped<IEventsService, EventsService>();
 
 await builder.Build().RunAsync();

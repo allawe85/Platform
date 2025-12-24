@@ -36,6 +36,10 @@ namespace Platform.Data
 
         public DbSet<Document> Documents { get; set; }
 
+        public DbSet<EventType> EventTypes { get; set; }
+
+        public DbSet<Event> Events { get; set; }
+
         #endregion
 
 
@@ -513,6 +517,117 @@ namespace Platform.Data
             var existing = await Set<ApplicationUser>().FindAsync(id);
             if (existing == null) return false;
             Set<ApplicationUser>().Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region EventType - CRUD Operations
+
+        public async Task<List<EventType>> GetAllEventTypesAsync()
+        {
+            return await EventTypes
+                         .AsNoTracking()
+                         .ToListAsync();
+        }
+
+        public async Task<EventType?> GetEventTypeByIdAsync(int id)
+        {
+            return await EventTypes.FindAsync(id);
+        }
+
+        public async Task<EventType> AddEventTypeAsync(EventType entity)
+        {
+            var entry = await EventTypes.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<EventType?> UpdateEventTypeAsync(EventType entity)
+        {
+            var existing = await EventTypes.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
+            EventTypes.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteEventTypeAsync(int id)
+        {
+            var existing = await EventTypes.FindAsync(id);
+            if (existing == null) return false;
+
+            EventTypes.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region Event - CRUD Operations
+
+        public async Task<List<Event>> GetAllEventsAsync()
+        {
+            return await Events
+                         .AsNoTracking()
+                         .Include(e => e.EventType)
+                         .ToListAsync();
+        }
+
+        public async Task<Event?> GetEventByIdAsync(int id)
+        {
+            return await Events
+                         .Include(e => e.EventType)
+                         .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<List<Event>> GetEventsByDateRangeAsync(DateTime start, DateTime end)
+        {
+            return await Events
+                         .AsNoTracking()
+                         .Include(e => e.EventType)
+                         .Where(e => e.StartDate >= start && e.EndDate <= end)
+                         .ToListAsync();
+        }
+
+        public async Task<Event> AddEventAsync(Event entity)
+        {
+            var entry = await Events.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<Event?> UpdateEventAsync(Event entity)
+        {
+            var existing = await Events.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+            existing.Location = entity.Location;
+            existing.LocationAr = entity.LocationAr;
+            existing.EventTypeId = entity.EventTypeId;
+            existing.StartDate = entity.StartDate;
+            existing.EndDate = entity.EndDate;
+            existing.Description = entity.Description;
+            existing.DescriptionAr = entity.DescriptionAr;
+
+            Events.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteEventAsync(int id)
+        {
+            var existing = await Events.FindAsync(id);
+            if (existing == null) return false;
+
+            Events.Remove(existing);
             await SaveChangesAsync();
             return true;
         }
