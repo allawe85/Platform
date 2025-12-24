@@ -90,34 +90,10 @@
     }
 </MudPaper>
 
-<MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
-    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@_dialogTitle</MudText>
-        <MudStack Spacing="2">
-            <MudTextField Label="Name" @bind-Value="_currentHierarchy.Name" For="@(() => _currentHierarchy.Name)" />
-            <MudTextField Label="Name (Arabic)" @bind-Value="_currentHierarchy.NameAr" For="@(() => _currentHierarchy.NameAr)" />
-            
-            <MudSelect T="int" Label="Hierarchy Level" @bind-Value="_currentHierarchy.HierarchyLevelId" AnchorOrigin="Origin.BottomCenter">
-                @foreach (var level in Levels)
-                {
-                    <MudSelectItem Value="@level.Id">@level.Name</MudSelectItem>
-                }
-            </MudSelect>
-
-            <MudSelect T="int" Label="Parent" @bind-Value="_currentHierarchy.ParentId" AnchorOrigin="Origin.BottomCenter">
-                <MudSelectItem Value="0">Root</MudSelectItem>
-                @foreach (var h in HierarchyList.Where(x => x.Id != _currentHierarchy.Id)) 
-                {
-                    <MudSelectItem Value="@h.Id">@h.Name</MudSelectItem>
-                }
-            </MudSelect>
-        </MudStack>
-        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="CancelDialog">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitHierarchy">Save</MudButton>
-        </MudStack>
-    </MudPaper>
-</MudOverlay>
+<HierarchyDialog @bind-Visible="_showDialog" 
+                 HierarchyId="_targetHierarchyId" 
+                 DefaultParentId="_targetParentId"
+                 OnClose="OnDialogClose" />
 
 @code {
     private List<Hierarchy> HierarchyList = new();
@@ -132,9 +108,8 @@
 
     // Dialog State
     private bool _showDialog;
-    private Hierarchy _currentHierarchy = new();
-    private string _dialogTitle = "Add Hierarchy";
-    private bool _isEdit = false;
+    private int? _targetHierarchyId;
+    private int? _targetParentId;
     
     // Selection
     private Hierarchy? _selectedHierarchy;
@@ -299,9 +274,8 @@
 
     private void AddRootHierarchy()
     {
-        _currentHierarchy = new Hierarchy { ParentId = 0 };
-        _dialogTitle = "Add Root Hierarchy";
-        _isEdit = false;
+        _targetHierarchyId = null;
+        _targetParentId = 0;
         _showDialog = true;
     }
 
@@ -313,9 +287,8 @@
 
     private void AddChildToNode(Hierarchy parent)
     {
-        _currentHierarchy = new Hierarchy { ParentId = parent.Id };
-        _dialogTitle = $"Add Child to {parent.Name}";
-        _isEdit = false;
+        _targetHierarchyId = null;
+        _targetParentId = parent.Id;
         _showDialog = true;
     }
 
@@ -333,48 +306,15 @@
 
     private void EditHierarchy(Hierarchy hierarchy)
     {
-        _currentHierarchy = new Hierarchy { 
-            Id = hierarchy.Id, 
-            Name = hierarchy.Name, 
-            NameAr = hierarchy.NameAr,
-            HierarchyLevelId = hierarchy.HierarchyLevelId,
-            ParentId = hierarchy.ParentId
-        };
-        _dialogTitle = "Edit Hierarchy";
-        _isEdit = true;
+        _targetHierarchyId = hierarchy.Id;
         _showDialog = true;
     }
 
-    private void CancelDialog()
+    private async Task OnDialogClose(bool success)
     {
-        _showDialog = false;
-    }
-
-    private async Task SubmitHierarchy()
-    {
-        await SaveHierarchy(_currentHierarchy);
-    }
-
-    private async Task SaveHierarchy(Hierarchy hierarchy)
-    {
-        try
+        if (success)
         {
-            if (_isEdit)
-            {
-                await HierarchiesService.UpdateHierarchyAsync(hierarchy.Id, hierarchy);
-                Snackbar.Add("Hierarchy updated", Severity.Success);
-            }
-            else
-            {
-                await HierarchiesService.CreateHierarchyAsync(hierarchy);
-                Snackbar.Add("Hierarchy created", Severity.Success);
-            }
-            _showDialog = false;
-            await LoadHierarchies(); 
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error saving hierarchy: {ex.Message}", Severity.Error);
+            await LoadHierarchies();
         }
     }
 

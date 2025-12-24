@@ -1,0 +1,96 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Polls
+@using MudBlazor
+@inject IPollsService PollsService
+@inject ISnackbar Snackbar
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+     <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+         <MudText Typo="Typo.h6" Class="mb-4">Results</MudText>
+         
+         @if (_loading)
+         {
+             <MudProgressCircular Indeterminate="true" />
+         }
+         else if (_poll != null)
+         {
+            <MudText Typo="Typo.subtitle1" GutterBottom="true">@_poll.Question</MudText>
+            <MudText Typo="Typo.body2" Class="mb-4">Total Votes: @_totalVotes</MudText>
+
+            @foreach (var option in _poll.Options)
+            {
+                var count = _results.ContainsKey(option.Id) ? _results[option.Id] : 0;
+                var percentage = _totalVotes > 0 ? (double)count / _totalVotes * 100 : 0;
+
+                <div class="mb-2">
+                    <div class="d-flex justify-space-between">
+                        <MudText>@option.OptionText</MudText>
+                        <MudText>@count votes (@percentage.ToString("F1")%)</MudText>
+                    </div>
+                    <MudProgressLinear Color="Color.Primary" Value="@percentage" Class="my-1" />
+                </div>
+            }
+         }
+         
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="Close">Close</MudButton>
+        </MudStack>
+     </MudPaper>
+</MudOverlay>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    
+    [Parameter] public int? PollId { get; set; }
+
+    private Poll _poll;
+    private Dictionary<int, int> _results = new();
+    private bool _loading;
+    private int _totalVotes;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible && PollId.HasValue)
+        {
+            await LoadResults(PollId.Value);
+        }
+    }
+
+    private async Task LoadResults(int pollId)
+    {
+        _loading = true;
+        _results.Clear();
+        _totalVotes = 0;
+        try 
+        {
+             // We need the poll details to show options + vote counts
+             // IPollsService has GetPollByIdAsync and GetPollResultsAsync
+             var pollTask = PollsService.GetPollByIdAsync(pollId);
+             var resultsTask = PollsService.GetPollResultsAsync(pollId);
+
+             await Task.WhenAll(pollTask, resultsTask);
+             
+             _poll = await pollTask;
+             _results = await resultsTask;
+             
+             _totalVotes = _results.Sum(x => x.Value);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading results: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Close()
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync();
+    }
+}

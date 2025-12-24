@@ -32,19 +32,7 @@
     </RowTemplate>
 </MudTable>
 
-<MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
-    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@_dialogTitle</MudText>
-        <MudStack Spacing="2">
-            <MudTextField Label="Name" @bind-Value="_currentLevel.Name" For="@(() => _currentLevel.Name)" />
-            <MudTextField Label="Name (Arabic)" @bind-Value="_currentLevel.NameAr" For="@(() => _currentLevel.NameAr)" />
-        </MudStack>
-        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="CancelDialog">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitLevel">Save</MudButton>
-        </MudStack>
-    </MudPaper>
-</MudOverlay>
+<HierarchyLevelDialog @bind-Visible="_showDialog" LevelId="_targetLevelId" OnClose="OnDialogClose" />
 
 @code {
     private List<HierarchyLevel> HierarchyLevels = new();
@@ -52,10 +40,7 @@
     
     // Dialog State
     private bool _showDialog;
-    private HierarchyLevel _currentLevel = new();
-    private string _dialogTitle = "Add Level";
-    private bool _isEdit = false;
-    private DialogOptions _dialogOptions = new() { FullWidth = true, MaxWidth = MaxWidth.Small };
+    private int? _targetLevelId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,50 +66,21 @@
 
     private void AddLevel()
     {
-        _currentLevel = new HierarchyLevel();
-        _dialogTitle = "Add Level";
-        _isEdit = false;
+        _targetLevelId = null;
         _showDialog = true;
     }
 
     private void EditLevel(HierarchyLevel level)
     {
-        _currentLevel = new HierarchyLevel { Id = level.Id, Name = level.Name, NameAr = level.NameAr };
-        _dialogTitle = "Edit Level";
-        _isEdit = true;
+        _targetLevelId = level.Id;
         _showDialog = true;
     }
 
-    private void CancelDialog()
+    private async Task OnDialogClose(bool success)
     {
-        _showDialog = false;
-    }
-
-    private async Task SubmitLevel()
-    {
-        await SaveLevel(_currentLevel);
-    }
-
-    private async Task SaveLevel(HierarchyLevel level)
-    {
-        try
+        if (success)
         {
-            if (_isEdit)
-            {
-                await HierarchiesService.UpdateLevelAsync(level.Id, level);
-                Snackbar.Add("Level updated", Severity.Success);
-            }
-            else
-            {
-                await HierarchiesService.CreateLevelAsync(level);
-                Snackbar.Add("Level created", Severity.Success);
-            }
-            _showDialog = false;
             await LoadLevels();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error saving level: {ex.Message}", Severity.Error);
         }
     }
 
