@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Hierarchies" xml:space="preserve">
+    <value>Hierarchies</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Levels</value>
+  </data>
+  <data name="Employees" xml:space="preserve">
+    <value>Employees</value>
+  </data>
+  <data name="Assets" xml:space="preserve">
+    <value>Assets</value>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="Configurations" xml:space="preserve">
+    <value>Configurations</value>
+  </data>
+  <data name="AssetStatuses" xml:space="preserve">
+    <value>Asset Statuses</value>
+  </data>
+  <data name="AssetTypes" xml:space="preserve">
+    <value>Asset Types</value>
+  </data>
+  <data name="DocumentTypes" xml:space="preserve">
+    <value>Document Types</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+    <data name="HierarchiesManagement" xml:space="preserve">
+    <value>Hierarchies Management</value>
+  </data>
+    <data name="HRManagement" xml:space="preserve">
+    <value>HR Management</value>
+  </data>
+</root>
