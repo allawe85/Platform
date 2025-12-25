@@ -14,6 +14,12 @@
 
 <MudLayout>
     <style>
+        :root {
+            --mud-appbar-height: 100px;
+        }
+        .mud-drawer.mud-drawer-fixed {
+            top: 100px !important;
+        }
         .mud-nav-link-text {
             font-weight: 700 !important;
             font-size: 1.1rem !important;
@@ -52,7 +58,7 @@
                 <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">@Loc["Levels"]</MudNavLink>
                 <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">@Loc["Hierarchies"]</MudNavLink>
             </MudNavGroup>
-            <MudNavGroup Title="@Loc["Events"]" Icon="@Icons.Material.Filled.Event" Expanded="true">
+            <MudNavGroup Title="@Loc["Events"]" Icon="@Icons.Material.Filled.Event">
                 <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">@Loc["Calendar"]</MudNavLink>
                 <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">@Loc["EventTypes"]</MudNavLink>
             </MudNavGroup>
