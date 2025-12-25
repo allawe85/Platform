@@ -6,6 +6,7 @@
 @inject IHierarchiesService HierarchiesService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 
 <MudText Typo="Typo.h5" Class="mb-4">Hierarchies</MudText>
 
@@ -22,6 +23,7 @@
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomOut" OnClick="ZoomOut" Color="Color.Secondary" />
                 <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">Reset</MudButton>
             }
+            <MudIconButton Icon="@Icons.Material.Filled.Print" OnClick="Print" Color="Color.Default" Variant="Variant.Outlined" Title="Print" Class="ml-2"/>
         </div>
         <MudSpacer />
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">Add Root</MudButton>
@@ -362,6 +364,11 @@
     private void ZoomIn() => _zoomLevel = Math.Min(_zoomLevel + 0.1, 2.0);
     private void ZoomOut() => _zoomLevel = Math.Max(_zoomLevel - 0.1, 0.4);
     private void ResetZoom() => _zoomLevel = 1.0;
+
+    private async Task Print()
+    {
+        await JSRuntime.InvokeVoidAsync("print");
+    }
 
     // --- Renderers ---
 
