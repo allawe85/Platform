@@ -118,7 +118,7 @@ else
     private List<Event> _events = new();
     private List<EventType> _eventTypes = new();
     private bool _loading = true;
-    private DateRange _dateRange = new DateRange(DateTime.Now.Date, DateTime.Now.Date.AddDays(30));
+    private DateRange _dateRange = new DateRange(null, null);
     private int? _selectedEventTypeId;
 
     // Dialog
@@ -155,17 +155,23 @@ else
         _loading = true;
         try
         {
+            List<Event> events;
+
             if (_dateRange.Start.HasValue && _dateRange.End.HasValue)
             {
-                var events = await EventsService.GetEventsByRangeAsync(_dateRange.Start.Value, _dateRange.End.Value);
-                
-                if (_selectedEventTypeId.HasValue)
-                {
-                    events = events.Where(e => e.EventTypeId == _selectedEventTypeId.Value).ToList();
-                }
-
-                _events = events.OrderBy(e => e.StartDate).ToList();
+                events = await EventsService.GetEventsByRangeAsync(_dateRange.Start.Value, _dateRange.End.Value);
             }
+            else
+            {
+                events = await EventsService.GetEventsAsync();
+            }
+                
+            if (_selectedEventTypeId.HasValue)
+            {
+                events = events.Where(e => e.EventTypeId == _selectedEventTypeId.Value).ToList();
+            }
+
+            _events = events.OrderBy(e => e.StartDate).ToList();
         }
         catch (Exception ex)
         {
