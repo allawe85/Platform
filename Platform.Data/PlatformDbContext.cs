@@ -44,6 +44,8 @@ namespace Platform.Data
         public DbSet<PollOption> PollOptions { get; set; }
         public DbSet<PollVote> PollVotes { get; set; }
 
+        public DbSet<TimeAttendance> TimeAttendances { get; set; }
+
         #endregion
 
 
@@ -745,6 +747,41 @@ namespace Platform.Data
                 .ToDictionaryAsync(x => x.OptionId, x => x.Count);
 
             return results;
+        }
+
+        #endregion
+        #region TimeAttendance - Operations
+
+        public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
+        {
+            var entry = await TimeAttendances.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<List<TimeAttendance>> GetTimeAttendanceByEmployeeIdAsync(int employeeId)
+        {
+            return await TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.EmployeeId == employeeId)
+                .OrderByDescending(ta => ta.TransactionTime)
+                .ToListAsync();
+        }
+
+        public async Task<List<TimeAttendance>> GetTimeAttendanceReportAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
+        {
+            var query = TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.TransactionTime >= startDate && ta.TransactionTime <= endDate);
+
+            if (employeeId.HasValue)
+            {
+                query = query.Where(ta => ta.EmployeeId == employeeId.Value);
+            }
+
+            return await query
+                .OrderBy(ta => ta.TransactionTime)
+                .ToListAsync();
         }
 
         #endregion
