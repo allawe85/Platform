@@ -7,9 +7,9 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Polls Management</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["PollsManagementTitle"]</MudText>
 
-<MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="AddPoll" Class="mb-4">Add New Poll</MudButton>
+<MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="AddPoll" Class="mb-4">@Loc["AddNewPoll"]</MudButton>
 
 @if (_loading)
 {
@@ -20,30 +20,30 @@ else
     <MudTable Items="@_polls" Hover="true" Striped="true" Elevation="1">
         <HeaderContent>
             <MudTh>ID</MudTh>
-            <MudTh>Question</MudTh>
-            <MudTh>Question (Ar)</MudTh>
-            <MudTh>Active</MudTh>
-            <MudTh>Options</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@Loc["Question"]</MudTh>
+            <MudTh>@Loc["QuestionAr"]</MudTh>
+            <MudTh>@Loc["Active"]</MudTh>
+            <MudTh>@Loc["Options"]</MudTh>
+            <MudTh>@Loc["Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="ID">@context.Id</MudTd>
-            <MudTd DataLabel="Question">@context.Question</MudTd>
-            <MudTd DataLabel="Question (Ar)">@context.QuestionAr</MudTd>
-            <MudTd DataLabel="Active">
+            <MudTd DataLabel="@Loc["Question"]">@context.Question</MudTd>
+            <MudTd DataLabel="@Loc["QuestionAr"]">@context.QuestionAr</MudTd>
+            <MudTd DataLabel="@Loc["Active"]">
                 @if (context.IsActive)
                 {
-                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small">@Loc["Active"]</MudChip>
                 }
                 else
                 {
-                    <MudChip T="string" Color="Color.Default" Size="Size.Small">Inactive</MudChip>
+                    <MudChip T="string" Color="Color.Default" Size="Size.Small">@Loc["Inactive"]</MudChip>
                 }
             </MudTd>
-            <MudTd DataLabel="Options">@context.Options?.Count</MudTd>
+            <MudTd DataLabel="@Loc["Options"]">@context.Options?.Count</MudTd>
             <MudTd DataLabel="Actions">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditPoll(context))" Size="Size.Small" />
-                <MudIconButton Icon="@Icons.Material.Filled.BarChart" Color="Color.Secondary" OnClick="@(() => ShowResults(context))" Size="Size.Small" Title="Results" />
+                <MudIconButton Icon="@Icons.Material.Filled.BarChart" Color="Color.Secondary" OnClick="@(() => ShowResults(context))" Size="Size.Small" Title="@Loc["Results"]" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeletePoll(context))" Size="Size.Small" />
             </MudTd>
         </RowTemplate>
@@ -115,16 +115,16 @@ else
     private async Task DeletePoll(Poll poll)
     {
          bool? result = await DialogService.ShowMessageBox(
-            "Warning", 
-            $"Deleting {poll.Question} can not be undone!", 
-            yesText:"Delete!", cancelText:"Cancel");
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"].ToString(), poll.Question), 
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {
             try
             {
                 await PollsService.DeletePollAsync(poll.Id);
-                Snackbar.Add("Poll deleted successfully", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
                 await LoadPolls();
             }
             catch (Exception ex)

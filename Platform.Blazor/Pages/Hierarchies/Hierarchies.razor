@@ -7,12 +7,12 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Hierarchies</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["Hierarchies"]</MudText>
 
 <MudPaper Class="pa-4">
     <MudToolBar>
          <div class="view-toggle">
-            <MudTooltip Text="@(_isChartView ? "Switch to Tree View" : "Switch to Chart View")">
+            <MudTooltip Text="@(_isChartView ? Loc["SwitchToTreeView"] : Loc["SwitchToChartView"])">
                 <MudIconButton Icon="@(_isChartView ? Icons.Material.Filled.List : Icons.Material.Filled.AccountTree)" 
                                OnClick="ToggleView" Color="Color.Primary" Variant="Variant.Outlined" />
             </MudTooltip>
@@ -20,15 +20,21 @@
             {
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomIn" OnClick="ZoomIn" Color="Color.Secondary" />
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomOut" OnClick="ZoomOut" Color="Color.Secondary" />
-                <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">Reset</MudButton>
+                <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">@Loc["Reset"]</MudButton>
             }
         </div>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">Add Root</MudButton>
+        <MudTextField @bind-Value="_searchQuery" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" 
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mr-4"
+                      Clearable="true" OnClearButtonClick="HandleSearchClear"
+                      OnKeyUp="HandleSearchKeyUp"
+                      Style="max-width: 300px; font-size: 1.1rem; font-weight: 700;" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="BuildTree" Class="mr-2">@Loc["Search"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">@Loc["AddRoot"]</MudButton>
          @if (!_isChartView) {
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">Add Child</MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="EditSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" />
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">@Loc["AddChild"]</MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="EditSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Edit"]" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Delete"]" />
          }
     </MudToolBar>
 
@@ -85,7 +91,7 @@
         
         @if (TreeRoots.Count == 0)
         {
-             <MudText Class="ma-4">No hierarchies found. Add a root hierarchy to get started.</MudText>
+             <MudText Class="ma-4">@Loc["NoHierarchiesFound"]</MudText>
         }
     }
 </MudPaper>
@@ -113,6 +119,23 @@
     
     // Selection
     private Hierarchy? _selectedHierarchy;
+
+    // Search
+    private string _searchQuery = "";
+
+    private void HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            BuildTree();
+        }
+    }
+
+    private void HandleSearchClear()
+    {
+        _searchQuery = "";
+        BuildTree();
+    }
 
     // Colors mapping
     private Dictionary<int, string> _levelColors = new();
@@ -166,14 +189,30 @@
     private void BuildTree()
     {
          foreach(var item in HierarchyList) item.Children.Clear();
-         TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
-         foreach(var item in HierarchyList)
+         
+         var filteredList = HierarchyList;
+         if (!string.IsNullOrWhiteSpace(_searchQuery))
+         {
+             filteredList = HierarchyList.Where(x => 
+                (x.Name != null && x.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)) ||
+                (x.NameAr != null && x.NameAr.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+             ).ToList();
+
+             // When searching, we include root nodes that match OR have matching children
+             // But simpler: just show matching nodes as roots if their parent is NOT in the filtered set.
+             TreeRoots = filteredList.Where(x => x.ParentId == 0 || !filteredList.Any(p => p.Id == x.ParentId)).ToList();
+         }
+         else
+         {
+             TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
+         }
+
+         foreach(var item in filteredList)
          {
              if (item.ParentId != 0)
              {
-                 var parent = HierarchyList.FirstOrDefault(x => x.Id == item.ParentId);
+                 var parent = filteredList.FirstOrDefault(x => x.Id == item.ParentId);
                  if (parent != null) parent.Children.Add(item);
-                 else if (!TreeRoots.Contains(item)) TreeRoots.Add(item);
              }
          }
          
@@ -321,16 +360,16 @@
     private async Task DeleteHierarchy(Hierarchy hierarchy)
     {
         bool? result = await DialogService.ShowMessageBox(
-            "Warning", 
-            $"Deleting {hierarchy.Name} can not be undone!", 
-            yesText:"Delete!", cancelText:"Cancel");
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"].ToString(), hierarchy.Name), 
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {
             try
             {
                 await HierarchiesService.DeleteHierarchyAsync(hierarchy.Id);
-                Snackbar.Add("Hierarchy deleted", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
                 await LoadHierarchies();
                 _selectedHierarchy = null; 
             }
@@ -383,13 +422,13 @@
                     <div class="node-actions">
                          <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
                                         Variant="Variant.Filled" Color="Color.Surface" 
-                                        OnClick="@(() => AddChildToNode(node))" Title="Add Child" />
+                                        OnClick="@(() => AddChildToNode(node))" Title="@Loc["AddChild"]" />
                          <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
                                         Variant="Variant.Filled" Color="Color.Surface" 
-                                        OnClick="@(() => EditHierarchy(node))" Title="Edit" />
+                                        OnClick="@(() => EditHierarchy(node))" Title="@Loc["Edit"]" />
                          <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
                                         Variant="Variant.Filled" Color="Color.Error" 
-                                        OnClick="@(() => DeleteHierarchy(node))" Title="Delete" />
+                                        OnClick="@(() => DeleteHierarchy(node))" Title="@Loc["Delete"]" />
                     </div>
                 </div>
                 @if (node.Children != null && node.Children.Count > 0)

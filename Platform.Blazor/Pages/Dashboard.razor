@@ -1,6 +1,11 @@
 ﻿@page "/dashboard"
+@using System.Globalization
 @attribute [Authorize]
 
-<MudText Typo="Typo.h3" GutterBottom="true">Dashboard</MudText>
-<MudText Class="mb-8">Welcome to your new dashboard!</MudText>
-<MudAlert Severity="Severity.Normal">You are logged in.</MudAlert>
+<MudText Typo="Typo.h3" GutterBottom="true">@Loc["Dashboard"]</MudText>
+<MudText Class="mb-8">@Loc["DashboardWelcome"]</MudText>
+<MudAlert Severity="Severity.Normal" Class="mud-width-full" Style="text-align: right;">
+    <div dir="@(CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr")">
+        @Loc["LoggedInAlert"]
+    </div>
+</MudAlert>
