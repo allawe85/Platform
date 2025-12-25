@@ -1,6 +1,10 @@
 ﻿@using System.Globalization
+@using Platform.Blazor.Services
+@inject IJSRuntime JSRuntime
+@inject LayoutService LayoutService
+@implements IDisposable
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@_azureTheme" IsDarkMode="@LayoutService.IsDarkMode" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
@@ -23,4 +27,34 @@
 
 @code {
     private bool IsRtl => CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+
+    private MudTheme _azureTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#007FFF",
+            AppbarBackground = "#007FFF",
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = "#007FFF",
+            AppbarBackground = "#007FFF",
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LayoutService.OnMajorUpdate += StateHasChanged;
+
+        var isDarkString = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "darkMode");
+        if (bool.TryParse(isDarkString, out var isDark))
+        {
+            LayoutService.SetDarkMode(isDark);
+        }
+    }
+
+    public void Dispose()
+    {
+        LayoutService.OnMajorUpdate -= StateHasChanged;
+    }
 }

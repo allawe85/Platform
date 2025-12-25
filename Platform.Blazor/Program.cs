@@ -14,6 +14,7 @@ using Platform.Blazor.Services.Employees;
 using Platform.Blazor.Services.Assets;
 using Platform.Blazor.Services.Documents;
 using Platform.Blazor.Services.Events;
+using Platform.Blazor.Services;
 using Platform.Blazor.Services.Polls;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -29,6 +30,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddMudServices();
+builder.Services.AddScoped<LayoutService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IHierarchiesService, HierarchiesService>();
 builder.Services.AddScoped<ILookupsService, LookupsService>();
