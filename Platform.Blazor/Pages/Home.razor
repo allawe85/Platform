@@ -1,0 +1,22 @@
+﻿@page "/"
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Index</PageTitle>
+
+<MudText Typo="Typo.h6">Constructing platform...</MudText>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Nav.NavigateTo("/dashboard");
+        }
+        else
+        {
+            Nav.NavigateTo("/login");
+        }
+    }
+}

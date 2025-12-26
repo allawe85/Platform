@@ -1,0 +1,125 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Hierarchies
+@using MudBlazor
+@inject IHierarchiesService HierarchiesService
+@inject ISnackbar Snackbar
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Hierarchy" : "Add Hierarchy")</MudText>
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudStack Spacing="2">
+                <MudTextField Label="Name" @bind-Value="_hierarchy.Name" Required="true" For="@(() => _hierarchy.Name)" />
+                <MudTextField Label="Name (Arabic)" @bind-Value="_hierarchy.NameAr" For="@(() => _hierarchy.NameAr)" />
+                
+                <MudSelect T="int" Label="Hierarchy Level" @bind-Value="_hierarchy.HierarchyLevelId" AnchorOrigin="Origin.BottomCenter" Required="true">
+                    @foreach (var level in _levels)
+                    {
+                        <MudSelectItem Value="@level.Id">@level.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="int" Label="Parent" @bind-Value="_hierarchy.ParentId" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem Value="0">Root</MudSelectItem>
+                    @foreach (var h in _potentialParents) 
+                    {
+                        <MudSelectItem Value="@h.Id">@h.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+        </MudForm>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter] public int? HierarchyId { get; set; }
+    [Parameter] public int? DefaultParentId { get; set; }
+
+    private Hierarchy _hierarchy = new();
+    private List<HierarchyLevel> _levels = new();
+    private List<Hierarchy> _allHierarchies = new();
+    private List<Hierarchy> _potentialParents => _allHierarchies.Where(x => x.Id != _hierarchy.Id).ToList();
+
+    private MudForm _form;
+    private bool _success;
+    private bool _isEdit => HierarchyId.HasValue && HierarchyId.Value > 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible)
+        {
+             await LoadLookups();
+
+            if (_isEdit)
+            {
+                 var existing = _allHierarchies.FirstOrDefault(x => x.Id == HierarchyId.Value);
+                 if (existing != null) 
+                 {
+                     _hierarchy = new Hierarchy {
+                         Id = existing.Id,
+                         Name = existing.Name,
+                         NameAr = existing.NameAr,
+                         HierarchyLevelId = existing.HierarchyLevelId,
+                         ParentId = existing.ParentId
+                     };
+                 }
+            }
+            else
+            {
+                _hierarchy = new Hierarchy { ParentId = DefaultParentId ?? 0 };
+            }
+        }
+    }
+
+    private async Task LoadLookups()
+    {
+         var levelsTask = HierarchiesService.GetLevelsAsync();
+         var hierarchiesTask = HierarchiesService.GetHierarchiesAsync();
+         await Task.WhenAll(levelsTask, hierarchiesTask);
+         _levels = await levelsTask;
+         _allHierarchies = await hierarchiesTask;
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (_success)
+        {
+            try 
+            {
+                if (_isEdit)
+                {
+                    await HierarchiesService.UpdateHierarchyAsync(_hierarchy.Id, _hierarchy);
+                    Snackbar.Add("Hierarchy updated", Severity.Success);
+                }
+                else
+                {
+                    await HierarchiesService.CreateHierarchyAsync(_hierarchy);
+                    Snackbar.Add("Hierarchy created", Severity.Success);
+                }
+                await Close(true);
+            }
+            catch(Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task Close(bool result)
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync(result);
+    }
+    
+    private async Task Cancel() => await Close(false);
+}

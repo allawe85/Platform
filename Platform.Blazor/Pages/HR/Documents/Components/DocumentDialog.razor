@@ -1,0 +1,145 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Documents
+@using Platform.Blazor.Services.Lookups
+@using Platform.Blazor.Services.Employees
+@using MudBlazor
+@inject IDocumentsService DocumentsService
+@inject ILookupsService LookupsService
+@inject IEmployeesService EmployeesService
+@inject ISnackbar Snackbar
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Document" : "Add Document")</MudText>
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_document.Title" Label="Title" Required="true" />
+                <MudTextField @bind-Value="_document.Details" Label="Details" Lines="3" />
+                
+                <MudSelect T="int" @bind-Value="_document.DocumentTypeId" Label="Document Type" Required="true" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var type in _documentTypes)
+                    {
+                        <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="int" @bind-Value="_document.EmployeeId" Label="Employee" Required="true" AnchorOrigin="Origin.BottomCenter" Disabled="@(_fixedEmployee)">
+                    @foreach (var emp in _employees)
+                    {
+                        <MudSelectItem Value="@emp.Id">@emp.CivilId - @emp.EmployeeId</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudDatePicker Label="Expiry Date" @bind-Date="_expiryDate" Required="true" />
+            </MudStack>
+        </MudForm>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? "Update" : "Create")</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter] public int? DocumentId { get; set; }
+    [Parameter] public int? PreselectedEmployeeId { get; set; }
+
+    private Document _document = new Document();
+    private List<DocumentType> _documentTypes = new();
+    private List<EmployeeInfo> _employees = new();
+    
+    private DateTime? _expiryDate;
+
+    private MudForm _form;
+    private bool _success;
+    private bool _isEdit => DocumentId.HasValue;
+    private bool _fixedEmployee => PreselectedEmployeeId.HasValue;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible)
+        {
+            if (DocumentId.HasValue)
+            {
+                var doc = await DocumentsService.GetDocumentByIdAsync(DocumentId.Value);
+                if (doc != null)
+                {
+                    _document = doc;
+                    _expiryDate = _document.ExpiryDate;
+                }
+            }
+            else
+            {
+                _document = new Document();
+                _expiryDate = DateTime.Today.AddYears(1);
+                
+                if (PreselectedEmployeeId.HasValue)
+                {
+                    _document.EmployeeId = PreselectedEmployeeId.Value;
+                }
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var typesTask = LookupsService.GetDocumentTypesAsync();
+        var employeesTask = EmployeesService.GetAllEmployeesAsync();
+
+        await Task.WhenAll(typesTask, employeesTask);
+
+        _documentTypes = await typesTask;
+        _employees = await employeesTask;
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_success)
+        {
+            if (_expiryDate.HasValue) _document.ExpiryDate = _expiryDate.Value;
+
+            if (_isEdit)
+            {
+                var result = await DocumentsService.UpdateDocumentAsync(_document.Id, _document);
+                if (result != null)
+                {
+                    Snackbar.Add("Document updated successfully", Severity.Success);
+                    await Close(true);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to update document", Severity.Error);
+                }
+            }
+            else
+            {
+                try
+                {
+                    _document.Id = 0;
+                    await DocumentsService.CreateDocumentAsync(_document);
+                    Snackbar.Add("Document created successfully", Severity.Success);
+                    await Close(true);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Failed to create document: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+    }
+
+    private async Task Close(bool success = false)
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync(success);
+    }
+    
+    private async Task Cancel() => await Close(false);
+}

@@ -1,0 +1,144 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Polls
+@using MudBlazor
+@inject IPollsService PollsService
+@inject ISnackbar Snackbar
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Poll" : "Add New Poll")</MudText>
+        <MudForm Model="@_poll" @ref="_form">
+            <MudTextField Label="Question" @bind-Value="_poll.Question" Required="true" RequiredError="Question is required" />
+            <MudTextField Label="Question (Arabic)" @bind-Value="_poll.QuestionAr" Required="true" RequiredError="Question (Arabic) is required" />
+            <MudCheckBox T="bool" @bind-Value="_poll.IsActive" Label="Active" Color="Color.Primary" For="@(() => _poll.IsActive)"></MudCheckBox>
+
+            <MudText Typo="Typo.h6" Class="mt-4">Options</MudText>
+            @if (_poll.Options != null)
+            {
+                 <MudList T="string">
+                    @foreach (var option in _poll.Options)
+                    {
+                        <MudListItem>
+                            <MudStack Row="true" AlignItems="AlignItems.Center"> 
+                                <MudTextField Label="Option" @bind-Value="option.OptionText" Required="true" RequiredError="Option text is required" />
+                                <MudTextField Label="Option (Arabic)" @bind-Value="option.OptionTextAr" Required="true" RequiredError="Option text (Arabic) is required" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveOption(option))" Color="Color.Error" />
+                            </MudStack>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOption" Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-2">Add Option</MudButton>
+        </MudForm>
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+    [Parameter] public int? PollId { get; set; }
+
+    private Poll _poll = new() { Options = new List<PollOption>() };
+    private MudForm _form;
+    private bool _isEdit => PollId.HasValue && PollId.Value > 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible)
+        {
+            if (_isEdit)
+            {
+                 var poll = await PollsService.GetPollByIdAsync(PollId.Value);
+                 if (poll != null)
+                 {
+                     // Deep copy for editing safely
+                     _poll = new Poll 
+                     { 
+                        Id = poll.Id, 
+                        Question = poll.Question, 
+                        QuestionAr = poll.QuestionAr, 
+                        IsActive = poll.IsActive,
+                        Options = new List<PollOption>()
+                     };
+
+                     if (poll.Options != null)
+                     {
+                        foreach(var opt in poll.Options)
+                        {
+                            _poll.Options.Add(new PollOption 
+                            { 
+                                Id = opt.Id, 
+                                PollId = opt.PollId, 
+                                OptionText = opt.OptionText, 
+                                OptionTextAr = opt.OptionTextAr 
+                            });
+                        }
+                     }
+                 }
+            }
+            else
+            {
+                _poll = new Poll { Options = new List<PollOption>(), IsActive = true };
+                // Add default 2 options? Logic in original code didn't force it but validation did.
+                // Original code: _currentPoll = new Poll { Options = new List<PollOption>(), IsActive = true };
+            }
+        }
+    }
+
+    private void AddOption()
+    {
+        if (_poll.Options == null) _poll.Options = new List<PollOption>();
+        _poll.Options.Add(new PollOption());
+    }
+
+    private void RemoveOption(PollOption option)
+    {
+        _poll.Options.Remove(option);
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        if (_poll.Options == null || _poll.Options.Count < 2)
+        {
+            Snackbar.Add("Poll must have at least 2 options.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            if (_isEdit)
+            {
+                await PollsService.UpdatePollAsync(_poll.Id, _poll);
+                Snackbar.Add("Poll updated successfully", Severity.Success);
+            }
+            else
+            {
+                await PollsService.AddPollAsync(_poll);
+                Snackbar.Add("Poll added successfully", Severity.Success);
+            }
+            await Close(true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving poll: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task Close(bool result)
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync(result);
+    }
+    
+    private async Task Cancel() => await Close(false);
+}

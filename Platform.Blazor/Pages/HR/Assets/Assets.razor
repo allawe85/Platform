@@ -1,0 +1,122 @@
+@page "/assets"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Assets
+@using Platform.Blazor.Pages.HR.Assets.Components
+@inject IAssetsService AssetsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["AssetsManagementTitle"]</MudText>
+
+<MudTable Items="@_assets" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="new Func<Asset,bool>(FilterFunc)" Elevation="4">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@Loc["AllAssets"]</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">@Loc["Add"]</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>@Loc["Details"]</MudTh>
+        <MudTh>@Loc["Type"]</MudTh>
+        <MudTh>@Loc["Status"]</MudTh>
+        <MudTh>@Loc["AssignedTo"]</MudTh>
+        <MudTh>@Loc["ReceiveDate"]</MudTh>
+        <MudTh>@Loc["ReturnDate"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="@Loc["Details"]">@context.Details</MudTd>
+        <MudTd DataLabel="@Loc["Type"]">@context.AssetType?.Name</MudTd>
+        <MudTd DataLabel="@Loc["Status"]">@context.Status?.Name</MudTd>
+        <MudTd DataLabel="@Loc["AssignedTo"]">@(@context.Employee != null ? $"{context.Employee.CivilId} - {context.Employee.EmployeeId}" : Loc["Unassigned"])</MudTd>
+        <MudTd DataLabel="@Loc["ReceiveDate"]">@context.ReceiveDate.ToShortDateString()</MudTd>
+        <MudTd DataLabel="@Loc["ReturnDate"]">@(context.ReturnDate?.ToShortDateString())</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsset(context))" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<AssetDialog @bind-Visible="_showDialog" AssetId="_selectedAssetId" OnClose="OnDialogClose" />
+
+@code {
+    private List<Asset> _assets = new();
+    private string _searchString = "";
+    private bool _showDialog;
+    private int? _selectedAssetId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _assets = await AssetsService.GetAllAssetsAsync();
+    }
+
+    private bool FilterFunc(Asset element)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        if (element.Details != null && element.Details.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.AssetType?.Name != null && element.AssetType.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        // Search by employee
+        if (element.Employee != null)
+        {
+             if (element.Employee.EmployeeId.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+             if (element.Employee.CivilId.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+
+        return false;
+    }
+
+    private void OpenAddDialog()
+    {
+        _selectedAssetId = null;
+        _showDialog = true;
+    }
+
+    private void OpenEditDialog(Asset asset)
+    {
+        _selectedAssetId = asset.Id;
+        _showDialog = true;
+    }
+
+    private async Task OnDialogClose(bool success)
+    {
+        if (success)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteAsset(Asset asset)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            Loc["Warning"],
+            string.Format(Loc["ConfirmDelete"].ToString(), asset.Details),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+        if (result == true)
+        {
+            var success = await AssetsService.DeleteAssetAsync(asset.Id);
+            if (success)
+            {
+                Snackbar.Add(Loc["Success"], Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add(Loc["Error"], Severity.Error);
+            }
+        }
+    }
+}

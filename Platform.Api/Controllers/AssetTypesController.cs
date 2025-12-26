@@ -16,37 +16,37 @@ namespace Platform.Api.Controllers
             _context = context;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllAssetTypesController() {
+        public async Task<IActionResult> GetAllAssetTypes() {
 
-            var AssetTypes = await _context.GetAllAssetTypesAsync();
-            return Ok(AssetTypes);
+            var assetTypes = await _context.GetAllAssetTypesAsync();
+            return Ok(assetTypes);
         }
         [HttpGet]
         [Route("{id:int}")]
         public async Task<IActionResult> GetAssetTypeById(int id)
         {
-            var AssetType = await _context.GetAssetTypeByIdAsync(id);
-            if (AssetType == null)
+            var assetType = await _context.GetAssetTypeByIdAsync(id);
+            if (assetType == null)
             {
                 return NotFound();
             }
-            return Ok(AssetType);
+            return Ok(assetType);
         }
         [HttpPost]
-        public async Task<IActionResult> CreateAssetType([FromBody] Data.DTOs.AssetType assettype)
+        public async Task<IActionResult> CreateAssetType([FromBody] Data.DTOs.AssetType assetType)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var createdAssetType = await _context.AddAssetTypeAsync(assettype);
+            var createdAssetType = await _context.AddAssetTypeAsync(assetType);
             return CreatedAtAction(nameof(GetAssetTypeById), new { id = createdAssetType.Id }, createdAssetType);
         }
         [HttpPut]
         [Route("{id:int}")]
-        public async Task<IActionResult> UpdateAssetType(int id, [FromBody] Data.DTOs.AssetType assettype)
+        public async Task<IActionResult> UpdateAssetType(int id, [FromBody] Data.DTOs.AssetType assetType)
         {
-            if (id != assettype.Id)
+            if (id != assetType.Id)
             {
                 return BadRequest("AssetType ID mismatch");
             }
@@ -54,7 +54,7 @@ namespace Platform.Api.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var updatedAssetType = await _context.UpdateAssetTypeAsync(assettype);
+            var updatedAssetType = await _context.UpdateAssetTypeAsync(assetType);
             if (updatedAssetType == null)
             {
                 return NotFound();

@@ -1,0 +1,128 @@
+@page "/employees"
+@using Platform.Blazor.Services.Employees
+@using Platform.Data.DTOs
+@using Platform.Blazor.Pages.HR.Employees.Components
+@inject IEmployeesService EmployeesService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["EmployeesManagementTitle"]</MudText>
+
+<MudTable Items="@_employees" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="new Func<EmployeeInfo,bool>(FilterFunc)" Elevation="4">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@Loc["Employees"]</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">@Loc["Add"]</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>@Loc["CivilId"]</MudTh>
+        <MudTh>@Loc["EmployeeId"]</MudTh>
+        <MudTh>@Loc["Hierarchy"]</MudTh>
+        <MudTh>@Loc["UserAccount"]</MudTh>
+        <MudTh>@Loc["Email"]</MudTh>
+        <MudTh>@Loc["Phone"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="@Loc["CivilId"]">@context.CivilId</MudTd>
+        <MudTd DataLabel="@Loc["EmployeeId"]">@context.EmployeeId</MudTd>
+        <MudTd DataLabel="@Loc["Hierarchy"]">@context.HierarchyName</MudTd>
+        <MudTd DataLabel="@Loc["UserAccount"]">@context.UserName</MudTd>
+        <MudTd DataLabel="@Loc["Email"]">@context.Email</MudTd>
+        <MudTd DataLabel="@Loc["Phone"]">@context.PhoneNumber</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditDialog(context.Id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteEmployee(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Size="Size.Small" OnClick="@(() => ViewDetails(context.Id))" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<EmployeeDialog @bind-Visible="_showDialog" EmployeeId="_selectedEmployeeId" OnClose="OnDialogClose" />
+
+@code {
+    private List<EmployeeInfo> _employees = new();
+    private string _searchString = "";
+    private bool _showDialog;
+    private int? _selectedEmployeeId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _employees = await EmployeesService.GetAllEmployeesAsync();
+    }
+
+    private bool FilterFunc(EmployeeInfo element)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        if (element.CivilId != null && element.CivilId.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.EmployeeId != null && element.EmployeeId.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Email != null && element.Email.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.PhoneNumber != null && element.PhoneNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.UserName != null && element.UserName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private void OpenAddDialog()
+    {
+        _selectedEmployeeId = null;
+        _showDialog = true;
+    }
+
+    private void OpenEditDialog(int id)
+    {
+        _selectedEmployeeId = id;
+        _showDialog = true;
+    }
+
+    private async Task OnDialogClose(bool success)
+    {
+        if (success)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteEmployee(EmployeeInfo employee)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            Loc["Warning"],
+            string.Format(Loc["ConfirmDelete"].ToString(), employee.EmployeeId),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+        if (result == true)
+        {
+            var success = await EmployeesService.DeleteEmployeeAsync(employee.Id);
+            if (success)
+            {
+                Snackbar.Add(Loc["Success"], Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add(Loc["Error"], Severity.Error);
+            }
+        }
+    }
+    
+    private void ViewDetails(int id)
+    {
+        Nav.NavigateTo($"/employees/{id}");
+    }
+}

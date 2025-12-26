@@ -1,0 +1,146 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Employees
+@using Platform.Blazor.Services.Hierarchies
+@using Platform.Blazor.Services.Auth
+@using MudBlazor
+@inject IEmployeesService EmployeesService
+@inject IHierarchiesService HierarchiesService
+@inject IApplicationUsersService UsersService
+@inject ISnackbar Snackbar
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Employee" : "Add Employee")</MudText>
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_employee.CivilId" Label="Civil ID" Required="true" RequiredError="Civil ID is required!" />
+                <MudTextField @bind-Value="_employee.EmployeeId" Label="Employee ID" Required="true" RequiredError="Employee ID is required!" />
+                
+                <MudSelect T="int" @bind-Value="_employee.HierarchyId" Label="Hierarchy" Required="true" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var hierarchy in _hierarchies)
+                    {
+                        <MudSelectItem Value="@hierarchy.Id">@hierarchy.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="string" @bind-Value="_employee.AspnetusersId" Label="User Account" HelperText="Optional: Assign a login account" AnchorOrigin="Origin.BottomCenter" Clearable="true">
+                        @foreach (var user in _users)
+                    {
+                        <MudSelectItem Value="@user.Id">@user.UserName (@user.Email)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+        </MudForm>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? "Update" : "Create")</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter] public int? EmployeeId { get; set; }
+
+    private Employee _employee = new Employee();
+    private List<Hierarchy> _hierarchies = new();
+    private List<ApplicationUser> _users = new();
+    
+    private MudForm _form;
+    private bool _success;
+    private bool _isEdit => EmployeeId.HasValue;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible)
+        {
+             // Reset or load data when dialog becomes visible
+             // However, OnInitializedAsync runs only once.
+             // We should check if we need to reload.
+             // For simplicity, we can load looks ups in OnInitialized, but Employee data in OnParametersSet if ID changed.
+             // Better: Move Load Data to a separate method and call it when Visible becomes true?
+             // Or simplier: The parent sets EmployeeId, then sets Visible=true.
+             // We can detect change in Visible or EmployeeId.
+             
+             if (EmployeeId.HasValue)
+             {
+                 var info = await EmployeesService.GetEmployeeInfoByIdAsync(EmployeeId.Value);
+                 if (info != null)
+                 {
+                     _employee = new Employee
+                     {
+                         Id = info.Id,
+                         CivilId = info.CivilId,
+                         EmployeeId = info.EmployeeId,
+                         HierarchyId = info.HierarchyId,
+                         AspnetusersId = info.AspnetusersId
+                     };
+                 }
+             }
+             else
+             {
+                 _employee = new Employee();
+             }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hierarchyTask = HierarchiesService.GetHierarchiesAsync();
+        var usersTask = UsersService.GetAllUsersAsync();
+        
+        await Task.WhenAll(hierarchyTask, usersTask);
+        
+        _hierarchies = await hierarchyTask;
+        _users = await usersTask;
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_success)
+        {
+            if (_isEdit)
+            {
+                var result = await EmployeesService.UpdateEmployeeAsync(_employee.Id, _employee);
+                if (result != null)
+                {
+                    Snackbar.Add("Employee updated successfully", Severity.Success);
+                    await Close(true);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to update employee", Severity.Error);
+                }
+            }
+            else
+            {
+                try
+                {
+                     // Ensure ID is 0
+                    _employee.Id = 0; 
+                    await EmployeesService.CreateEmployeeAsync(_employee);
+                    Snackbar.Add("Employee created successfully", Severity.Success);
+                    await Close(true);
+                }
+                catch (Exception ex)
+                {
+                    Snackbar.Add($"Failed to create employee: {ex.Message}", Severity.Error);
+                }
+            }
+        }
+    }
+
+    private async Task Close(bool success = false)
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync(success);
+    }
+    
+    private async Task Cancel() => await Close(false);
+}

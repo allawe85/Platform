@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Dashboard</value>
+  </data>
+  <data name="Hierarchies" xml:space="preserve">
+    <value>Hierarchies</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Levels</value>
+  </data>
+  <data name="Employees" xml:space="preserve">
+    <value>Employees</value>
+  </data>
+  <data name="Assets" xml:space="preserve">
+    <value>Assets</value>
+  </data>
+  <data name="Documents" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Accounts" xml:space="preserve">
+    <value>Accounts</value>
+  </data>
+  <data name="Configurations" xml:space="preserve">
+    <value>Configurations</value>
+  </data>
+  <data name="AssetStatuses" xml:space="preserve">
+    <value>Asset Statuses</value>
+  </data>
+  <data name="AssetTypes" xml:space="preserve">
+    <value>Asset Types</value>
+  </data>
+  <data name="DocumentTypes" xml:space="preserve">
+    <value>Document Types</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="HierarchiesManagement" xml:space="preserve">
+    <value>Hierarchies Management</value>
+  </data>
+  <data name="HRManagement" xml:space="preserve">
+    <value>HR Management</value>
+  </data>
+  <data name="Events" xml:space="preserve">
+    <value>Events</value>
+  </data>
+  <data name="Calendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="EventTypes" xml:space="preserve">
+    <value>Event Types</value>
+  </data>
+  <data name="Polls" xml:space="preserve">
+    <value>Polls</value>
+  </data>
+  <data name="Management" xml:space="preserve">
+    <value>Management</value>
+  </data>
+  <data name="Vote" xml:space="preserve">
+    <value>Vote</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>Search...</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NameAr" xml:space="preserve">
+    <value>Name (Arabic)</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>Zoom In</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>Zoom Out</value>
+  </data>
+  <data name="AddRoot" xml:space="preserve">
+    <value>Add Root</value>
+  </data>
+  <data name="AddChild" xml:space="preserve">
+    <value>Add Child</value>
+  </data>
+  <data name="SwitchToTreeView" xml:space="preserve">
+    <value>Switch to Tree View</value>
+  </data>
+  <data name="SwitchToChartView" xml:space="preserve">
+    <value>Switch to Chart View</value>
+  </data>
+  <data name="NoHierarchiesFound" xml:space="preserve">
+    <value>No hierarchies found. Add a root hierarchy to get started.</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Deleting {0} can not be undone!</value>
+  </data>
+  <data name="CivilId" xml:space="preserve">
+    <value>Civil ID</value>
+  </data>
+  <data name="EmployeeId" xml:space="preserve">
+    <value>Employee ID</value>
+  </data>
+  <data name="Hierarchy" xml:space="preserve">
+    <value>Hierarchy</value>
+  </data>
+  <data name="UserAccount" xml:space="preserve">
+    <value>User Account</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="AssignedTo" xml:space="preserve">
+    <value>Assigned To</value>
+  </data>
+  <data name="ReceiveDate" xml:space="preserve">
+    <value>Receive Date</value>
+  </data>
+  <data name="ReturnDate" xml:space="preserve">
+    <value>Return Date</value>
+  </data>
+  <data name="Unassigned" xml:space="preserve">
+    <value>Unassigned</value>
+  </data>
+  <data name="AssetStatusesTitle" xml:space="preserve">
+    <value>Asset Statuses</value>
+  </data>
+  <data name="AssetsManagementTitle" xml:space="preserve">
+    <value>Assets Management</value>
+  </data>
+  <data name="EmployeesManagementTitle" xml:space="preserve">
+    <value>Employees Management</value>
+  </data>
+  <data name="AllAssets" xml:space="preserve">
+    <value>All Assets</value>
+  </data>
+  <data name="Statuses" xml:space="preserve">
+    <value>Statuses</value>
+  </data>
+  <data name="AssetTypesTitle" xml:space="preserve">
+    <value>Asset Types</value>
+  </data>
+  <data name="DocumentTypesTitle" xml:space="preserve">
+    <value>Document Types</value>
+  </data>
+  <data name="Types" xml:space="preserve">
+    <value>Types</value>
+  </data>
+  <data name="EventCalendarTitle" xml:space="preserve">
+    <value>Event Calendar</value>
+  </data>
+  <data name="DateRange" xml:space="preserve">
+    <value>Date Range</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>Start Date</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>End Date</value>
+  </data>
+  <data name="EventType" xml:space="preserve">
+    <value>Event Type</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="NoEventsFound" xml:space="preserve">
+    <value>No events found for the selected range.</value>
+  </data>
+  <data name="Period" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="StartTime" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="EndTime" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Location</value>
+  </data>
+  <data name="LocationAr" xml:space="preserve">
+    <value>Location (Arabic)</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="DescriptionAr" xml:space="preserve">
+    <value>Description (Arabic)</value>
+  </data>
+  <data name="AccountsManagementTitle" xml:space="preserve">
+    <value>Accounts Management</value>
+  </data>
+  <data name="SystemAccounts" xml:space="preserve">
+    <value>System Accounts</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="PhoneNumber" xml:space="preserve">
+    <value>Phone Number</value>
+  </data>
+  <data name="ManagedViaRegistration" xml:space="preserve">
+    <value>Managed via Registration</value>
+  </data>
+  <data name="DocumentsManagementTitle" xml:space="preserve">
+    <value>Documents Management</value>
+  </data>
+  <data name="AllDocuments" xml:space="preserve">
+    <value>All Documents</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="ExpiryDate" xml:space="preserve">
+    <value>Expiry Date</value>
+  </data>
+  <data name="ExpiringSoon" xml:space="preserve">
+    <value>Expiring Soon!</value>
+  </data>
+  <data name="PollsManagementTitle" xml:space="preserve">
+    <value>Polls Management</value>
+  </data>
+  <data name="AddNewPoll" xml:space="preserve">
+    <value>Add New Poll</value>
+  </data>
+  <data name="Question" xml:space="preserve">
+    <value>Question</value>
+  </data>
+  <data name="QuestionAr" xml:space="preserve">
+    <value>Question (Ar)</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Inactive" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="ActivePollsDetails" xml:space="preserve">
+    <value>Active Polls Details</value>
+  </data>
+  <data name="NotLinkedToEmployee" xml:space="preserve">
+    <value>You are not linked to an employee record. Please contact HR.</value>
+  </data>
+  <data name="NoActivePolls" xml:space="preserve">
+    <value>There are no active polls at the moment.</value>
+  </data>
+  <data name="AlreadyVoted" xml:space="preserve">
+    <value>You have already voted on this poll.</value>
+  </data>
+  <data name="Voting" xml:space="preserve">
+    <value>Voting...</value>
+  </data>
+  <data name="SelectOptionPrompt" xml:space="preserve">
+    <value>Please select an option.</value>
+  </data>
+  <data name="DashboardWelcome" xml:space="preserve">
+    <value>Welcome to your new dashboard!</value>
+  </data>
+  <data name="LoggedInAlert" xml:space="preserve">
+    <value>You are logged in.</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>Levels</value>
+  </data>
+  <data name="HierarchyLevelsTitle" xml:space="preserve">
+    <value>Hierarchy Levels</value>
+  </data>
+  <data name="ManageTypes" xml:space="preserve">
+    <value>Manage Types</value>
+  </data>
+  <data name="EventTypeDeleted" xml:space="preserve">
+    <value>Event Type deleted</value>
+  </data>
+  <data name="LevelDeleted" xml:space="preserve">
+    <value>Level deleted</value>
+  </data>
+  <data name="EventTypes" xml:space="preserve">
+    <value>Event Types</value>
+  </data>
+</root>

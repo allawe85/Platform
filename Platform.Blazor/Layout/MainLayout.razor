@@ -1,0 +1,138 @@
+﻿@inherits LayoutComponentBase
+@inject IAuthService Auth
+@inject NavigationManager Nav
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
+@using Platform.Blazor.Services.Auth
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject LayoutService LayoutService
+@implements IDisposable
+@inject IStringLocalizer<AppStrings> Loc
+
+<MudLayout>
+    <style>
+        :root {
+            --mud-appbar-height: 100px;
+        }
+        .mud-drawer.mud-drawer-fixed {
+            top: 100px !important;
+        }
+        .mud-nav-link-text {
+            font-weight: 700 !important;
+            font-size: 1.1rem !important;
+            color: @(LayoutService.IsDarkMode ? "#E0E0E0" : "inherit") !important;
+        }
+        .mud-nav-link.active .mud-nav-link-text {
+            color: #007FFF !important;
+        }
+        .mud-nav-link .mud-nav-link-icon-default {
+            color: #007FFF !important;
+        }
+        .mud-nav-menu {
+            padding: 24px !important;
+        }
+    </style>
+    <MudAppBar Elevation="1" Style="height: 100px; background-color: #007FFF; padding-top: 20px;">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Size="Size.Large" />
+        <MudText Typo="Typo.h6" Class="ml-3" Style="font-size: 1.5rem; font-weight: 700;">Platform</MudText>
+        <MudSpacer />
+
+        <MudSpacer />
+        @if (!string.IsNullOrEmpty(_username))
+        {
+            <MudText Class="mr-4" Style="font-size: 1.2rem; font-weight: 700;">@Loc["Welcome"], @_username</MudText>
+            <MudIconButton Icon="@(LayoutService.IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" Color="Color.Inherit" OnClick="ToggleDarkMode" Size="Size.Large" />
+            <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" OnClick="ToggleLanguage" Size="Size.Large" />
+        }
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End">
+            <MudMenuItem OnClick="Logout">@Loc["Logout"]</MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <MudNavMenu>
+            <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
+            <MudNavGroup Title="@Loc["HierarchiesManagement"]" Icon="@Icons.Material.Filled.AccountTree">
+                <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">@Loc["Levels"]</MudNavLink>
+                <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">@Loc["Hierarchies"]</MudNavLink>
+            </MudNavGroup>
+            <MudNavGroup Title="@Loc["Events"]" Icon="@Icons.Material.Filled.Event">
+                <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">@Loc["Calendar"]</MudNavLink>
+                <MudNavLink Href="/upcoming-events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Upcoming">Upcoming Events</MudNavLink>
+                <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">@Loc["EventTypes"]</MudNavLink>
+            </MudNavGroup>
+
+            <MudNavGroup Title="@Loc["HRManagement"]" Icon="@Icons.Material.Filled.People">
+                <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.Badge">@Loc["Employees"]</MudNavLink>
+                <MudNavLink Href="/assets" Icon="@Icons.Material.Filled.Devices">@Loc["Assets"]</MudNavLink>
+                <MudNavLink Href="/documents" Icon="@Icons.Material.Filled.Folder">@Loc["Documents"]</MudNavLink>
+                <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.ManageAccounts">@Loc["Accounts"]</MudNavLink>
+            </MudNavGroup>
+            <MudNavGroup Title="@Loc["Configurations"]" Icon="@Icons.Material.Filled.Settings">
+                <MudNavLink Href="/asset-statuses" Icon="@Icons.Material.Filled.List">@Loc["AssetStatuses"]</MudNavLink>
+                <MudNavLink Href="/asset-types" Icon="@Icons.Material.Filled.Category">@Loc["AssetTypes"]</MudNavLink>
+                <MudNavLink Href="/document-types" Icon="@Icons.Material.Filled.Description">@Loc["DocumentTypes"]</MudNavLink>
+            </MudNavGroup>
+            <MudNavGroup Title="@Loc["Polls"]" Icon="@Icons.Material.Filled.Poll">
+                <MudNavLink Href="/polls-management" Icon="@Icons.Material.Filled.List">@Loc["Management"]</MudNavLink>
+                <MudNavLink Href="/poll-vote" Icon="@Icons.Material.Filled.HowToVote">@Loc["Vote"]</MudNavLink>
+            </MudNavGroup>
+            <MudNavGroup Title="Time Attendance" Icon="@Icons.Material.Filled.AccessTime">
+                <MudNavLink Href="/attendance/checkin" Icon="@Icons.Material.Filled.Timer">Check In/Out</MudNavLink>
+                <MudNavLink Href="/attendance/report" Icon="@Icons.Material.Filled.Assessment">Attendance Report</MudNavLink>
+            </MudNavGroup>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <img src="images/MOISkyline.jpg" style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 70%; height: 70%; object-fit: contain; opacity: 0.3; z-index: -1; pointer-events: none; mix-blend-mode: @(LayoutService.IsDarkMode ? "multiply" : "normal");" />
+        <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+    string? _username;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LayoutService.OnMajorUpdate += StateHasChanged;
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        _username = state.User.Identity?.Name;
+    }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    async Task Logout()
+    {
+        await Auth.LogoutAsync();
+        Nav.NavigateTo("/login");
+    }
+
+    async Task ToggleLanguage()
+    {
+        var currentCulture = CultureInfo.CurrentCulture;
+        var newCultureName = currentCulture.Name == "en-US" ? "ar-EG" : "en-US";
+        
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "culture", newCultureName);
+
+        Nav.NavigateTo(Nav.Uri, forceLoad: true);
+    }
+
+    async Task ToggleDarkMode()
+    {
+        LayoutService.ToggleDarkMode();
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "darkMode", LayoutService.IsDarkMode.ToString());
+    }
+
+    public void Dispose()
+    {
+        LayoutService.OnMajorUpdate -= StateHasChanged;
+    }
+}

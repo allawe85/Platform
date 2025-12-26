@@ -1,0 +1,48 @@
+﻿@page "/login"
+@using Platform.Blazor.Services.Auth
+@layout Platform.Blazor.Layout.LoginLayout
+@inject IAuthService Auth
+@inject NavigationManager Nav
+
+<MudGrid Justify="Justify.Center" Class="mt-10">
+    <MudItem xs="12" sm="8" md="4">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5" Align="Align.Center">Login</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField @bind-Value="Model.UserNameOrEmail" Label="Username or Email" Variant="Variant.Outlined" Class="mb-3" />
+                <MudTextField @bind-Value="Model.Password" Label="Password" InputType="InputType.Password" Variant="Variant.Outlined" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="DoLogin" Class="mb-3">Login</MudButton>
+                <MudButton ButtonType="ButtonType.Button" Variant="Variant.Text" Color="Color.Secondary" FullWidth="true" Href="/register">Register</MudButton>
+            </MudCardActions>
+        </MudCard>
+        @if (!string.IsNullOrEmpty(Error))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-2">@Error</MudAlert>
+        }
+    </MudItem>
+</MudGrid>
+
+@code {
+    LoginRequest Model = new("", "");
+    string? Error;
+
+    async Task DoLogin()
+    {
+        Error = null;
+        var token = await Auth.LoginAsync(Model);
+        if (token != null)
+        {
+            Nav.NavigateTo("/dashboard");
+        }
+        else
+        {
+            Error = "Login failed";
+        }
+    }
+}

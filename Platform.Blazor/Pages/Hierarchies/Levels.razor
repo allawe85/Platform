@@ -1,0 +1,109 @@
+@page "/hierarchy-levels"
+@using Platform.Blazor.Pages.Hierarchies.Components
+@using Platform.Blazor.Services.Auth
+@using Platform.Blazor.Services.Hierarchies
+@using Platform.Data.DTOs
+@inject IHierarchiesService HierarchiesService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@Loc["HierarchyLevelsTitle"]</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["HierarchyLevelsTitle"]</MudText>
+
+<MudTable Items="@HierarchyLevels" Hover="true" Loading="@_loading">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@Loc["Levels"]</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddLevel">@Loc["Add"]</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>@Loc["Name"]</MudTh>
+        <MudTh>@Loc["NameAr"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
+        <MudTd DataLabel="@Loc["NameAr"]">@context.NameAr</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditLevel(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteLevel(context))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+<HierarchyLevelDialog @bind-Visible="_showDialog" LevelId="_targetLevelId" OnClose="OnDialogClose" />
+
+@code {
+    private List<HierarchyLevel> HierarchyLevels = new();
+    private bool _loading = true;
+    
+    // Dialog State
+    private bool _showDialog;
+    private int? _targetLevelId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLevels();
+    }
+
+    private async Task LoadLevels()
+    {
+        _loading = true;
+        try
+        {
+            HierarchyLevels = await HierarchiesService.GetLevelsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading levels: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void AddLevel()
+    {
+        _targetLevelId = null;
+        _showDialog = true;
+    }
+
+    private void EditLevel(HierarchyLevel level)
+    {
+        _targetLevelId = level.Id;
+        _showDialog = true;
+    }
+
+    private async Task OnDialogClose(bool success)
+    {
+        if (success)
+        {
+            await LoadLevels();
+        }
+    }
+
+    private async Task DeleteLevel(HierarchyLevel level)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"].ToString(), level.Name), 
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+        if (result == true)
+        {
+            try
+            {
+                await HierarchiesService.DeleteLevelAsync(level.Id);
+                Snackbar.Add(Loc["Success"], Severity.Success);
+                await LoadLevels();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting level: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

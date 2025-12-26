@@ -1,0 +1,128 @@
+@page "/documents"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Documents
+@using Platform.Blazor.Pages.HR.Documents.Components
+@inject IDocumentsService DocumentsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["DocumentsManagementTitle"]</MudText>
+
+<MudTable Items="@_documents" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="new Func<Document,bool>(FilterFunc)" Elevation="4">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@Loc["AllDocuments"]</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">@Loc["Add"]</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>@Loc["Title"]</MudTh>
+        <MudTh>@Loc["Type"]</MudTh>
+        <MudTh>@Loc["AssignedTo"]</MudTh>
+        <MudTh>@Loc["ExpiryDate"]</MudTh>
+        <MudTh>@Loc["Details"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="@Loc["Title"]">@context.Title</MudTd>
+        <MudTd DataLabel="@Loc["Type"]">@context.DocumentType?.Name</MudTd>
+        <MudTd DataLabel="@Loc["AssignedTo"]">@(@context.Employee != null ? $"{context.Employee.CivilId} - {context.Employee.EmployeeId}" : Loc["Unassigned"])</MudTd>
+        <MudTd DataLabel="@Loc["ExpiryDate"]">
+            @if (context.ExpiryDate < DateTime.Today.AddDays(30))
+            {
+                    <MudTooltip Text="@Loc["ExpiringSoon"]">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Small" Class="mr-1"/>
+                    </MudTooltip>
+            }
+            @context.ExpiryDate.ToShortDateString()
+        </MudTd>
+        <MudTd DataLabel="@Loc["Details"]">@context.Details</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteDocument(context))" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<DocumentDialog @bind-Visible="_showDialog" DocumentId="_selectedDocumentId" OnClose="OnDialogClose" />
+
+@code {
+    private List<Document> _documents = new();
+    private string _searchString = "";
+    private bool _showDialog;
+    private int? _selectedDocumentId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _documents = await DocumentsService.GetAllDocumentsAsync();
+    }
+
+    private bool FilterFunc(Document element)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        if (element.Title != null && element.Title.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.DocumentType?.Name != null && element.DocumentType.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        // Search by employee
+        if (element.Employee != null)
+        {
+             if (element.Employee.EmployeeId.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+             if (element.Employee.CivilId.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        }
+
+        return false;
+    }
+
+    private void OpenAddDialog()
+    {
+        _selectedDocumentId = null;
+        _showDialog = true;
+    }
+
+    private void OpenEditDialog(Document doc)
+    {
+        _selectedDocumentId = doc.Id;
+        _showDialog = true;
+    }
+
+    private async Task OnDialogClose(bool success)
+    {
+        if (success)
+        {
+            await LoadData();
+        }
+    }
+
+    private async Task DeleteDocument(Document doc)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            Loc["Warning"],
+            string.Format(Loc["ConfirmDelete"].ToString(), doc.Title),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+        if (result == true)
+        {
+            var success = await DocumentsService.DeleteDocumentAsync(doc.Id);
+            if (success)
+            {
+                Snackbar.Add(Loc["Success"], Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add(Loc["Error"], Severity.Error);
+            }
+        }
+    }
+}

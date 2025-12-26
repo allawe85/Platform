@@ -36,10 +36,21 @@ namespace Platform.Data
 
         public DbSet<Document> Documents { get; set; }
 
+        public DbSet<EventType> EventTypes { get; set; }
+
+        public DbSet<Event> Events { get; set; }
+
+        public DbSet<Poll> Polls { get; set; }
+        public DbSet<PollOption> PollOptions { get; set; }
+        public DbSet<PollVote> PollVotes { get; set; }
+
+        public DbSet<TimeAttendance> TimeAttendances { get; set; }
+
         #endregion
 
 
         #region HierarchyLevel - CRUD Operations
+
         public async Task<List<HierarchyLevel>> GetAllHierarchyLevelsAsync()
         {
             return await HierarchyLevels
@@ -116,6 +127,7 @@ namespace Platform.Data
             existing.Name = entity.Name;
             existing.NameAr = entity.NameAr;
             existing.HierarchyLevelId = entity.HierarchyLevelId;
+            existing.ParentId = entity.ParentId;
 
             Hierarchies.Update(existing);
             await SaveChangesAsync();
@@ -228,6 +240,8 @@ namespace Platform.Data
             if (existing == null) return null;
             // copy scalar properties
             existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
             AssetTypes.Update(existing);
             await SaveChangesAsync();
             return existing;
@@ -271,6 +285,8 @@ namespace Platform.Data
             if (existing == null) return null;
             // copy scalar properties
             existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
             AssetStatuses.Update(existing);
             await SaveChangesAsync();
             return existing;
@@ -340,6 +356,17 @@ namespace Platform.Data
             return true;
         }
 
+        public async Task<List<Asset>> GetAssetsByEmployeeIdAsync(int employeeId)
+        {
+            return await Assets
+                         .AsNoTracking()
+                         .Include(a => a.AssetType)
+                         .Include(a => a.Status)
+                         .Include(a => a.Employee)
+                         .Where(a => a.EmployeeId == employeeId)
+                         .ToListAsync();
+        }
+
         #endregion
 
 
@@ -368,8 +395,11 @@ namespace Platform.Data
         {
             var existing = await DocumentTypes.FindAsync(entity.Id);
             if (existing == null) return null;
+            
             // copy scalar properties
             existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
             DocumentTypes.Update(existing);
             await SaveChangesAsync();
             return existing;
@@ -434,6 +464,324 @@ namespace Platform.Data
             Documents.Remove(existing);
             await SaveChangesAsync();
             return true;
+        }
+
+        public async Task GetAssetController(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<Document>> GetDocumentsByEmployeeIdAsync(int employeeId)
+        {
+            return await Documents
+                         .AsNoTracking()
+                         .Include(d => d.Employee)
+                         .Include(d => d.DocumentType)
+                         .Where(d => d.EmployeeId == employeeId)
+                         .ToListAsync();
+        }
+
+        #endregion
+
+        #region ApplicationUser - CRUD Operations
+        public async Task<List<ApplicationUser>> GetAllApplicationUsersAsync()
+        {
+            return await Set<ApplicationUser>()
+                         .AsNoTracking()
+                         .ToListAsync();
+        }
+
+        public async Task<ApplicationUser?> GetApplicationUserByIdAsync(string id)
+        {
+            return await Set<ApplicationUser>()
+                         .AsNoTracking()
+                         .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
+        public async Task<ApplicationUser> AddApplicationUserAsync(ApplicationUser entity)
+        {
+            var entry = await Set<ApplicationUser>().AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<ApplicationUser?> UpdateApplicationUserAsync(ApplicationUser entity)
+        {
+            var existing = await Set<ApplicationUser>().FindAsync(entity.Id);
+            if (existing == null) return null;
+            // copy scalar properties
+            existing.UserName = entity.UserName;
+            existing.Email = entity.Email;
+            existing.PhoneNumber = entity.PhoneNumber;
+            Set<ApplicationUser>().Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteApplicationUserAsync(string id)
+        {
+            var existing = await Set<ApplicationUser>().FindAsync(id);
+            if (existing == null) return false;
+            Set<ApplicationUser>().Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region EventType - CRUD Operations
+
+        public async Task<List<EventType>> GetAllEventTypesAsync()
+        {
+            return await EventTypes
+                         .AsNoTracking()
+                         .ToListAsync();
+        }
+
+        public async Task<EventType?> GetEventTypeByIdAsync(int id)
+        {
+            return await EventTypes.FindAsync(id);
+        }
+
+        public async Task<EventType> AddEventTypeAsync(EventType entity)
+        {
+            var entry = await EventTypes.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<EventType?> UpdateEventTypeAsync(EventType entity)
+        {
+            var existing = await EventTypes.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+
+            EventTypes.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteEventTypeAsync(int id)
+        {
+            var existing = await EventTypes.FindAsync(id);
+            if (existing == null) return false;
+
+            EventTypes.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region Event - CRUD Operations
+
+        public async Task<List<Event>> GetAllEventsAsync()
+        {
+            return await Events
+                         .AsNoTracking()
+                         .Include(e => e.EventType)
+                         .ToListAsync();
+        }
+
+        public async Task<Event?> GetEventByIdAsync(int id)
+        {
+            return await Events
+                         .Include(e => e.EventType)
+                         .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<List<Event>> GetEventsByDateRangeAsync(DateTime start, DateTime end)
+        {
+            return await Events
+                         .AsNoTracking()
+                         .Include(e => e.EventType)
+                         .Where(e => e.StartDate >= start && e.EndDate <= end)
+                         .ToListAsync();
+        }
+
+        public async Task<Event> AddEventAsync(Event entity)
+        {
+            var entry = await Events.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<Event?> UpdateEventAsync(Event entity)
+        {
+            var existing = await Events.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.Name = entity.Name;
+            existing.NameAr = entity.NameAr;
+            existing.Location = entity.Location;
+            existing.LocationAr = entity.LocationAr;
+            existing.EventTypeId = entity.EventTypeId;
+            existing.StartDate = entity.StartDate;
+            existing.EndDate = entity.EndDate;
+            existing.Description = entity.Description;
+            existing.DescriptionAr = entity.DescriptionAr;
+
+            Events.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteEventAsync(int id)
+        {
+            var existing = await Events.FindAsync(id);
+            if (existing == null) return false;
+
+            Events.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region Poll - CRUD Operations
+
+        public async Task<List<Poll>> GetAllPollsAsync()
+        {
+            return await Polls
+                .AsNoTracking()
+                .Include(p => p.Options)
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+        }
+
+        public async Task<Poll?> GetPollByIdAsync(int id)
+        {
+            return await Polls
+                .Include(p => p.Options)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public async Task<Poll> AddPollAsync(Poll entity)
+        {
+            var entry = await Polls.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<Poll?> UpdatePollAsync(Poll entity)
+        {
+            var existing = await Polls
+                .Include(p => p.Options)
+                .FirstOrDefaultAsync(p => p.Id == entity.Id);
+
+            if (existing == null) return null;
+
+            existing.Question = entity.Question;
+            existing.QuestionAr = entity.QuestionAr;
+            existing.IsActive = entity.IsActive;
+
+            // Handle Poll Options Update
+            if (entity.Options != null)
+            {
+                // Identify options to remove
+                var existingOptionIds = existing.Options.Select(o => o.Id).ToList();
+                var newOptionIds = entity.Options.Select(o => o.Id).ToList();
+                var optionsToRemove = existing.Options.Where(o => !newOptionIds.Contains(o.Id)).ToList();
+
+                foreach (var option in optionsToRemove)
+                {
+                    // Assuming Cascade Delete is handled by DB FK or EF Core tracking
+                    // We explicitly remove from context
+                    existing.Options.Remove(option);
+                    // Or PollOptions.Remove(option) if attached
+                }
+
+                // Add or Update
+                foreach (var option in entity.Options)
+                {
+                    var existingOption = existing.Options.FirstOrDefault(o => o.Id == option.Id);
+                    if (existingOption != null)
+                    {
+                        existingOption.OptionText = option.OptionText;
+                        existingOption.OptionTextAr = option.OptionTextAr;
+                    }
+                    else
+                    {
+                        // New option, ensure PollId is set if needed or add to collection
+                        existing.Options.Add(option);
+                    }
+                }
+            }
+
+            Polls.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeletePollAsync(int id)
+        {
+            var existing = await Polls.FindAsync(id);
+            if (existing == null) return false;
+
+            Polls.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<PollVote> AddPollVoteAsync(PollVote entity)
+        {
+            var entry = await PollVotes.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<bool> HasEmployeeVotedAsync(int pollId, int employeeId)
+        {
+            return await PollVotes
+                .AnyAsync(pv => pv.PollId == pollId && pv.EmployeeId == employeeId);
+        }
+
+        public async Task<Dictionary<int, int>> GetPollResultsAsync(int pollId)
+        {
+            var results = await PollVotes
+                .Where(pv => pv.PollId == pollId)
+                .GroupBy(pv => pv.PollOptionId)
+                .Select(g => new { OptionId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.OptionId, x => x.Count);
+
+            return results;
+        }
+
+        #endregion
+        #region TimeAttendance - Operations
+
+        public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
+        {
+            var entry = await TimeAttendances.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<List<TimeAttendance>> GetTimeAttendanceByEmployeeIdAsync(int employeeId)
+        {
+            return await TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.EmployeeId == employeeId)
+                .OrderByDescending(ta => ta.TransactionTime)
+                .ToListAsync();
+        }
+
+        public async Task<List<TimeAttendance>> GetTimeAttendanceReportAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
+        {
+            var query = TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.TransactionTime >= startDate && ta.TransactionTime <= endDate);
+
+            if (employeeId.HasValue)
+            {
+                query = query.Where(ta => ta.EmployeeId == employeeId.Value);
+            }
+
+            return await query
+                .OrderBy(ta => ta.TransactionTime)
+                .ToListAsync();
         }
 
         #endregion

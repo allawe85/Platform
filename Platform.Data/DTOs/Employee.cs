@@ -17,7 +17,7 @@ namespace Platform.Data.DTOs
         public string CivilId { get; set; }
 
         [Column("employee_id")]
-        public string EmployeeId { get; set; }
+        public int EmployeeId { get; set; }
 
         [Column("hierarchy_id")]
         public int HierarchyId { get; set; }

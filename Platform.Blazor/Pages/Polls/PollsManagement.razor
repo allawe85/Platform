@@ -1,0 +1,144 @@
+@page "/polls-management"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Polls
+@using Platform.Blazor.Pages.Polls.Dialogs
+@using MudBlazor
+@inject IPollsService PollsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["PollsManagementTitle"]</MudText>
+
+<MudButton StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="AddPoll" Class="mb-4">@Loc["AddNewPoll"]</MudButton>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="@_polls" Hover="true" Striped="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>@Loc["Question"]</MudTh>
+            <MudTh>@Loc["QuestionAr"]</MudTh>
+            <MudTh>@Loc["Active"]</MudTh>
+            <MudTh>@Loc["Options"]</MudTh>
+            <MudTh>@Loc["Actions"]</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="@Loc["Question"]">@context.Question</MudTd>
+            <MudTd DataLabel="@Loc["QuestionAr"]">@context.QuestionAr</MudTd>
+            <MudTd DataLabel="@Loc["Active"]">
+                @if (context.IsActive)
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small">@Loc["Active"]</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Default" Size="Size.Small">@Loc["Inactive"]</MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="@Loc["Options"]">@context.Options?.Count</MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditPoll(context))" Size="Size.Small" />
+                <MudIconButton Icon="@Icons.Material.Filled.BarChart" Color="Color.Secondary" OnClick="@(() => ShowResults(context))" Size="Size.Small" Title="@Loc["Results"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeletePoll(context))" Size="Size.Small" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+}
+
+<!-- Edit/Create Overlay -->
+<PollDialog @bind-Visible="_showEditDialog" PollId="_targetPollId" OnClose="OnPollDialogClose" />
+<PollResultsDialog @bind-Visible="_showResultsDialog" PollId="_targetPollId" />
+
+@code {
+    private List<Poll> _polls = new();
+    private bool _loading = true;
+
+    // Edit/Create Dialog State
+    // Dialog State
+    private bool _showEditDialog;
+    private bool _showResultsDialog;
+    private int? _targetPollId;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPolls();
+    }
+
+    private async Task LoadPolls()
+    {
+        _loading = true;
+        try
+        {
+            _polls = await PollsService.GetAllPollsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading polls: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    // --- Actions ---
+
+    private void AddPoll()
+    {
+        _targetPollId = null;
+        _showEditDialog = true;
+    }
+
+    private void EditPoll(Poll poll)
+    {
+        _targetPollId = poll.Id;
+        _showEditDialog = true;
+    }
+
+    private async Task OnPollDialogClose(bool success)
+    {
+        if (success)
+        {
+            await LoadPolls();
+        }
+    }
+
+    private async Task DeletePoll(Poll poll)
+    {
+         bool? result = await DialogService.ShowMessageBox(
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"].ToString(), poll.Question), 
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+        if (result == true)
+        {
+            try
+            {
+                await PollsService.DeletePollAsync(poll.Id);
+                Snackbar.Add(Loc["Success"], Severity.Success);
+                await LoadPolls();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting poll: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    // --- Results Logic ---
+
+    private void ShowResults(Poll poll)
+    {
+        _targetPollId = poll.Id;
+        _showResultsDialog = true;
+    }
+}

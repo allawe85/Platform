@@ -1,0 +1,93 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Hierarchies
+@using MudBlazor
+@inject IHierarchiesService HierarchiesService
+@inject ISnackbar Snackbar
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Level" : "Add Level")</MudText>
+        <MudForm @ref="_form" @bind-IsValid="_success">
+            <MudStack Spacing="2">
+                <MudTextField Label="Name" @bind-Value="_level.Name" Required="true" For="@(() => _level.Name)" />
+                <MudTextField Label="Name (Arabic)" @bind-Value="_level.NameAr" For="@(() => _level.NameAr)" />
+            </MudStack>
+        </MudForm>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+        </MudStack>
+    </MudPaper>
+</MudOverlay>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter] public int? LevelId { get; set; }
+
+    private HierarchyLevel _level = new();
+    private MudForm _form;
+    private bool _success;
+    private bool _isEdit => LevelId.HasValue && LevelId.Value > 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Visible)
+        {
+            if (_isEdit)
+            {
+                 var all = await HierarchiesService.GetLevelsAsync();
+                 var existing = all.FirstOrDefault(x => x.Id == LevelId.Value);
+                 if (existing != null)
+                 {
+                     _level = new HierarchyLevel {
+                         Id = existing.Id,
+                         Name = existing.Name,
+                         NameAr = existing.NameAr
+                     };
+                 }
+            }
+            else
+            {
+                _level = new HierarchyLevel();
+            }
+        }
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (_success)
+        {
+            try 
+            {
+                if (_isEdit)
+                {
+                    await HierarchiesService.UpdateLevelAsync(_level.Id, _level);
+                    Snackbar.Add("Level updated", Severity.Success);
+                }
+                else
+                {
+                    await HierarchiesService.CreateLevelAsync(_level);
+                    Snackbar.Add("Level created", Severity.Success);
+                }
+                await Close(true);
+            }
+            catch(Exception ex)
+            {
+                 Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task Close(bool result)
+    {
+        Visible = false;
+        await VisibleChanged.InvokeAsync(false);
+        await OnClose.InvokeAsync(result);
+    }
+    
+    private async Task Cancel() => await Close(false);
+}

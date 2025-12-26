@@ -17,7 +17,7 @@ namespace Platform.Data.DTOs
         public string CivilId { get; set; }
         
         [Column("employee_id")]
-        public string EmployeeId { get; set; }
+        public int EmployeeId { get; set; }
         
         [Column("hierarchy_id")]
         public int HierarchyId { get; set; }
@@ -32,7 +32,7 @@ namespace Platform.Data.DTOs
         public string Email { get; set; }
         
         [Column("PhoneNumber")]
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         
         [Column("hierarchy_name")]
         public string HierarchyName { get; set; }
