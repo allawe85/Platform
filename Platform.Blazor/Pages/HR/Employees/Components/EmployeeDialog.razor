@@ -13,6 +13,7 @@
         <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Employee" : "Add Employee")</MudText>
         <MudForm @ref="_form" @bind-IsValid="_success">
             <MudStack Spacing="3">
+                <MudTextField @bind-Value="_employee.FullName" Label="Full Name" Required="true" RequiredError="Full Name is required!" />
                 <MudTextField @bind-Value="_employee.CivilId" Label="Civil ID" Required="true" RequiredError="Civil ID is required!" />
                 <MudTextField @bind-Value="_employee.EmployeeId" Label="Employee ID" Required="true" RequiredError="Employee ID is required!" />
                 
@@ -45,7 +46,7 @@
 
     [Parameter] public int? EmployeeId { get; set; }
 
-    private Employee _employee = new Employee();
+    private EmployeeInfo _employee = new EmployeeInfo();
     private List<Hierarchy> _hierarchies = new();
     private List<ApplicationUser> _users = new();
     
@@ -70,19 +71,12 @@
                  var info = await EmployeesService.GetEmployeeInfoByIdAsync(EmployeeId.Value);
                  if (info != null)
                  {
-                     _employee = new Employee
-                     {
-                         Id = info.Id,
-                         CivilId = info.CivilId,
-                         EmployeeId = info.EmployeeId,
-                         HierarchyId = info.HierarchyId,
-                         AspnetusersId = info.AspnetusersId
-                     };
+                     _employee = info;
                  }
              }
              else
              {
-                 _employee = new Employee();
+                 _employee = new EmployeeInfo();
              }
         }
     }
@@ -106,7 +100,17 @@
         {
             if (_isEdit)
             {
-                var result = await EmployeesService.UpdateEmployeeAsync(_employee.Id, _employee);
+                var employeeToUpdate = new Employee
+                {
+                    Id = _employee.Id,
+                    CivilId = _employee.CivilId,
+                    EmployeeId = _employee.EmployeeId,
+                    HierarchyId = _employee.HierarchyId,
+                    AspnetusersId = _employee.AspnetusersId,
+                    FullName = _employee.FullName
+                };
+
+                var result = await EmployeesService.UpdateEmployeeAsync(_employee.Id, employeeToUpdate);
                 if (result != null)
                 {
                     Snackbar.Add("Employee updated successfully", Severity.Success);
@@ -121,9 +125,17 @@
             {
                 try
                 {
-                     // Ensure ID is 0
-                    _employee.Id = 0; 
-                    await EmployeesService.CreateEmployeeAsync(_employee);
+                    // Ensure ID is 0
+                    var employeeToCreate = new Employee
+                    {
+                        Id = 0,
+                        CivilId = _employee.CivilId,
+                        EmployeeId = _employee.EmployeeId,
+                        HierarchyId = _employee.HierarchyId,
+                        AspnetusersId = _employee.AspnetusersId,
+                        FullName = _employee.FullName
+                    };
+                    await EmployeesService.CreateEmployeeAsync(employeeToCreate);
                     Snackbar.Add("Employee created successfully", Severity.Success);
                     await Close(true);
                 }
