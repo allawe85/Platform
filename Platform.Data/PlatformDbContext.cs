@@ -252,6 +252,7 @@ namespace Platform.Data
             existing.EmployeeId = entity.EmployeeId;
             existing.HierarchyId = entity.HierarchyId;
             existing.AspnetusersId = entity.AspnetusersId;
+            existing.FullName = entity.FullName;
 
             Employees.Update(existing);
             await SaveChangesAsync();
