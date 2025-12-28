@@ -1,0 +1,55 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Announcements
+@inject IAnnouncementsService AnnouncementsService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="Announcement.Title" Label="Title" Required="true" RequiredError="Title is required" />
+        <MudTextField @bind-Value="Announcement.Description" Label="Description" Lines="5" Required="true" RequiredError="Description is required" />
+        <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="Is Active" Color="Color.Primary" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Announcement Announcement { get; set; } = new Announcement { IsActive = true, CreatedDate = DateTime.Now };
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrWhiteSpace(Announcement.Title))
+        {
+            Snackbar.Add("Title is required", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            if (Announcement.AnnouncementId == 0)
+            {
+                // New
+                Announcement.CreatedDate = DateTime.Now;
+                await AnnouncementsService.CreateAnnouncementAsync(Announcement);
+                Snackbar.Add("Announcement Created", Severity.Success);
+            }
+            else
+            {
+                // Edit
+                await AnnouncementsService.UpdateAnnouncementAsync(Announcement.AnnouncementId, Announcement);
+                Snackbar.Add("Announcement Updated", Severity.Success);
+            }
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    void Cancel() => MudDialog.Cancel();
+}

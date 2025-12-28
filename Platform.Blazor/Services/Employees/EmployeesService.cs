@@ -46,9 +46,9 @@ namespace Platform.Blazor.Services.Employees
              return null; 
         }
 
-        public async Task<Employee> CreateEmployeeAsync(Employee employee)
+        public async Task<Employee> CreateEmployeeAsync(CreateEmployeeRequest request)
         {
-            var response = await _http.PostAsJsonAsync("api/employees", employee);
+            var response = await _http.PostAsJsonAsync("api/employees", request);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<Employee>();
         }

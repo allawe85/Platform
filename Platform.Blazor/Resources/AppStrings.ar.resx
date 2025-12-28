@@ -388,4 +388,10 @@
   <data name="EventTypes" xml:space="preserve">
     <value>أنواع الفعاليات</value>
   </data>
+  <data name="UpcomingEvents" xml:space="preserve">
+    <value>الأحداث القادمة</value>
+  </data>
+  <data name="NoUpcomingEvents" xml:space="preserve">
+    <value>لا توجد أحداث قادمة.</value>
+  </data>
 </root>

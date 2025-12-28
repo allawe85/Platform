@@ -9,6 +9,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
+@inject LayoutService LayoutService
 
 <MudText Typo="Typo.h5" Class="mb-4">@Loc["Hierarchies"]</MudText>
 
@@ -64,29 +65,39 @@
         }
         else
         {
-            <MudTreeView T="Hierarchy" Items="@TreeItems" SelectedValue="_selectedHierarchy" SelectedValueChanged="OnSelectionChanged" Hover="true">
+            <MudTreeView T="Hierarchy" Items="@TreeItems" SelectedValue="_selectedHierarchy" SelectedValueChanged="OnSelectionChanged" Hover="false" 
+                         Class="@($"modern-tree-container {(LayoutService.IsDarkMode ? "dark-theme" : "light-theme")}")">
                 <ItemTemplate Context="item">
                     <MudTreeViewItem Items="@item.Children" Value="@item.Value" @bind-Expanded="@item.Expanded">
                         <Content>
-                             <div class="d-flex align-center justify-space-between flex-grow-1" style="width: 100%; cursor: pointer; padding: 8px 0;" @onclick="@(() => item.Expanded = !item.Expanded)">
-                                <div class="d-flex align-center">
-                                    <MudText Typo="Typo.h6" Style="@($"font-weight: bold; margin-right: 8px; color: {GetLevelTextColor(item.Value.HierarchyLevelId)}")">
+                            <div class="@($"modern-tree-item {(_selectedHierarchy?.Id == item.Value.Id ? "selected" : "")}")" 
+                                 style="@($"--level-color: {GetLevelColor(item.Value.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; background: {(LayoutService.IsDarkMode ? "var(--mud-palette-surface)" : "white")}; border-left-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; border-right-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)};")"
+                                 @onclick="@(() => HandleItemClick(item))">
+                                <div class="level-indicator-bar" style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}")"></div>
+                                
+                                <div class="node-info-group">
+                                    <div class="expand-icon-wrapper">
+                                         @if (item.Children?.Any() == true)
+                                         {
+                                             <MudIcon Icon="@Icons.Material.Filled.ChevronRight" 
+                                                      Style="@($"transform: rotate({(item.Expanded ? "90deg" : "0deg")}); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: var(--mud-palette-text-secondary);")" />
+                                         }
+                                    </div>
+                                    
+                                    <div class="node-id-badge">
                                         @GetHierarchyNumber(item.Value.Id)
-                                    </MudText>
-                                     @if (item.Children?.Any() == true)
-                                     {
-                                         <MudIcon Icon="@Icons.Material.Filled.ChevronRight" 
-                                                  Style="@($"transform: rotate({(item.Expanded ? "90deg" : "0deg")}); transition: transform 0.2s; color: {GetLevelTextColor(item.Value.HierarchyLevelId)}; margin-right: 4px; font-size: 1.5rem;")" />
-                                     }
-                                     else
-                                     {
-                                         <div style="width: 28px;"></div>
-                                     }
-                                    <MudText Typo="Typo.h6" Style="@($"color: {GetLevelTextColor(item.Value.HierarchyLevelId)}; font-weight: bold;")">@item.Value.Name</MudText>
+                                    </div>
+                                    
+                                    <div class="node-main-text">
+                                        <span class="node-name-primary">
+                                            @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(item.Value.NameAr) ? item.Value.NameAr : item.Value.Name)
+                                        </span>
+                                    </div>
                                 </div>
-                                 <MudChip T="string" Size="Size.Small" Style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}; color: white; margin-right: 0;")">
-                                    @(item.Value.HierarchyLevel?.Name ?? "")
-                                </MudChip>
+
+                                <div class="node-level-tag" style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}")">
+                                    @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(item.Value.HierarchyLevel?.NameAr) ? item.Value.HierarchyLevel.NameAr : item.Value.HierarchyLevel?.Name ?? "")
+                                </div>
                             </div>
                         </Content>
                     </MudTreeViewItem>
@@ -272,12 +283,14 @@
     private HashSet<TreeItemData<Hierarchy>> ConvertToTreeItems(List<Hierarchy> nodes)
     {
         var items = new HashSet<TreeItemData<Hierarchy>>();
+        bool isArabic = System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG";
         foreach (var node in nodes)
         {
+            string displayName = isArabic && !string.IsNullOrEmpty(node.NameAr) ? node.NameAr : node.Name;
             items.Add(new TreeItemData<Hierarchy>
             {
                 Value = node,
-                Text = node.Name,
+                Text = displayName,
                 Expanded = false,
                 Children = node.Children.Any() ? ConvertToTreeItems(node.Children).ToList() : null
             });
@@ -318,7 +331,13 @@
 
     private string GetLevelTextColor(int levelId) 
     {
+        if (LayoutService.IsDarkMode) return "var(--mud-palette-text-primary)";
         return _levelTextColors.ContainsKey(levelId) ? _levelTextColors[levelId] : "#333"; 
+    }
+
+    private string GetLevelSolidColor(int levelId) 
+    {
+        return _levelTextColors.ContainsKey(levelId) ? _levelTextColors[levelId] : "#999"; 
     }
 
     // --- Actions ---
@@ -400,6 +419,12 @@
     private void OnSelectionChanged(Hierarchy node)
     {
         _selectedHierarchy = node;
+    }
+
+    private void HandleItemClick(TreeItemData<Hierarchy> item)
+    {
+        _selectedHierarchy = item.Value;
+        item.Expanded = !item.Expanded;
     }
 
     // --- View Logic ---

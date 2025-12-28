@@ -388,4 +388,10 @@
   <data name="EventTypes" xml:space="preserve">
     <value>Event Types</value>
   </data>
+  <data name="UpcomingEvents" xml:space="preserve">
+    <value>Upcoming Events</value>
+  </data>
+  <data name="NoUpcomingEvents" xml:space="preserve">
+    <value>No upcoming events found.</value>
+  </data>
 </root>
