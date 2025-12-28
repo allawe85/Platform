@@ -1,0 +1,116 @@
+@page "/my-leaves"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Leaves
+@inject LeaveService LeaveService
+@inject AuthenticationStateProvider AuthStateProvider
+@* Removed DialogService injection *@
+
+<MudText Typo="Typo.h5" GutterBottom="true">My Leaves</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenRequestDialog" Class="mb-4">
+    New Leave Request
+</MudButton>
+
+<MudGrid>
+    <MudItem xs="12" md="4">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">My Balances</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (Balances == null)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else
+                {
+                    <MudTable Items="Balances" Dense="true" Hover="true" Striped="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Type</MudTh>
+                            <MudTh>Balance (Days)</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>
+                            <MudTd DataLabel="Balance">@context.Balance</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" md="8">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Leave History</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (MyLeavesList == null)
+                {
+                     <MudProgressCircular Indeterminate="true" />
+                }
+                else
+                {
+                     <MudTable Items="MyLeavesList" Dense="true" Hover="true" Striped="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Type</MudTh>
+                            <MudTh>Start Date</MudTh>
+                            <MudTh>End Date</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh>Details</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>
+                            <MudTd DataLabel="Start">@context.StartDate.ToShortDateString()</MudTd>
+                            <MudTd DataLabel="End">@context.EndDate.ToShortDateString()</MudTd>
+                            <MudTd DataLabel="Status">@context.LeaveStatus?.NameAr</MudTd>
+                            <MudTd DataLabel="Details">@context.Details</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<LeaveRequestDialog @bind-Visible="_showDialog" LeaveTypes="LeaveTypes" EmployeeId="CurrentEmployeeId" OnClose="OnDialogClose" />
+
+@code {
+    private List<LeaveBalance> Balances;
+    private List<Leave> MyLeavesList;
+    private List<LeaveType> LeaveTypes = new();
+    
+    // Hardcoded for now
+    private int CurrentEmployeeId = 1; 
+
+    private bool _showDialog;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+        LeaveTypes = await LeaveService.GetLeaveTypes();
+    }
+
+    private async Task LoadData()
+    {
+        Balances = await LeaveService.GetMyBalances(CurrentEmployeeId);
+        MyLeavesList = await LeaveService.GetMyLeavesAndRequests(CurrentEmployeeId);
+    }
+
+    private void OpenRequestDialog()
+    {
+        _showDialog = true;
+    }
+
+    private async Task OnDialogClose(bool result)
+    {
+        if (result)
+        {
+            await LoadData();
+        }
+    }
+}

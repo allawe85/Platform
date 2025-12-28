@@ -20,6 +20,7 @@
     <HeaderContent>
         <MudTh>@Loc["CivilId"]</MudTh>
         <MudTh>@Loc["EmployeeId"]</MudTh>
+        <MudTh>Full Name</MudTh>
         <MudTh>@Loc["Hierarchy"]</MudTh>
         <MudTh>@Loc["UserAccount"]</MudTh>
         <MudTh>@Loc["Email"]</MudTh>
@@ -29,6 +30,7 @@
     <RowTemplate>
         <MudTd DataLabel="@Loc["CivilId"]">@context.CivilId</MudTd>
         <MudTd DataLabel="@Loc["EmployeeId"]">@context.EmployeeId</MudTd>
+        <MudTd DataLabel="Full Name">@context.FullName</MudTd>
         <MudTd DataLabel="@Loc["Hierarchy"]">@context.HierarchyName</MudTd>
         <MudTd DataLabel="@Loc["UserAccount"]">@context.UserName</MudTd>
         <MudTd DataLabel="@Loc["Email"]">@context.Email</MudTd>
@@ -67,6 +69,8 @@
         if (string.IsNullOrWhiteSpace(_searchString))
             return true;
         if (element.CivilId != null && element.CivilId.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.FullName != null && element.FullName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         if (element.EmployeeId != null && element.EmployeeId.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
