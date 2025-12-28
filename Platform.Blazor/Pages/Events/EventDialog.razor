@@ -1,0 +1,94 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Events
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@inject IEventsService EventsService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Align="Align.Center">@Title</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudRTLProvider RightToLeft="@IsRtl">
+            <MudForm @ref="_form" @bind-IsValid="_success">
+                <MudStack Spacing="3">
+                    <MudTextField Label="@Loc["Name"]" @bind-Value="EventModel.Name" Required="true" />
+                    <MudTextField Label="@Loc["NameAr"]" @bind-Value="EventModel.NameAr" Required="true" />
+
+                    <MudDateRangePicker Label="@Loc["Period"]" @bind-DateRange="_dateRange" Required="true" />
+                    
+                    <MudGrid>
+                        <MudItem xs="6">
+                             <MudTimePicker Label="@Loc["StartTime"]" @bind-Time="_startTime" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTimePicker Label="@Loc["EndTime"]" @bind-Time="_endTime" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudTextField Label="@Loc["Location"]" @bind-Value="EventModel.Location" Required="true" />
+                    <MudTextField Label="@Loc["LocationAr"]" @bind-Value="EventModel.LocationAr" Required="true" />
+
+                    <MudSelect T="int" Label="@Loc["Type"]" @bind-Value="EventModel.EventTypeId" AnchorOrigin="Origin.BottomCenter" Required="true">
+                        @foreach (var type in EventTypes)
+                        {
+                            <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudTextField Label="@Loc["Description"]" @bind-Value="EventModel.Description" Lines="3" />
+                </MudStack>
+            </MudForm>
+        </MudRTLProvider>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="@(!_success)">@Loc["Save"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public Event EventModel { get; set; } = new();
+    [Parameter] public List<EventType> EventTypes { get; set; } = new();
+    [Parameter] public string Title { get; set; }
+
+    private MudForm _form;
+    private bool _success;
+    private DateRange _dateRange;
+    private TimeSpan? _startTime;
+    private TimeSpan? _endTime;
+
+    private bool IsRtl => System.Globalization.CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+
+    protected override void OnInitialized()
+    {
+        // Initialize local state from passed model
+        _dateRange = new DateRange(EventModel.StartDate.Date, EventModel.EndDate.Date);
+        _startTime = EventModel.StartDate.TimeOfDay;
+        _endTime = EventModel.EndDate.TimeOfDay;
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_success)
+        {
+            // Update model with new date/times
+            var startBase = _dateRange.Start ?? DateTime.Now.Date;
+            var endBase = _dateRange.End ?? startBase;
+
+            EventModel.StartDate = startBase.Date + (_startTime ?? TimeSpan.Zero);
+            EventModel.EndDate = endBase.Date + (_endTime ?? TimeSpan.Zero);
+
+            MudDialog.Close(DialogResult.Ok(EventModel));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

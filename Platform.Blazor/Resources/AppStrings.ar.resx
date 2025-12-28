@@ -389,69 +389,9 @@
     <value>أنواع الفعاليات</value>
   </data>
   <data name="UpcomingEvents" xml:space="preserve">
-    <value>الفعاليات القادمة</value>
+    <value>الأحداث القادمة</value>
   </data>
-  <data name="NoUpcomingEventsFound" xml:space="preserve">
-    <value>لا توجد فعاليات قادمة.</value>
-  </data>
-  <data name="TimeAttendance" xml:space="preserve">
-    <value>تسجيل الحضور</value>
-  </data>
-  <data name="CheckInOut" xml:space="preserve">
-    <value>تسجيل الحضور/الإنصراف</value>
-  </data>
-  <data name="AttendanceReport" xml:space="preserve">
-    <value>تقرير الحضور</value>
-  </data>
-  <data name="CheckInTitle" xml:space="preserve">
-    <value>تسجيل الحضور - الحضور/الإنصراف</value>
-  </data>
-  <data name="EnterEmployeeId" xml:space="preserve">
-    <value>أدخل رقم الموظف</value>
-  </data>
-  <data name="CheckIn" xml:space="preserve">
-    <value>تسجيل حضور</value>
-  </data>
-  <data name="CheckOut" xml:space="preserve">
-    <value>تسجيل إنصراف</value>
-  </data>
-  <data name="RecentActivity" xml:space="preserve">
-    <value>النشاط الأخير</value>
-  </data>
-  <data name="Time" xml:space="preserve">
-    <value>الوقت</value>
-  </data>
-  <data name="PleaseEnterValidId" xml:space="preserve">
-    <value>يرجى إدخال رقم موظف صحيح</value>
-  </data>
-  <data name="CheckInSuccess" xml:space="preserve">
-    <value>تم تسجيل الحضور بنجاح</value>
-  </data>
-  <data name="CheckOutSuccess" xml:space="preserve">
-    <value>تم تسجيل الإنصراف بنجاح</value>
-  </data>
-  <data name="HRAttendanceReportTitle" xml:space="preserve">
-    <value>تقرير حضور الموارد البشرية</value>
-  </data>
-  <data name="FromDate" xml:space="preserve">
-    <value>من تاريخ</value>
-  </data>
-  <data name="ToDate" xml:space="preserve">
-    <value>إلى تاريخ</value>
-  </data>
-  <data name="EmployeeIdOptional" xml:space="preserve">
-    <value>رقم الموظف (اختياري)</value>
-  </data>
-  <data name="GenerateReport" xml:space="preserve">
-    <value>إنشاء التقرير</value>
-  </data>
-  <data name="EmployeeID" xml:space="preserve">
-    <value>رقم الموظف</value>
-  </data>
-  <data name="PleaseSelectDateRange" xml:space="preserve">
-    <value>يرجى اختيار نطاق تاريخ</value>
-  </data>
-  <data name="NoRecordsFound" xml:space="preserve">
-    <value>لم يتم العثور على سجلات للمعايير المحددة</value>
+  <data name="NoUpcomingEvents" xml:space="preserve">
+    <value>لا توجد أحداث قادمة.</value>
   </data>
 </root>

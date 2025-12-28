@@ -5,9 +5,7 @@
 @inject ISnackbar Snackbar
 @using Microsoft.Extensions.Localization
 @using Platform.Blazor.Resources
-
 @inject IStringLocalizer<AppStrings> Loc
-@using System.Globalization
 
 <MudText Typo="Typo.h5" Class="mb-4">@Loc["UpcomingEvents"]</MudText>
 
@@ -17,19 +15,24 @@
 }
 else if (!_events.Any())
 {
-    <MudAlert Severity="Severity.Info">@Loc["NoUpcomingEventsFound"]</MudAlert>
+    <MudAlert Severity="Severity.Info">@Loc["NoUpcomingEvents"]</MudAlert>
 }
 else
 {
     <MudGrid>
         @foreach (var evt in _events)
         {
+            var name = GetLocalizedValue(evt.Name, evt.NameAr);
+            var description = GetLocalizedValue(evt.Description, evt.DescriptionAr);
+            var location = GetLocalizedValue(evt.Location, evt.LocationAr);
+            var eventType = evt.EventType != null ? GetLocalizedValue(evt.EventType.Name, evt.EventType.NameAr) : "";
+
             <MudItem xs="12" sm="6" md="4">
                 <MudCard Elevation="3" Class="h-100">
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6">@(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.NameAr : evt.Name)</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.EventType?.NameAr : evt.EventType?.Name)</MudText>
+                            <MudText Typo="Typo.h6">@name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@eventType</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
                             <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@evt.StartDate.ToString("MMM dd", CultureInfo.CurrentCulture)</MudChip>
@@ -43,11 +46,11 @@ else
                             </MudText>
                             <MudText Typo="Typo.body2">
                                 <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
-                                @(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.LocationAr : evt.Location)
+                                @location
                             </MudText>
-                             @if (!string.IsNullOrEmpty(evt.Description) || !string.IsNullOrEmpty(evt.DescriptionAr))
+                             @if (!string.IsNullOrEmpty(description))
                             {
-                                <MudText Typo="Typo.body2" Class="mt-2 text-truncate">@(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.DescriptionAr : evt.Description)</MudText>
+                                <MudText Typo="Typo.body2" Class="mt-2 text-truncate">@description</MudText>
                             }
                         </MudStack>
                     </MudCardContent>
@@ -85,5 +88,16 @@ else
         {
             _loading = false;
         }
+    }
+
+    private bool IsArabic => System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+
+    private string GetLocalizedValue(string en, string ar)
+    {
+        if (IsArabic && !string.IsNullOrEmpty(ar))
+        {
+            return ar;
+        }
+        return en;
     }
 }
