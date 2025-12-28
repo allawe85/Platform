@@ -388,4 +388,52 @@
   <data name="EventTypes" xml:space="preserve">
     <value>أنواع الفعاليات</value>
   </data>
+  <data name="AddAsset" xml:space="preserve">
+    <value>إضافة أصل</value>
+  </data>
+  <data name="EditAsset" xml:space="preserve">
+    <value>تعديل أصل</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>تحديث</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>إنشاء</value>
+  </data>
+  <data name="AssetType" xml:space="preserve">
+    <value>نوع الأصل</value>
+  </data>
+  <data name="AssignedEmployee" xml:space="preserve">
+    <value>الموظف المعين</value>
+  </data>
+  <data name="AddDocument" xml:space="preserve">
+    <value>إضافة مستند</value>
+  </data>
+  <data name="EditDocument" xml:space="preserve">
+    <value>تعديل مستند</value>
+  </data>
+  <data name="DocumentType" xml:space="preserve">
+    <value>نوع المستند</value>
+  </data>
+  <data name="Employee" xml:space="preserve">
+    <value>الموظف</value>
+  </data>
+  <data name="AddEmployee" xml:space="preserve">
+    <value>إضافة موظف</value>
+  </data>
+  <data name="EditEmployee" xml:space="preserve">
+    <value>تعديل موظف</value>
+  </data>
+  <data name="EmployeeDetails" xml:space="preserve">
+    <value>تفاصيل الموظف</value>
+  </data>
+  <data name="BackToList" xml:space="preserve">
+    <value>العودة للقائمة</value>
+  </data>
+  <data name="AssignedAssets" xml:space="preserve">
+    <value>الأصول المعينة</value>
+  </data>
+  <data name="EmployeeDocuments" xml:space="preserve">
+    <value>مستندات الموظف</value>
+  </data>
 </root>
