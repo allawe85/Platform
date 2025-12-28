@@ -167,7 +167,21 @@
                         AspnetusersId = _employee.AspnetusersId,
                         FullName = _employee.FullName
                     };
-                    await EmployeesService.CreateEmployeeAsync(employeeToCreate);
+
+                    var request = new CreateEmployeeRequest
+                    {
+                        Employee = employeeToCreate,
+                        LeaveBalances = _leaveBalanceModels
+                            .Where(x => x.IsSelected)
+                            .Select(x => new LeaveBalance
+                            {
+                                LeaveTypeId = x.Type.Id,
+                                Balance = x.Balance,
+                                EmployeeId = 0 // Will be set by server
+                            }).ToList()
+                    };
+
+                    await EmployeesService.CreateEmployeeAsync(request);
                     Snackbar.Add("Employee created successfully", Severity.Success);
                     await Close(true);
                 }
