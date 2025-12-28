@@ -38,15 +38,48 @@ namespace Platform.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateEmployee([FromBody] Data.DTOs.Employee employee)
+        public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var createdEmployee = await _context.AddEmployeeAsync(employee);
-            return CreatedAtAction(nameof(GetEmployeeById), new { id = createdEmployee.Id }, createdEmployee
-            );
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Add Employee
+                var employee = request.Employee;
+                var createdEmployeeEntry = await _context.Employees.AddAsync(employee);
+                await _context.SaveChangesAsync();
+
+                var createdEmployee = createdEmployeeEntry.Entity;
+
+                // 2. Add Leave Balances if provided
+                if (request.LeaveBalances != null && request.LeaveBalances.Any())
+                {
+                    foreach (var balance in request.LeaveBalances)
+                    {
+                        balance.EmployeeId = createdEmployee.Id;
+                        // Avoid inserting duplicate LeaveType or Employee if they are attached
+                        balance.LeaveType = null; 
+                        balance.Employee = null;
+                        
+                        await _context.LeaveBalances.AddAsync(balance);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                return CreatedAtAction(nameof(GetEmployeeById), new { id = createdEmployee.Id }, createdEmployee);
+
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpPut]
