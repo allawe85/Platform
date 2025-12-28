@@ -6,7 +6,7 @@ namespace Platform.Blazor.Services.Employees
     {
         Task<List<EmployeeInfo>> GetAllEmployeesAsync();
         Task<EmployeeInfo?> GetEmployeeInfoByIdAsync(int id);
-        Task<Employee> CreateEmployeeAsync(Employee employee);
+        Task<Employee> CreateEmployeeAsync(CreateEmployeeRequest request);
         Task<Employee?> UpdateEmployeeAsync(int id, Employee employee);
         Task<bool> DeleteEmployeeAsync(int id);
         Task<Employee?> GetEmployeeRecordByIdAsync(int id);

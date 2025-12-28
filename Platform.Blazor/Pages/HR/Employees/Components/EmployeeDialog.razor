@@ -7,6 +7,7 @@
 @inject IHierarchiesService HierarchiesService
 @inject IApplicationUsersService UsersService
 @inject ISnackbar Snackbar
+@inject Platform.Blazor.Services.Leaves.LeaveService LeaveService
 
 <MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
@@ -29,6 +30,22 @@
                         <MudSelectItem Value="@user.Id">@user.UserName (@user.Email)</MudSelectItem>
                     }
                 </MudSelect>
+
+
+                @if (!_isEdit)
+                {
+                    <MudText Typo="Typo.subtitle1" Class="mt-4">Initial Leave Balances</MudText>
+                    <MudDivider />
+                    <MudStack Spacing="2" Class="mt-2">
+                        @foreach (var item in _leaveBalanceModels)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudCheckBox @bind-Value="item.IsSelected" Label="@item.Type.Name" Dense="true" Color="Color.Primary" />
+                                <MudNumericField @bind-Value="item.Balance" Label="Balance" Disabled="@(!item.IsSelected)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width: 100px;" />
+                            </MudStack>
+                        }
+                    </MudStack>
+                }
             </MudStack>
         </MudForm>
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
@@ -47,7 +64,9 @@
 
     private Employee _employee = new Employee();
     private List<Hierarchy> _hierarchies = new();
+
     private List<ApplicationUser> _users = new();
+    private List<LeaveBalanceModel> _leaveBalanceModels = new();
     
     private MudForm _form;
     private bool _success;
@@ -95,7 +114,20 @@
         await Task.WhenAll(hierarchyTask, usersTask);
         
         _hierarchies = await hierarchyTask;
+
         _users = await usersTask;
+
+        // Load Leave Types for new employee
+        if (!_isEdit)
+        {
+            var leaveTypes = await LeaveService.GetLeaveTypes();
+            _leaveBalanceModels = leaveTypes.Select(lt => new LeaveBalanceModel
+            {
+                Type = lt,
+                IsSelected = true,
+                Balance = lt.TypeBalance
+            }).ToList();
+        }
     }
 
     private async Task Submit()
@@ -121,9 +153,22 @@
             {
                 try
                 {
-                     // Ensure ID is 0
+                    // Ensure ID is 0
                     _employee.Id = 0; 
-                    await EmployeesService.CreateEmployeeAsync(_employee);
+
+                    var request = new CreateEmployeeRequest
+                    {
+                        Employee = _employee,
+                        LeaveBalances = _leaveBalanceModels
+                            .Where(x => x.IsSelected)
+                            .Select(x => new LeaveBalance
+                            {
+                                LeaveTypeId = x.Type.Id,
+                                Balance = x.Balance
+                            }).ToList()
+                    };
+
+                    await EmployeesService.CreateEmployeeAsync(request);
                     Snackbar.Add("Employee created successfully", Severity.Success);
                     await Close(true);
                 }
@@ -143,4 +188,11 @@
     }
     
     private async Task Cancel() => await Close(false);
+
+    public class LeaveBalanceModel
+    {
+        public LeaveType Type { get; set; }
+        public bool IsSelected { get; set; }
+        public int? Balance { get; set; }
+    }
 }

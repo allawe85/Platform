@@ -14,6 +14,10 @@ namespace Platform.Data.DTOs
         [StringLength(200)]
         public string NameAr { get; set; }
 
+        [Column("name")]
+        [StringLength(200)]
+        public string Name { get; set; }
+
         [Column("type_balance")]
         public int? TypeBalance { get; set; }
     }
