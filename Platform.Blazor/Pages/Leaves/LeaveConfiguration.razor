@@ -1,0 +1,216 @@
+@page "/leave-configuration"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Leaves
+@inject LeaveService LeaveService
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudText Typo="Typo.h5" GutterBottom="true">Leave Configuration</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Leave Types</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTable Items="@LeaveTypes" Dense="true" Hover="true" CanCancelEdit="true" 
+                          CommitEditTooltip="Commit Edit" CancelEditTooltip="Discard Changes" 
+                          RowEditPreview="BackupTypeItem" RowEditCancel="ResetTypeItem" RowEditCommit="TypeItemHasBeenCommitted"
+                          IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.EditButton">
+                    <HeaderContent>
+                        <MudTh>Name (AR)</MudTh>
+                        <MudTh>Balance</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name (AR)">@context.NameAr</MudTd>
+                        <MudTd DataLabel="Balance">@context.TypeBalance</MudTd>
+                        <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteType(context.Id))" />
+                        </MudTd>
+                    </RowTemplate>
+                    <RowEditingTemplate>
+                        <MudTd DataLabel="Name (AR)">
+                            <MudTextField @bind-Value="@context.NameAr" Required />
+                        </MudTd>
+                        <MudTd DataLabel="Balance">
+                            <MudNumericField @bind-Value="@context.TypeBalance" />
+                        </MudTd>
+                    </RowEditingTemplate>
+                </MudTable>
+
+                <div class="d-flex gap-2 mt-4">
+                     <MudTextField @bind-Value="NewTypeName" Label="New Type Name (AR)" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
+                     <MudNumericField @bind-Value="NewTypeBalance" Label="Balance" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
+                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddType">Add</MudButton>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+     <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                 <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Leave Statuses</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                 <MudTable Items="@LeaveStatuses" Dense="true" Hover="true" CanCancelEdit="true"
+                          CommitEditTooltip="Commit Edit" CancelEditTooltip="Discard Changes"
+                          RowEditPreview="BackupStatusItem" RowEditCancel="ResetStatusItem" RowEditCommit="StatusItemHasBeenCommitted"
+                          IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.EditButton">
+                    <HeaderContent>
+                        <MudTh>Name (AR)</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Name (AR)">@context.NameAr</MudTd>
+                         <MudTd>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteStatus(context.Id))" />
+                        </MudTd>
+                    </RowTemplate>
+                    <RowEditingTemplate>
+                        <MudTd DataLabel="Name (AR)">
+                            <MudTextField @bind-Value="@context.NameAr" Required />
+                        </MudTd>
+                    </RowEditingTemplate>
+                </MudTable>
+
+                 <div class="d-flex gap-2 mt-4">
+                     <MudTextField @bind-Value="NewStatusName" Label="New Status Name (AR)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddStatus">Add</MudButton>
+                 </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<LeaveType> LeaveTypes = new();
+    private List<LeaveStatus> LeaveStatuses = new();
+
+    private string NewTypeName;
+    private int? NewTypeBalance;
+    private string NewStatusName;
+
+    // Backup for edit revert
+    private LeaveType _typeBeforeEdit;
+    private LeaveStatus _statusBeforeEdit;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try {
+            LeaveTypes = await LeaveService.GetLeaveTypes();
+            LeaveStatuses = await LeaveService.GetLeaveStatuses();
+        } catch {}
+    }
+
+    // --- Types CRUD ---
+
+    private async Task AddType()
+    {
+        if (string.IsNullOrWhiteSpace(NewTypeName)) return;
+        var type = new LeaveType { NameAr = NewTypeName, TypeBalance = NewTypeBalance };
+        await Http.PostAsJsonAsync("api/LeaveTypes", type);
+        NewTypeName = ""; NewTypeBalance = null;
+        Snackbar.Add("Type added", Severity.Success);
+        await LoadData();
+    }
+
+    private void BackupTypeItem(object element)
+    {
+        var item = (LeaveType)element;
+        _typeBeforeEdit = new LeaveType { Id = item.Id, NameAr = item.NameAr, TypeBalance = item.TypeBalance };
+    }
+
+    private void ResetTypeItem(object element)
+    {
+        var item = (LeaveType)element;
+        if (_typeBeforeEdit != null)
+        {
+            item.NameAr = _typeBeforeEdit.NameAr;
+            item.TypeBalance = _typeBeforeEdit.TypeBalance;
+        }
+    }
+
+    private async void TypeItemHasBeenCommitted(object element)
+    {
+        var item = (LeaveType)element;
+        await Http.PutAsJsonAsync($"api/LeaveTypes/{item.Id}", item);
+        Snackbar.Add("Type updated", Severity.Success);
+    }
+
+    private async Task DeleteType(int id)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning", 
+            "Deleting can not be undone!", 
+            yesText:"Delete!", cancelText:"Cancel");
+
+        if (result == true)
+        {
+            await Http.DeleteAsync($"api/LeaveTypes/{id}");
+            Snackbar.Add("Type deleted", Severity.Success);
+            await LoadData();
+        }
+    }
+
+    // --- Statuses CRUD ---
+
+    private async Task AddStatus()
+    {
+        if (string.IsNullOrWhiteSpace(NewStatusName)) return;
+        var status = new LeaveStatus { NameAr = NewStatusName };
+        await Http.PostAsJsonAsync("api/LeaveStatuses", status);
+        NewStatusName = "";
+        Snackbar.Add("Status added", Severity.Success);
+        await LoadData();
+    }
+
+    private void BackupStatusItem(object element)
+    {
+        var item = (LeaveStatus)element;
+        _statusBeforeEdit = new LeaveStatus { Id = item.Id, NameAr = item.NameAr };
+    }
+
+    private void ResetStatusItem(object element)
+    {
+        var item = (LeaveStatus)element;
+        if (_statusBeforeEdit != null)
+        {
+            item.NameAr = _statusBeforeEdit.NameAr;
+        }
+    }
+
+    private async void StatusItemHasBeenCommitted(object element)
+    {
+        var item = (LeaveStatus)element;
+        await Http.PutAsJsonAsync($"api/LeaveStatuses/{item.Id}", item);
+        Snackbar.Add("Status updated", Severity.Success);
+    }
+
+    private async Task DeleteStatus(int id)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning", 
+            "Deleting can not be undone!", 
+            yesText:"Delete!", cancelText:"Cancel");
+
+        if (result == true)
+        {
+            await Http.DeleteAsync($"api/LeaveStatuses/{id}");
+            Snackbar.Add("Status deleted", Severity.Success);
+            await LoadData();
+        }
+    }
+}

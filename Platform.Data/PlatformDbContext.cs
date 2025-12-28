@@ -44,6 +44,10 @@ namespace Platform.Data
         public DbSet<PollOption> PollOptions { get; set; }
         public DbSet<PollVote> PollVotes { get; set; }
 
+        public DbSet<Leave> Leaves { get; set; }
+        public DbSet<LeaveType> LeaveTypes { get; set; }
+        public DbSet<LeaveStatus> LeaveStatuses { get; set; }
+        public DbSet<LeaveBalance> LeaveBalances { get; set; }
         public DbSet<TimeAttendance> TimeAttendances { get; set; }
 
         #endregion
@@ -750,6 +754,24 @@ namespace Platform.Data
         }
 
         #endregion
+
+        #region LeaveType - CRUD Operations
+
+        public async Task<List<LeaveType>> GetAllLeaveTypesAsync()
+        {
+            return await LeaveTypes
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<LeaveType?> GetLeaveTypeByIdAsync(int id)
+        {
+            return await LeaveTypes.FindAsync(id);
+        }
+
+        public async Task<LeaveType> AddLeaveTypeAsync(LeaveType entity)
+        {
+            var entry = await LeaveTypes.AddAsync(entity);
         #region TimeAttendance - Operations
 
         public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
@@ -759,6 +781,198 @@ namespace Platform.Data
             return entry.Entity;
         }
 
+        public async Task<LeaveType?> UpdateLeaveTypeAsync(LeaveType entity)
+        {
+            var existing = await LeaveTypes.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.NameAr = entity.NameAr;
+            existing.TypeBalance = entity.TypeBalance;
+
+            LeaveTypes.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteLeaveTypeAsync(int id)
+        {
+            var existing = await LeaveTypes.FindAsync(id);
+            if (existing == null) return false;
+
+            LeaveTypes.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region LeaveStatus - CRUD Operations
+
+        public async Task<List<LeaveStatus>> GetAllLeaveStatusesAsync()
+        {
+            return await LeaveStatuses
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<LeaveStatus?> GetLeaveStatusByIdAsync(int id)
+        {
+            return await LeaveStatuses.FindAsync(id);
+        }
+
+        public async Task<LeaveStatus> AddLeaveStatusAsync(LeaveStatus entity)
+        {
+            var entry = await LeaveStatuses.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<LeaveStatus?> UpdateLeaveStatusAsync(LeaveStatus entity)
+        {
+            var existing = await LeaveStatuses.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.NameAr = entity.NameAr;
+
+            LeaveStatuses.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteLeaveStatusAsync(int id)
+        {
+            var existing = await LeaveStatuses.FindAsync(id);
+            if (existing == null) return false;
+
+            LeaveStatuses.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+
+        #endregion
+
+        #region LeaveBalance - CRUD Operations
+
+        public async Task<List<LeaveBalance>> GetLeaveBalancesByEmployeeIdAsync(int employeeId)
+        {
+            return await LeaveBalances
+                .AsNoTracking()
+                .Include(lb => lb.LeaveType)
+                .Where(lb => lb.EmployeeId == employeeId)
+                .ToListAsync();
+        }
+
+        public async Task<LeaveBalance?> GetLeaveBalanceByIdAsync(int id)
+        {
+             return await LeaveBalances
+                .Include(lb => lb.LeaveType)
+                .Include(lb => lb.Employee)
+                .FirstOrDefaultAsync(lb => lb.Id == id);
+        }
+
+        public async Task<LeaveBalance> AddLeaveBalanceAsync(LeaveBalance entity)
+        {
+            var entry = await LeaveBalances.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<LeaveBalance?> UpdateLeaveBalanceAsync(LeaveBalance entity)
+        {
+            var existing = await LeaveBalances.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.Balance = entity.Balance;
+            // Usually we don't update employee or type for an existing balance record, but can if needed.
+
+            LeaveBalances.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        // Helper to check if enough balance exists
+        public async Task<bool> HasEnoughBalanceAsync(int employeeId, int leaveTypeId, int daysRequested)
+        {
+            var balance = await LeaveBalances
+                .FirstOrDefaultAsync(lb => lb.EmployeeId == employeeId && lb.LeaveTypeId == leaveTypeId);
+            
+            if (balance == null) return false; // Or true if infinite? Assuming explicit balance needed.
+            
+            return (balance.Balance ?? 0) >= daysRequested;
+        }
+
+        #endregion
+
+        #region Leave - CRUD Operations
+
+        public async Task<List<Leave>> GetLeavesByEmployeeIdAsync(int employeeId)
+        {
+            return await Leaves
+                .AsNoTracking()
+                .Include(l => l.LeaveType)
+                .Include(l => l.LeaveStatus)
+                .Where(l => l.EmployeeId == employeeId)
+                .OrderByDescending(l => l.Id)
+                .ToListAsync();
+        }
+
+        public async Task<List<Leave>> GetPendingLeavesAsync()
+        {
+            // Assuming we check for specific status ID or just return all? 
+            // Better to filter by status if we know the ID.
+            // But currently flexible. returning all with eager loading.
+            return await Leaves
+                .Include(l => l.LeaveType)
+                .Include(l => l.LeaveStatus)
+                .Include(l => l.Employee)
+                .OrderByDescending(l => l.Id)
+                .ToListAsync(); 
+        }
+
+        public async Task<Leave?> GetLeaveByIdAsync(int id)
+        {
+            return await Leaves
+                .Include(l => l.LeaveType)
+                .Include(l => l.LeaveStatus)
+                .Include(l => l.Employee)
+                .FirstOrDefaultAsync(l => l.Id == id);
+        }
+
+        public async Task<Leave> AddLeaveAsync(Leave entity)
+        {
+            var entry = await Leaves.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<Leave?> UpdateLeaveAsync(Leave entity)
+        {
+            var existing = await Leaves.FindAsync(entity.Id);
+            if (existing == null) return null;
+
+            existing.LeaveStatusId = entity.LeaveStatusId;
+            existing.StartDate = entity.StartDate;
+            existing.EndDate = entity.EndDate;
+            existing.Details = entity.Details;
+            // Add other fields if necessary
+
+            Leaves.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<Leave?> UpdateLeaveStatusAsync(int leaveId, int newStatusId)
+        {
+            var existing = await Leaves.FindAsync(leaveId);
+            if (existing == null) return null;
+
+            existing.LeaveStatusId = newStatusId;
+
+            Leaves.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+        
         public async Task<List<TimeAttendance>> GetTimeAttendanceByEmployeeIdAsync(int employeeId)
         {
             return await TimeAttendances

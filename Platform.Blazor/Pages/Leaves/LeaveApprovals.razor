@@ -1,0 +1,62 @@
+@page "/leave-approvals"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Leaves
+@inject LeaveService LeaveService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" GutterBottom="true">Leave Approvals</MudText>
+
+<MudTable Items="PendingLeaves" Hover="true" Loading="@(PendingLeaves == null)">
+    <HeaderContent>
+        <MudTh>Employee</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Start Date</MudTh>
+        <MudTh>End Date</MudTh>
+        <MudTh>Days</MudTh>
+        <MudTh>Details</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Employee">@context.Employee?.CivilId</MudTd>
+        <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>
+        <MudTd DataLabel="Start">@context.StartDate.ToShortDateString()</MudTd>
+        <MudTd DataLabel="End">@context.EndDate.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Days">@((context.EndDate - context.StartDate).Days + 1)</MudTd>
+        <MudTd DataLabel="Details">@context.Details</MudTd>
+        <MudTd>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Success" OnClick="() => Approve(context.Id)">Approve</MudButton>
+            <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Error" OnClick="() => Reject(context.Id)" Class="ml-2">Reject</MudButton>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No pending leave requests.</MudText>
+    </NoRecordsContent>
+</MudTable>
+
+@code {
+    private List<Leave> PendingLeaves;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        PendingLeaves = await LeaveService.GetPendingLeaves();
+    }
+
+    private async Task Approve(int id)
+    {
+        await LeaveService.ApproveLeave(id);
+        Snackbar.Add("Request approved", Severity.Success);
+        await LoadData();
+    }
+
+    private async Task Reject(int id)
+    {
+        await LeaveService.RejectLeave(id);
+         Snackbar.Add("Request rejected", Severity.Info);
+        await LoadData();
+    }
+}
