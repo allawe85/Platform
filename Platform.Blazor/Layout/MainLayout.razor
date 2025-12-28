@@ -60,7 +60,7 @@
             </MudNavGroup>
             <MudNavGroup Title="@Loc["Events"]" Icon="@Icons.Material.Filled.Event">
                 <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">@Loc["Calendar"]</MudNavLink>
-                <MudNavLink Href="/upcoming-events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Upcoming">Upcoming Events</MudNavLink>
+                <MudNavLink Href="/upcoming-events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Upcoming">@Loc["UpcomingEvents"]</MudNavLink>
                 <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">@Loc["EventTypes"]</MudNavLink>
             </MudNavGroup>
 
@@ -79,9 +79,9 @@
                 <MudNavLink Href="/polls-management" Icon="@Icons.Material.Filled.List">@Loc["Management"]</MudNavLink>
                 <MudNavLink Href="/poll-vote" Icon="@Icons.Material.Filled.HowToVote">@Loc["Vote"]</MudNavLink>
             </MudNavGroup>
-            <MudNavGroup Title="Time Attendance" Icon="@Icons.Material.Filled.AccessTime">
-                <MudNavLink Href="/attendance/checkin" Icon="@Icons.Material.Filled.Timer">Check In/Out</MudNavLink>
-                <MudNavLink Href="/attendance/report" Icon="@Icons.Material.Filled.Assessment">Attendance Report</MudNavLink>
+            <MudNavGroup Title="@Loc["TimeAttendance"]" Icon="@Icons.Material.Filled.AccessTime">
+                <MudNavLink Href="/attendance/checkin" Icon="@Icons.Material.Filled.Timer">@Loc["CheckInOut"]</MudNavLink>
+                <MudNavLink Href="/attendance/report" Icon="@Icons.Material.Filled.Assessment">@Loc["AttendanceReport"]</MudNavLink>
             </MudNavGroup>
         </MudNavMenu>
     </MudDrawer>
