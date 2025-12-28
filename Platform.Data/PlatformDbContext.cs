@@ -18,6 +18,7 @@ namespace Platform.Data
 
 
         #region DbSets - Tables Representation
+        public DbSet<Announcement> Announcements { get; set; }
         public DbSet<HierarchyLevel> HierarchyLevels { get; set; }
 
         public DbSet<Hierarchy> Hierarchies { get; set; }
@@ -54,6 +55,59 @@ namespace Platform.Data
 
 
         #region HierarchyLevel - CRUD Operations
+
+
+
+        #region Announcement - CRUD Operations
+        public async Task<List<Announcement>> GetAllAnnouncementsAsync()
+        {
+            return await Announcements
+                .AsNoTracking()
+                .OrderByDescending(x => x.CreatedDate)
+                .ToListAsync();
+        }
+
+        public async Task<Announcement?> GetAnnouncementByIdAsync(int id)
+        {
+            return await Announcements.FindAsync(id);
+        }
+
+        public async Task<Announcement> AddAnnouncementAsync(Announcement entity)
+        {
+            var entry = await Announcements.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+
+        public async Task<Announcement?> UpdateAnnouncementAsync(Announcement entity)
+        {
+            var existing = await Announcements.FindAsync(entity.AnnouncementId);
+            if (existing == null) return null;
+
+            existing.Title = entity.Title;
+            existing.Description = entity.Description;
+            existing.IsActive = entity.IsActive;
+            // CreatedDate usually isn't updated, or if it is, include it here. 
+            // Based on user SQL, they did update it, so let's allow it or set it to now if needed.
+            // But usually created date is fixed. The user SQL example: CreatedDate = GETDATE(). 
+            // So we can update it if the entity has a new date, but typically we trust the entity coming in unless we want to enforce server time on update.
+            // For now, let's assume the entity passed in has the correct values.
+            
+            Announcements.Update(existing);
+            await SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<bool> DeleteAnnouncementAsync(int id)
+        {
+            var existing = await Announcements.FindAsync(id);
+            if (existing == null) return false;
+
+            Announcements.Remove(existing);
+            await SaveChangesAsync();
+            return true;
+        }
+        #endregion
 
         public async Task<List<HierarchyLevel>> GetAllHierarchyLevelsAsync()
         {
@@ -817,6 +871,7 @@ namespace Platform.Data
             if (existing == null) return null;
 
             existing.NameAr = entity.NameAr;
+            existing.Name = entity.Name;
             existing.TypeBalance = entity.TypeBalance;
 
             LeaveTypes.Update(existing);

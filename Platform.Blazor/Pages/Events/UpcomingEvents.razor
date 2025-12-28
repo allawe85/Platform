@@ -35,14 +35,14 @@ else
                             <MudText Typo="Typo.caption" Color="Color.Secondary">@eventType</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@evt.StartDate.ToString("MMM dd")</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@evt.StartDate.ToString("MMM dd", CultureInfo.CurrentCulture)</MudChip>
                         </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
                         <MudStack Spacing="1">
                             <MudText Typo="Typo.body2">
                                 <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="mr-1" />
-                                @evt.StartDate.ToShortTimeString() - @evt.EndDate.ToShortTimeString()
+                                @evt.StartDate.ToString("t", CultureInfo.CurrentCulture) - @evt.EndDate.ToString("t", CultureInfo.CurrentCulture)
                             </MudText>
                             <MudText Typo="Typo.body2">
                                 <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
