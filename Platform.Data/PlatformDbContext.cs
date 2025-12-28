@@ -399,7 +399,7 @@ namespace Platform.Data
         {
             var existing = await DocumentTypes.FindAsync(entity.Id);
             if (existing == null) return null;
-            
+
             // copy scalar properties
             existing.Name = entity.Name;
             existing.NameAr = entity.NameAr;
@@ -755,6 +755,41 @@ namespace Platform.Data
 
         #endregion
 
+        
+
+        #region TimeAttendance - Operations
+              public async Task<List<TimeAttendance>> GetTimeAttendanceByEmployeeIdAsync(int employeeId)
+        {
+            return await TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.EmployeeId == employeeId)
+                .OrderByDescending(ta => ta.TransactionTime)
+                .ToListAsync();
+        }
+
+        public async Task<List<TimeAttendance>> GetTimeAttendanceReportAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
+        {
+            var query = TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.TransactionTime >= startDate && ta.TransactionTime <= endDate);
+
+            if (employeeId.HasValue)
+            {
+                query = query.Where(ta => ta.EmployeeId == employeeId.Value);
+            }
+
+            return await query
+                .OrderBy(ta => ta.TransactionTime)
+                .ToListAsync();
+        }
+        public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
+        {
+            var entry = await TimeAttendances.AddAsync(entity);
+            await SaveChangesAsync();
+            return entry.Entity;
+        }
+        #endregion
+
         #region LeaveType - CRUD Operations
 
         public async Task<List<LeaveType>> GetAllLeaveTypesAsync()
@@ -772,11 +807,6 @@ namespace Platform.Data
         public async Task<LeaveType> AddLeaveTypeAsync(LeaveType entity)
         {
             var entry = await LeaveTypes.AddAsync(entity);
-        #region TimeAttendance - Operations
-
-        public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
-        {
-            var entry = await TimeAttendances.AddAsync(entity);
             await SaveChangesAsync();
             return entry.Entity;
         }
@@ -864,10 +894,10 @@ namespace Platform.Data
 
         public async Task<LeaveBalance?> GetLeaveBalanceByIdAsync(int id)
         {
-             return await LeaveBalances
-                .Include(lb => lb.LeaveType)
-                .Include(lb => lb.Employee)
-                .FirstOrDefaultAsync(lb => lb.Id == id);
+            return await LeaveBalances
+               .Include(lb => lb.LeaveType)
+               .Include(lb => lb.Employee)
+               .FirstOrDefaultAsync(lb => lb.Id == id);
         }
 
         public async Task<LeaveBalance> AddLeaveBalanceAsync(LeaveBalance entity)
@@ -895,9 +925,9 @@ namespace Platform.Data
         {
             var balance = await LeaveBalances
                 .FirstOrDefaultAsync(lb => lb.EmployeeId == employeeId && lb.LeaveTypeId == leaveTypeId);
-            
+
             if (balance == null) return false; // Or true if infinite? Assuming explicit balance needed.
-            
+
             return (balance.Balance ?? 0) >= daysRequested;
         }
 
@@ -926,7 +956,7 @@ namespace Platform.Data
                 .Include(l => l.LeaveStatus)
                 .Include(l => l.Employee)
                 .OrderByDescending(l => l.Id)
-                .ToListAsync(); 
+                .ToListAsync();
         }
 
         public async Task<Leave?> GetLeaveByIdAsync(int id)
@@ -972,31 +1002,8 @@ namespace Platform.Data
             await SaveChangesAsync();
             return existing;
         }
-        
-        public async Task<List<TimeAttendance>> GetTimeAttendanceByEmployeeIdAsync(int employeeId)
-        {
-            return await TimeAttendances
-                .AsNoTracking()
-                .Where(ta => ta.EmployeeId == employeeId)
-                .OrderByDescending(ta => ta.TransactionTime)
-                .ToListAsync();
-        }
 
-        public async Task<List<TimeAttendance>> GetTimeAttendanceReportAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
-        {
-            var query = TimeAttendances
-                .AsNoTracking()
-                .Where(ta => ta.TransactionTime >= startDate && ta.TransactionTime <= endDate);
-
-            if (employeeId.HasValue)
-            {
-                query = query.Where(ta => ta.EmployeeId == employeeId.Value);
-            }
-
-            return await query
-                .OrderBy(ta => ta.TransactionTime)
-                .ToListAsync();
-        }
+      
 
         #endregion
     }
