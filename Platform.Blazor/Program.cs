@@ -41,6 +41,7 @@ builder.Services.AddScoped<IAssetsService, AssetsService>();
 builder.Services.AddScoped<IDocumentsService, DocumentsService>();
 builder.Services.AddScoped<IEventsService, EventsService>();
 builder.Services.AddScoped<IPollsService, PollsService>();
+builder.Services.AddScoped<Platform.Blazor.Services.Leaves.LeaveService>();
 
 var host = builder.Build();
 
