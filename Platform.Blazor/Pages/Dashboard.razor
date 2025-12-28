@@ -2,10 +2,13 @@
 @using System.Globalization
 @attribute [Authorize]
 
-<MudText Typo="Typo.h3" GutterBottom="true">@Loc["Dashboard"]</MudText>
-<MudText Class="mb-8">@Loc["DashboardWelcome"]</MudText>
-<MudAlert Severity="Severity.Normal" Class="mud-width-full" Style="text-align: right;">
-    <div dir="@(CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr")">
-        @Loc["LoggedInAlert"]
-    </div>
-</MudAlert>
+<MudStack Spacing="4" AlignItems="AlignItems.Start" Class="mud-width-full">
+    <MudText Typo="Typo.h3">@Loc["Dashboard"]</MudText>
+    
+    <MudStack Spacing="1" AlignItems="AlignItems.Start" Class="mud-width-full">
+        <MudText Typo="Typo.h6">@Loc["DashboardWelcome"]</MudText>
+        <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" Style="width: fit-content; min-width: 300px;">
+            @Loc["LoggedInAlert"]
+        </MudAlert>
+    </MudStack>
+</MudStack>
