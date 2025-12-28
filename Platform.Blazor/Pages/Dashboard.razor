@@ -1,14 +1,79 @@
 ﻿@page "/dashboard"
 @using System.Globalization
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Announcements
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IAnnouncementsService AnnouncementsService
+@inject IStringLocalizer<AppStrings> Loc
+@inject ISnackbar Snackbar
 @attribute [Authorize]
 
-<MudStack Spacing="4" AlignItems="AlignItems.Start" Class="mud-width-full">
-    <MudText Typo="Typo.h3">@Loc["Dashboard"]</MudText>
-    
-    <MudStack Spacing="1" AlignItems="AlignItems.Start" Class="mud-width-full">
-        <MudText Typo="Typo.h6">@Loc["DashboardWelcome"]</MudText>
-        <MudAlert Severity="Severity.Normal" Variant="Variant.Filled" Style="width: fit-content; min-width: 300px;">
-            @Loc["LoggedInAlert"]
-        </MudAlert>
-    </MudStack>
-</MudStack>
+<MudText Typo="Typo.h3" GutterBottom="true">@Loc["Dashboard"]</MudText>
+<MudText Class="mb-8">@Loc["DashboardWelcome"]</MudText>
+<MudAlert Severity="Severity.Normal" Class="mud-width-full" Style="text-align: right;">
+    <div dir="@(CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr")">
+        @Loc["LoggedInAlert"]
+    </div>
+</MudAlert>
+
+<MudGrid Class="mt-4">
+    <MudItem xs="12" md="6">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@Loc["Latest Updates"] (@(_announcements?.Count ?? 0))</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_announcements == null)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else if (!_announcements.Any())
+                {
+                    <MudText>No new updates.</MudText>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var item in _announcements)
+                        {
+                            <div class="pa-2">
+                                <div class="d-flex justify-space-between align-center">
+                                    <MudText Typo="Typo.subtitle2">@item.Title</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Default">@item.CreatedDate.ToString("g")</MudText>
+                                </div>
+                                <MudText Typo="Typo.body2" Class="mt-1">@item.Description</MudText>
+                            </div>
+                            @if (item != _announcements.Last())
+                            {
+                                <MudDivider />
+                            }
+                        }
+                    </div>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private List<Announcement> _announcements;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var all = await AnnouncementsService.GetAnnouncementsAsync();
+            _announcements = all.OrderByDescending(a => a.CreatedDate)
+                                .Take(5)
+                                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading updates: {ex.Message}", Severity.Error);
+            _announcements = new List<Announcement>();
+        }
+    }
+}
