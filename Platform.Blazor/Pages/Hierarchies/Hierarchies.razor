@@ -1,4 +1,6 @@
 @page "/hierarchies"
+@implements IAsyncDisposable
+@using Microsoft.JSInterop
 @using Platform.Blazor.Pages.Hierarchies.Components
 @using Platform.Blazor.Services.Auth
 @using Platform.Blazor.Services.Hierarchies
@@ -23,6 +25,7 @@
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomIn" OnClick="ZoomIn" Color="Color.Secondary" />
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomOut" OnClick="ZoomOut" Color="Color.Secondary" />
                 <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">@Loc["Reset"]</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" OnClick="OpenInNewWindow" Color="Color.Primary" Title="@Loc["OpenInNewWindow"]" />
             }
             <MudIconButton Icon="@Icons.Material.Filled.Print" OnClick="Print" Color="Color.Default" Variant="Variant.Outlined" Title="Print" Class="ml-2"/>
         </div>
@@ -49,15 +52,16 @@
     {
         @if (_isChartView)
         {
-            <div class="@($"chart-container-scroll {(LayoutService.IsDarkMode ? "dark-theme" : "light-theme")}")">
-                <div class="chart-scale-wrapper" style="@($"transform: scale({_zoomLevel.ToString(System.Globalization.CultureInfo.InvariantCulture)});")">
-                    <div class="org-tree">
-                        <ul>
-                           @RenderChartTree(TreeRoots)
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        @if (_isChartView)
+        {
+            <HierarchyChart Roots="TreeRoots" 
+                            LevelColors="_levelColors" 
+                            @bind-ZoomLevel="_zoomLevel"
+                            OnNodeSelect="OnSelectNode" 
+                            OnAddChild="AddChildToNode"
+                            OnEdit="EditHierarchy"
+                            OnDelete="DeleteHierarchy" />
+        }
         }
         else
         {
@@ -114,7 +118,13 @@
                  DefaultParentId="_targetParentId"
                  OnClose="OnDialogClose" />
 
+@inject NavigationManager NavigationManager
+
 @code {
+    // Component References removed as they are now inside HierarchyChart
+    // private ElementReference _chartContainer; ... removed
+    // private IJSObjectReference? _chartModule; ... removed 
+    
     private List<Hierarchy> HierarchyList = new();
     private List<Hierarchy> TreeRoots = new();
     private HashSet<TreeItemData<Hierarchy>> TreeItems = new();
@@ -424,56 +434,29 @@
         _isChartView = !_isChartView;
         _zoomLevel = 1.0; 
     }
+    
+    // JS Event initialization removed (handled by component)
+    
+    public ValueTask DisposeAsync()
+    {
+        return ValueTask.CompletedTask;
+    }
 
     private void ZoomIn() => _zoomLevel = Math.Min(_zoomLevel + 0.1, 2.0);
     private void ZoomOut() => _zoomLevel = Math.Max(_zoomLevel - 0.1, 0.4);
     private void ResetZoom() => _zoomLevel = 1.0;
+    
+    private async Task OpenInNewWindow()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "/hierarchy-viewer", "_blank");
+    }
 
     private async Task Print()
     {
         await JSRuntime.InvokeVoidAsync("print");
     }
 
-    // --- Renderers ---
-
-    // 1. Chart Render
-    private RenderFragment RenderChartTree(List<Hierarchy> nodes) => __builder =>
-    {
-        foreach (var node in nodes)
-        {
-            <li style="@($"--level-color: {GetLevelColor(node.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(node.HierarchyLevelId)};")">
-                <div class="@GetNodeClass(node)" 
-                     style="@($"--level-color: {GetLevelColor(node.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(node.HierarchyLevelId)};")"
-                     @onclick="() => OnSelectNode(node)"
-                     @onclick:stopPropagation="true">
-                    
-                    <div class="node-title">
-                        @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(node.NameAr) ? node.NameAr : node.Name)
-                    </div>
-                    <div class="node-subtitle">@(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(node.HierarchyLevel?.NameAr) ? node.HierarchyLevel.NameAr : node.HierarchyLevel?.Name ?? "")</div>
-                    
-                    <div class="node-actions">
-                         <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
-                                        Variant="Variant.Text" Color="Color.Primary" 
-                                        OnClick="@(() => AddChildToNode(node))" Title="@Loc["AddChild"]" />
-                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
-                                        Variant="Variant.Text" Color="Color.Default" 
-                                        OnClick="@(() => EditHierarchy(node))" Title="@Loc["Edit"]" />
-                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
-                                        Variant="Variant.Text" Color="Color.Error" 
-                                        OnClick="@(() => DeleteHierarchy(node))" Title="@Loc["Delete"]" />
-                    </div>
-                </div>
-                @if (node.Children != null && node.Children.Count > 0)
-                {
-                    <ul>
-                      @RenderChartTree(node.Children)
-                    </ul>
-                }
-            </li>
-        }
-    };
-
+    // RenderChartTree removed (moved to component)
     private string GetNodeClass(Hierarchy node)
     {
         return (_selectedHierarchy != null && _selectedHierarchy.Id == node.Id) ? "node-card selected" : "node-card";
