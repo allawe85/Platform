@@ -1,0 +1,124 @@
+@page "/hierarchy-viewer"
+@layout Platform.Blazor.Layout.EmptyLayout
+@using Platform.Blazor.Pages.Hierarchies.Components
+@using Platform.Blazor.Services.Hierarchies
+@using Platform.Data.DTOs
+@inject IHierarchiesService HierarchiesService
+@inject ISnackbar Snackbar
+
+<HierarchyChart Roots="_trees" 
+                LevelColors="_levelColors" 
+                @bind-ZoomLevel="_zoomLevel"
+                OnNodeSelect="OnNodeSelect" 
+                OnAddChild="OnAddChild"
+                OnEdit="OnEdit"
+                OnDelete="OnDelete" />
+
+@if (_loading)
+{
+    <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%);">
+        <MudProgressCircular Indeterminate="true"  />
+    </div>
+}
+
+@code {
+    private List<Hierarchy> _trees = new();
+    private List<Hierarchy> _allHierarchies = new();
+    private List<HierarchyLevel> _levels = new();
+    private Dictionary<int, string> _levelColors = new();
+    private double _zoomLevel = 1.0;
+    private bool _loading = true;
+
+    // Palette copied from Hierarchies.razor to match
+    private List<string> _palette = new() 
+    { 
+        "linear-gradient(180deg, #4a90e2 0%, #0056b3 100%)", // Blue
+        "linear-gradient(180deg, #50c878 0%, #2e8b57 100%)", // Green
+        "linear-gradient(180deg, #f39c12 0%, #d35400 100%)", // Orange
+        "linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%)", // Purple
+        "linear-gradient(180deg, #e74c3c 0%, #c0392b 100%)", // Red
+        "linear-gradient(180deg, #34495e 0%, #2c3e50 100%)", // Dark Blue/Grey
+        "linear-gradient(180deg, #1abc9c 0%, #16a085 100%)"  // Teal
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            var hierarchiesTask = HierarchiesService.GetHierarchiesAsync();
+            var levelsTask = HierarchiesService.GetLevelsAsync();
+            await Task.WhenAll(hierarchiesTask, levelsTask);
+
+            _allHierarchies = await hierarchiesTask;
+            _levels = await levelsTask;
+            
+            BuildTree();
+            AssignColors();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading hierarchies: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void BuildTree()
+    {
+         foreach(var item in _allHierarchies) item.Children.Clear();
+         _trees = _allHierarchies.Where(x => x.ParentId == 0).ToList();
+
+         foreach(var item in _allHierarchies)
+         {
+             if (item.ParentId != 0)
+             {
+                 var parent = _allHierarchies.FirstOrDefault(x => x.Id == item.ParentId);
+                 if (parent != null) parent.Children.Add(item);
+             }
+         }
+    }
+
+    private void AssignColors()
+    {
+        _levelColors.Clear();
+        int i = 0;
+        foreach(var level in _levels.OrderBy(l => l.Id))
+        {
+            _levelColors[level.Id] = _palette[i % _palette.Count];
+            i++;
+        }
+    }
+
+    // Actions - For now, we can just log or show a message as the main request was Panning/Zooming
+    // Implementing full CRUD here would require Dialogs which might need MainLayout dependencies or MudBlazor Provider.
+    // Since we are in EmptyLayout, we need to ensure MudDialogProvider is available in App.razor or Layout.
+    // Assuming App.razor has MudDialogProvider.
+
+    private void OnNodeSelect(Hierarchy node)
+    {
+        // Selection feedback?
+    }
+
+    private void OnAddChild(Hierarchy node)
+    {
+        Snackbar.Add("Feature not available in viewer mode", Severity.Info);
+    }
+
+    private void OnEdit(Hierarchy node)
+    {
+        Snackbar.Add("Feature not available in viewer mode", Severity.Info);
+    }
+
+    private void OnDelete(Hierarchy node)
+    {
+        Snackbar.Add("Feature not available in viewer mode", Severity.Info);
+    }
+}
