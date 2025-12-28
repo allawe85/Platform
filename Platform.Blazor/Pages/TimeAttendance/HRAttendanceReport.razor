@@ -4,24 +4,29 @@
 @inject ITimeAttendanceService AttendanceService
 @inject ISnackbar Snackbar
 
-<PageTitle>HR Attendance Report</PageTitle>
+@inject IStringLocalizer<AppStrings> Loc
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@using System.Globalization
+
+<PageTitle>@Loc["HRAttendanceReportTitle"]</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">Attendance Report</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4">@Loc["AttendanceReport"]</MudText>
 
     <MudPaper Class="pa-4 mb-4" Elevation="2">
         <MudGrid>
             <MudItem xs="12" sm="4">
-                <MudDatePicker Label="From Date" @bind-Date="dateFrom" />
+                <MudDatePicker Label="@Loc["FromDate"]" @bind-Date="dateFrom" />
             </MudItem>
             <MudItem xs="12" sm="4">
-                <MudDatePicker Label="To Date" @bind-Date="dateTo" />
+                <MudDatePicker Label="@Loc["ToDate"]" @bind-Date="dateTo" />
             </MudItem>
             <MudItem xs="12" sm="4">
-                <MudTextField @bind-Value="filterEmployeeId" Label="Employee ID (Optional)" Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="filterEmployeeId" Label="@Loc["EmployeeIdOptional"]" Variant="Variant.Outlined" />
             </MudItem>
             <MudItem xs="12" class="d-flex justify-end">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateReport" Disabled="isLoading">Generate Report</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateReport" Disabled="isLoading">@Loc["GenerateReport"]</MudButton>
             </MudItem>
         </MudGrid>
     </MudPaper>
@@ -33,18 +38,18 @@
 
     <MudTable Items="@reportData" Hover="true" Striped="true" Filter="new Func<TimeAttendance,bool>(FilterFunc)">
         <HeaderContent>
-            <MudTh>ID</MudTh>
-            <MudTh>Employee ID</MudTh>
-            <MudTh>Date</MudTh>
-            <MudTh>Time</MudTh>
-            <MudTh>Type</MudTh>
+            <MudTh>@Loc["ID"]</MudTh>
+            <MudTh>@Loc["EmployeeID"]</MudTh>
+            <MudTh>@Loc["Date"]</MudTh>
+            <MudTh>@Loc["Time"]</MudTh>
+            <MudTh>@Loc["Type"]</MudTh>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="ID">@context.Id</MudTd>
-            <MudTd DataLabel="Employee ID">@context.EmployeeId</MudTd>
-            <MudTd DataLabel="Date">@context.TransactionTime.ToString("d")</MudTd>
-            <MudTd DataLabel="Time">@context.TransactionTime.ToString("T")</MudTd>
-            <MudTd DataLabel="Type">
+            <MudTd DataLabel="@Loc["ID"]">@context.Id</MudTd>
+            <MudTd DataLabel="@Loc["EmployeeID"]">@context.EmployeeId</MudTd>
+            <MudTd DataLabel="@Loc["Date"]">@context.TransactionTime.ToString("d", CultureInfo.CurrentCulture)</MudTd>
+            <MudTd DataLabel="@Loc["Time"]">@context.TransactionTime.ToString("T", CultureInfo.CurrentCulture)</MudTd>
+            <MudTd DataLabel="@Loc["Type"]">
                 <MudChip T="string" Color="@(context.TransactionType == "IN" ? Color.Success : Color.Error)" Size="Size.Small">@context.TransactionType</MudChip>
             </MudTd>
         </RowTemplate>
@@ -65,7 +70,7 @@
     {
         if (dateFrom == null || dateTo == null)
         {
-            Snackbar.Add("Please select a date range", Severity.Warning);
+            Snackbar.Add(Loc["PleaseSelectDateRange"], Severity.Warning);
             return;
         }
 
@@ -83,12 +88,12 @@
             
             if (!reportData.Any())
             {
-                Snackbar.Add("No records found for the selected criteria", Severity.Info);
+                Snackbar.Add(Loc["NoRecordsFound"], Severity.Info);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error generating report: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
         }
         finally
         {

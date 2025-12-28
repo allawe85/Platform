@@ -3,8 +3,13 @@
 @using Platform.Data.DTOs
 @inject IEventsService EventsService
 @inject ISnackbar Snackbar
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
 
-<MudText Typo="Typo.h5" Class="mb-4">Upcoming Events</MudText>
+@inject IStringLocalizer<AppStrings> Loc
+@using System.Globalization
+
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["UpcomingEvents"]</MudText>
 
 @if (_loading)
 {
@@ -12,7 +17,7 @@
 }
 else if (!_events.Any())
 {
-    <MudAlert Severity="Severity.Info">No upcoming events found.</MudAlert>
+    <MudAlert Severity="Severity.Info">@Loc["NoUpcomingEventsFound"]</MudAlert>
 }
 else
 {
@@ -23,26 +28,26 @@ else
                 <MudCard Elevation="3" Class="h-100">
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6">@evt.Name</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">@evt.EventType?.Name</MudText>
+                            <MudText Typo="Typo.h6">@(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.NameAr : evt.Name)</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.EventType?.NameAr : evt.EventType?.Name)</MudText>
                         </CardHeaderContent>
                         <CardHeaderActions>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@evt.StartDate.ToString("MMM dd")</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@evt.StartDate.ToString("MMM dd", CultureInfo.CurrentCulture)</MudChip>
                         </CardHeaderActions>
                     </MudCardHeader>
                     <MudCardContent>
                         <MudStack Spacing="1">
                             <MudText Typo="Typo.body2">
                                 <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="mr-1" />
-                                @evt.StartDate.ToShortTimeString() - @evt.EndDate.ToShortTimeString()
+                                @evt.StartDate.ToString("t", CultureInfo.CurrentCulture) - @evt.EndDate.ToString("t", CultureInfo.CurrentCulture)
                             </MudText>
                             <MudText Typo="Typo.body2">
                                 <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
-                                @evt.Location
+                                @(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.LocationAr : evt.Location)
                             </MudText>
-                             @if (!string.IsNullOrEmpty(evt.Description))
+                             @if (!string.IsNullOrEmpty(evt.Description) || !string.IsNullOrEmpty(evt.DescriptionAr))
                             {
-                                <MudText Typo="Typo.body2" Class="mt-2 text-truncate">@evt.Description</MudText>
+                                <MudText Typo="Typo.body2" Class="mt-2 text-truncate">@(CultureInfo.CurrentCulture.Name == "ar-EG" ? evt.DescriptionAr : evt.Description)</MudText>
                             }
                         </MudStack>
                     </MudCardContent>
@@ -74,7 +79,7 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading events: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
         }
         finally
         {

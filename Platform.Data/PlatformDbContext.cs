@@ -871,6 +871,7 @@ namespace Platform.Data
             if (existing == null) return null;
 
             existing.NameAr = entity.NameAr;
+            existing.Name = entity.Name;
             existing.TypeBalance = entity.TypeBalance;
 
             LeaveTypes.Update(existing);
