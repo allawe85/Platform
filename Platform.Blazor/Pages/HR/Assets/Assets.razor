@@ -6,32 +6,32 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Assets Management</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["AssetsManagementTitle"]</MudText>
 
 <MudTable Items="@_assets" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="new Func<Asset,bool>(FilterFunc)" Elevation="4">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">All Assets</MudText>
+        <MudText Typo="Typo.h6">@Loc["AllAssets"]</MudText>
         <MudSpacer />
-        <MudTextField @bind-Value="_searchString" Placeholder="Search by Details, Serial, Employee..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudTextField @bind-Value="_searchString" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">Add Asset</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">@Loc["Add"]</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>Details</MudTh>
-        <MudTh>Type</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Assigned To</MudTh>
-        <MudTh>Receive Date</MudTh>
-        <MudTh>Return Date</MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh>@Loc["Details"]</MudTh>
+        <MudTh>@Loc["Type"]</MudTh>
+        <MudTh>@Loc["Status"]</MudTh>
+        <MudTh>@Loc["AssignedTo"]</MudTh>
+        <MudTh>@Loc["ReceiveDate"]</MudTh>
+        <MudTh>@Loc["ReturnDate"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Details">@context.Details</MudTd>
-        <MudTd DataLabel="Type">@context.AssetType?.Name</MudTd>
-        <MudTd DataLabel="Status">@context.Status?.Name</MudTd>
-        <MudTd DataLabel="Assigned To">@(@context.Employee != null ? $"{context.Employee.CivilId} - {context.Employee.EmployeeId}" : "Unassigned")</MudTd>
-        <MudTd DataLabel="Receive Date">@context.ReceiveDate.ToShortDateString()</MudTd>
-        <MudTd DataLabel="Return Date">@(context.ReturnDate?.ToShortDateString())</MudTd>
+        <MudTd DataLabel="@Loc["Details"]">@context.Details</MudTd>
+        <MudTd DataLabel="@Loc["Type"]">@context.AssetType?.Name</MudTd>
+        <MudTd DataLabel="@Loc["Status"]">@context.Status?.Name</MudTd>
+        <MudTd DataLabel="@Loc["AssignedTo"]">@(@context.Employee != null ? $"{context.Employee.CivilId} - {context.Employee.EmployeeId}" : Loc["Unassigned"])</MudTd>
+        <MudTd DataLabel="@Loc["ReceiveDate"]">@context.ReceiveDate.ToShortDateString()</MudTd>
+        <MudTd DataLabel="@Loc["ReturnDate"]">@(context.ReturnDate?.ToShortDateString())</MudTd>
         <MudTd DataLabel="Actions">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAsset(context))" />
@@ -101,21 +101,21 @@
     private async Task DeleteAsset(Asset asset)
     {
         bool? result = await DialogService.ShowMessageBox(
-            "Delete Confirmation",
-            $"Are you sure you want to delete asset {asset.Details}?",
-            yesText: "Delete", cancelText: "Cancel");
+            Loc["Warning"],
+            string.Format(Loc["ConfirmDelete"].ToString(), asset.Details),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {
             var success = await AssetsService.DeleteAssetAsync(asset.Id);
             if (success)
             {
-                Snackbar.Add("Asset deleted successfully", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
                 await LoadData();
             }
             else
             {
-                Snackbar.Add("Failed to delete asset", Severity.Error);
+                Snackbar.Add(Loc["Error"], Severity.Error);
             }
         }
     }

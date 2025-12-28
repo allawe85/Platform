@@ -7,24 +7,25 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Hierarchy Levels</MudText>
+<PageTitle>@Loc["HierarchyLevelsTitle"]</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["HierarchyLevelsTitle"]</MudText>
 
 <MudTable Items="@HierarchyLevels" Hover="true" Loading="@_loading">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Levels</MudText>
+        <MudText Typo="Typo.h6">@Loc["Levels"]</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddLevel">Add Level</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddLevel">@Loc["Add"]</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
-        <MudTh>Name</MudTh>
-        <MudTh>Name (Arabic)</MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh>@Loc["Name"]</MudTh>
+        <MudTh>@Loc["NameAr"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
+        <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
+        <MudTd DataLabel="@Loc["NameAr"]">@context.NameAr</MudTd>
         <MudTd DataLabel="Actions">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditLevel(context))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteLevel(context))" />
@@ -87,16 +88,16 @@
     private async Task DeleteLevel(HierarchyLevel level)
     {
         bool? result = await DialogService.ShowMessageBox(
-            "Warning", 
-            $"Deleting {level.Name} can not be undone!", 
-            yesText:"Delete!", cancelText:"Cancel");
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"].ToString(), level.Name), 
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {
             try
             {
                 await HierarchiesService.DeleteLevelAsync(level.Id);
-                Snackbar.Add("Level deleted", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
                 await LoadLevels();
             }
             catch (Exception ex)

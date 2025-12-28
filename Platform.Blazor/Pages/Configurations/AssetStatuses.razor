@@ -6,24 +6,24 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Asset Statuses</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["AssetStatusesTitle"]</MudText>
 
 <MudTable Items="@Statuses" Hover="true" Loading="@_loading">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Statuses</MudText>
+        <MudText Typo="Typo.h6">@Loc["Statuses"]</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddStatus">Add Status</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddStatus">@Loc["Add"]</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh>Id</MudTh>
-        <MudTh>Name</MudTh>
-        <MudTh>Name (Arabic)</MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh>@Loc["Name"]</MudTh>
+        <MudTh>@Loc["NameAr"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
+        <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
+        <MudTd DataLabel="@Loc["NameAr"]">@context.NameAr</MudTd>
         <MudTd DataLabel="Actions">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditStatus(context))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteStatus(context))" />
@@ -35,12 +35,12 @@
     <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
         <MudText Typo="Typo.h6" Class="mb-4">@_dialogTitle</MudText>
         <MudStack Spacing="2">
-            <MudTextField Label="Name" @bind-Value="_currentStatus.Name" For="@(() => _currentStatus.Name)" />
-            <MudTextField Label="Name (Arabic)" @bind-Value="_currentStatus.NameAr" For="@(() => _currentStatus.NameAr)" />
+            <MudTextField Label="@Loc["Name"]" @bind-Value="_currentStatus.Name" For="@(() => _currentStatus.Name)" />
+            <MudTextField Label="@Loc["NameAr"]" @bind-Value="_currentStatus.NameAr" For="@(() => _currentStatus.NameAr)" />
         </MudStack>
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="CancelDialog">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitStatus">Save</MudButton>
+            <MudButton OnClick="CancelDialog">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitStatus">@Loc["Save"]</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
@@ -110,12 +110,12 @@
             if (_isEdit)
             {
                 await LookupsService.UpdateAssetStatusAsync(status.Id, status);
-                Snackbar.Add("Status updated", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
             }
             else
             {
                 await LookupsService.CreateAssetStatusAsync(status);
-                Snackbar.Add("Status created", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
             }
             _showDialog = false;
             await LoadStatuses();
@@ -129,9 +129,9 @@
     private async Task DeleteStatus(AssetStatus status)
     {
         bool? result = await DialogService.ShowMessageBox(
-            "Warning", 
-            $"Deleting {status.Name} can not be undone!", 
-            yesText:"Delete!", cancelText:"Cancel");
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"].ToString(), status.Name), 
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {

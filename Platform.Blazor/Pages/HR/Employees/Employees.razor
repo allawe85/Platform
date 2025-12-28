@@ -7,32 +7,32 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
 
-<MudText Typo="Typo.h5" Class="mb-4">Employees Management</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["EmployeesManagementTitle"]</MudText>
 
 <MudTable Items="@_employees" Dense="true" Hover="true" Bordered="true" Striped="true" Filter="new Func<EmployeeInfo,bool>(FilterFunc)" Elevation="4">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Employees</MudText>
+        <MudText Typo="Typo.h6">@Loc["Employees"]</MudText>
         <MudSpacer />
-        <MudTextField @bind-Value="_searchString" Placeholder="Search by Civil ID, Employee ID, Email, Phone..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+        <MudTextField @bind-Value="_searchString" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">Add Employee</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddDialog" StartIcon="@Icons.Material.Filled.Add">@Loc["Add"]</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>Civil ID</MudTh>
-        <MudTh>Employee ID</MudTh>
-        <MudTh>Hierarchy</MudTh>
-        <MudTh>User Account</MudTh>
-        <MudTh>Email</MudTh>
-        <MudTh>Phone</MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh>@Loc["CivilId"]</MudTh>
+        <MudTh>@Loc["EmployeeId"]</MudTh>
+        <MudTh>@Loc["Hierarchy"]</MudTh>
+        <MudTh>@Loc["UserAccount"]</MudTh>
+        <MudTh>@Loc["Email"]</MudTh>
+        <MudTh>@Loc["Phone"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Civil ID">@context.CivilId</MudTd>
-        <MudTd DataLabel="Employee ID">@context.EmployeeId</MudTd>
-        <MudTd DataLabel="Hierarchy">@context.HierarchyName</MudTd>
-        <MudTd DataLabel="User Account">@context.UserName</MudTd>
-        <MudTd DataLabel="Email">@context.Email</MudTd>
-        <MudTd DataLabel="Phone">@context.PhoneNumber</MudTd>
+        <MudTd DataLabel="@Loc["CivilId"]">@context.CivilId</MudTd>
+        <MudTd DataLabel="@Loc["EmployeeId"]">@context.EmployeeId</MudTd>
+        <MudTd DataLabel="@Loc["Hierarchy"]">@context.HierarchyName</MudTd>
+        <MudTd DataLabel="@Loc["UserAccount"]">@context.UserName</MudTd>
+        <MudTd DataLabel="@Loc["Email"]">@context.Email</MudTd>
+        <MudTd DataLabel="@Loc["Phone"]">@context.PhoneNumber</MudTd>
         <MudTd DataLabel="Actions">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditDialog(context.Id))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteEmployee(context))" />
@@ -102,21 +102,21 @@
     private async Task DeleteEmployee(EmployeeInfo employee)
     {
         bool? result = await DialogService.ShowMessageBox(
-            "Delete Confirmation",
-            $"Are you sure you want to delete employee {employee.EmployeeId} ({employee.CivilId})?",
-            yesText: "Delete", cancelText: "Cancel");
+            Loc["Warning"],
+            string.Format(Loc["ConfirmDelete"].ToString(), employee.EmployeeId),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {
             var success = await EmployeesService.DeleteEmployeeAsync(employee.Id);
             if (success)
             {
-                Snackbar.Add("Employee deleted successfully", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
                 await LoadData();
             }
             else
             {
-                Snackbar.Add("Failed to delete employee", Severity.Error);
+                Snackbar.Add(Loc["Error"], Severity.Error);
             }
         }
     }

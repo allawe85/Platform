@@ -9,7 +9,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Active Polls Details</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["ActivePollsDetails"]</MudText>
 
 @if (_loading)
 {
@@ -17,11 +17,11 @@
 }
 else if (_currentEmployeeId == null)
 {
-    <MudAlert Severity="Severity.Warning">You are not linked to an employee record. Please contact HR.</MudAlert>
+    <MudAlert Severity="Severity.Warning">@Loc["NotLinkedToEmployee"]</MudAlert>
 }
 else if (_activePolls.Count == 0)
 {
-    <MudAlert Severity="Severity.Info">There are no active polls at the moment.</MudAlert>
+    <MudAlert Severity="Severity.Info">@Loc["NoActivePolls"]</MudAlert>
 }
 else
 {
@@ -39,7 +39,7 @@ else
                     <MudCardContent>
                         @if (_hasVoted.ContainsKey(poll.Id) && _hasVoted[poll.Id])
                         {
-                            <MudAlert Severity="Severity.Success">You have already voted on this poll.</MudAlert>
+                            <MudAlert Severity="Severity.Success">@Loc["AlreadyVoted"]</MudAlert>
                         }
                         else
                         {
@@ -60,11 +60,11 @@ else
                                 @if (_processingVote == poll.Id)
                                 {
                                     <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
-                                    <span class="ms-2">Voting...</span>
+                                    <span class="ms-2">@Loc["Voting"]</span>
                                 }
                                 else
                                 {
-                                    <MudText>Vote</MudText>
+                                    <MudText>@Loc["Vote"]</MudText>
                                 }
                             </MudButton>
                         }
@@ -153,7 +153,7 @@ else
         var selection = GetSelectionForPoll(poll.Id);
         if (selection.SelectedOptionId == 0)
         {
-            Snackbar.Add("Please select an option.", Severity.Warning);
+            Snackbar.Add(Loc["SelectOptionPrompt"], Severity.Warning);
             return;
         }
 
@@ -169,14 +169,14 @@ else
 
             await PollsService.VoteAsync(vote);
             _hasVoted[poll.Id] = true;
-            Snackbar.Add("Vote recorded successfully!", Severity.Success);
+            Snackbar.Add(Loc["Success"], Severity.Success);
         }
         catch (Exception ex)
         {
              if (ex.Message.Contains("already voted"))
              {
                  _hasVoted[poll.Id] = true;
-                 Snackbar.Add("You have already voted on this poll.", Severity.Warning);
+                 Snackbar.Add(Loc["AlreadyVoted"], Severity.Warning);
              }
              else
              {

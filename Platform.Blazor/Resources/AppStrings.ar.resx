@@ -121,4 +121,271 @@
   <data name="Vote" xml:space="preserve">
     <value>تصويت</value>
   </data>
+  <data name="Add" xml:space="preserve">
+    <value>إضافة</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>تعديل</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>حذف</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>حفظ</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>إلغاء</value>
+  </data>
+  <data name="Search" xml:space="preserve">
+    <value>بحث</value>
+  </data>
+  <data name="SearchPlaceholder" xml:space="preserve">
+    <value>بحث...</value>
+  </data>
+  <data name="Actions" xml:space="preserve">
+    <value>إجراءات</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>الاسم</value>
+  </data>
+  <data name="NameAr" xml:space="preserve">
+    <value>الاسم (بالعربي)</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>تحذير</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>نجاح</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>خطأ</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>إغلاق</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>إعادة تعيين</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>تكبير</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>تصغير</value>
+  </data>
+  <data name="AddRoot" xml:space="preserve">
+    <value>إضافة جذر</value>
+  </data>
+  <data name="AddChild" xml:space="preserve">
+    <value>إضافة ابن</value>
+  </data>
+  <data name="SwitchToTreeView" xml:space="preserve">
+    <value>التبديل إلى عرض الشجرة</value>
+  </data>
+  <data name="SwitchToChartView" xml:space="preserve">
+    <value>التبديل إلى عرض المخطط</value>
+  </data>
+  <data name="NoHierarchiesFound" xml:space="preserve">
+    <value>لم يتم العثور على هياكل. أضف هيكلاً جذرياً للبدء.</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>حذف {0} لا يمكن التراجع عنه!</value>
+  </data>
+  <data name="CivilId" xml:space="preserve">
+    <value>الرقم المدني</value>
+  </data>
+  <data name="EmployeeId" xml:space="preserve">
+    <value>رقم الموظف</value>
+  </data>
+  <data name="Hierarchy" xml:space="preserve">
+    <value>التسلسل الهرمي</value>
+  </data>
+  <data name="UserAccount" xml:space="preserve">
+    <value>حساب المستخدم</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>البريد الإلكتروني</value>
+  </data>
+  <data name="Phone" xml:space="preserve">
+    <value>الهاتف</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>التفاصيل</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>النوع</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="AssignedTo" xml:space="preserve">
+    <value>معين إلى</value>
+  </data>
+  <data name="ReceiveDate" xml:space="preserve">
+    <value>تاريخ الاستلام</value>
+  </data>
+  <data name="ReturnDate" xml:space="preserve">
+    <value>تاريخ الإرجاع</value>
+  </data>
+  <data name="Unassigned" xml:space="preserve">
+    <value>غير معين</value>
+  </data>
+  <data name="AssetStatusesTitle" xml:space="preserve">
+    <value>حالات الأصول</value>
+  </data>
+  <data name="AssetsManagementTitle" xml:space="preserve">
+    <value>إدارة الأصول</value>
+  </data>
+  <data name="EmployeesManagementTitle" xml:space="preserve">
+    <value>إدارة الموظفين</value>
+  </data>
+  <data name="AllAssets" xml:space="preserve">
+    <value>جميع الأصول</value>
+  </data>
+  <data name="Statuses" xml:space="preserve">
+    <value>الحالات</value>
+  </data>
+  <data name="AssetTypesTitle" xml:space="preserve">
+    <value>أنواع الأصول</value>
+  </data>
+  <data name="DocumentTypesTitle" xml:space="preserve">
+    <value>أنواع المستندات</value>
+  </data>
+  <data name="Types" xml:space="preserve">
+    <value>الأنواع</value>
+  </data>
+  <data name="EventCalendarTitle" xml:space="preserve">
+    <value>تقويم الفعاليات</value>
+  </data>
+  <data name="DateRange" xml:space="preserve">
+    <value>النطاق الزمني</value>
+  </data>
+  <data name="StartDate" xml:space="preserve">
+    <value>تاريخ البدء</value>
+  </data>
+  <data name="EndDate" xml:space="preserve">
+    <value>تاريخ الانتهاء</value>
+  </data>
+  <data name="EventType" xml:space="preserve">
+    <value>نوع الفعالية</value>
+  </data>
+  <data name="Filter" xml:space="preserve">
+    <value>تصفية</value>
+  </data>
+  <data name="NoEventsFound" xml:space="preserve">
+    <value>لم يتم العثور على فعاليات للنطاق المحدد.</value>
+  </data>
+  <data name="Period" xml:space="preserve">
+    <value>الفترة</value>
+  </data>
+  <data name="StartTime" xml:space="preserve">
+    <value>وقت البدء</value>
+  </data>
+  <data name="EndTime" xml:space="preserve">
+    <value>وقت الانتهاء</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>الموقع</value>
+  </data>
+  <data name="LocationAr" xml:space="preserve">
+    <value>الموقع (بالعربي)</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>الوصف</value>
+  </data>
+  <data name="DescriptionAr" xml:space="preserve">
+    <value>الوصف (بالعربي)</value>
+  </data>
+  <data name="AccountsManagementTitle" xml:space="preserve">
+    <value>إدارة الحسابات</value>
+  </data>
+  <data name="SystemAccounts" xml:space="preserve">
+    <value>حسابات النظام</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>اسم المستخدم</value>
+  </data>
+  <data name="PhoneNumber" xml:space="preserve">
+    <value>رقم الهاتف</value>
+  </data>
+  <data name="ManagedViaRegistration" xml:space="preserve">
+    <value>يتم إدارتها عبر التسجيل</value>
+  </data>
+  <data name="DocumentsManagementTitle" xml:space="preserve">
+    <value>إدارة المستندات</value>
+  </data>
+  <data name="AllDocuments" xml:space="preserve">
+    <value>جميع المستندات</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>العنوان</value>
+  </data>
+  <data name="ExpiryDate" xml:space="preserve">
+    <value>تاريخ الانتهاء</value>
+  </data>
+  <data name="ExpiringSoon" xml:space="preserve">
+    <value>تنتهي قريباً!</value>
+  </data>
+  <data name="PollsManagementTitle" xml:space="preserve">
+    <value>إدارة الاستطلاعات</value>
+  </data>
+  <data name="AddNewPoll" xml:space="preserve">
+    <value>إضافة استطلاع جديد</value>
+  </data>
+  <data name="Question" xml:space="preserve">
+    <value>السؤال</value>
+  </data>
+  <data name="QuestionAr" xml:space="preserve">
+    <value>السؤال (بالعربي)</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>نشط</value>
+  </data>
+  <data name="Inactive" xml:space="preserve">
+    <value>غير نشط</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>النتائج</value>
+  </data>
+  <data name="ActivePollsDetails" xml:space="preserve">
+    <value>تفاصيل الاستطلاعات النشطة</value>
+  </data>
+  <data name="NotLinkedToEmployee" xml:space="preserve">
+    <value>أنت غير مرتبط بسجل موظف. يرجى التواصل مع الموارد البشرية.</value>
+  </data>
+  <data name="NoActivePolls" xml:space="preserve">
+    <value>لا توجد استطلاعات نشطة في الوقت الحالي.</value>
+  </data>
+  <data name="AlreadyVoted" xml:space="preserve">
+    <value>لقد قمت بالتصويت بالفعل على هذا الاستطلاع.</value>
+  </data>
+  <data name="Voting" xml:space="preserve">
+    <value>جارٍ التصويت...</value>
+  </data>
+  <data name="SelectOptionPrompt" xml:space="preserve">
+    <value>يرجى اختيار إحدى الخيارات.</value>
+  </data>
+  <data name="DashboardWelcome" xml:space="preserve">
+    <value>مرحباً بك في لوحة بياناتك الجديدة!</value>
+  </data>
+  <data name="LoggedInAlert" xml:space="preserve">
+    <value>أنت مسجل الدخول.</value>
+  </data>
+  <data name="Levels" xml:space="preserve">
+    <value>المستويات</value>
+  </data>
+  <data name="HierarchyLevelsTitle" xml:space="preserve">
+    <value>مستويات الهيكل التنظيمي</value>
+  </data>
+  <data name="ManageTypes" xml:space="preserve">
+    <value>إدارة الأنواع</value>
+  </data>
+  <data name="EventTypeDeleted" xml:space="preserve">
+    <value>تم حذف نوع الفعالية</value>
+  </data>
+  <data name="LevelDeleted" xml:space="preserve">
+    <value>تم حذف المستوى</value>
+  </data>
+  <data name="EventTypes" xml:space="preserve">
+    <value>أنواع الفعاليات</value>
+  </data>
 </root>

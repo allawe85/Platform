@@ -48,6 +48,7 @@ namespace Platform.Data
         public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<LeaveStatus> LeaveStatuses { get; set; }
         public DbSet<LeaveBalance> LeaveBalances { get; set; }
+        public DbSet<TimeAttendance> TimeAttendances { get; set; }
 
         #endregion
 
@@ -771,6 +772,11 @@ namespace Platform.Data
         public async Task<LeaveType> AddLeaveTypeAsync(LeaveType entity)
         {
             var entry = await LeaveTypes.AddAsync(entity);
+        #region TimeAttendance - Operations
+
+        public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
+        {
+            var entry = await TimeAttendances.AddAsync(entity);
             await SaveChangesAsync();
             return entry.Entity;
         }
@@ -967,6 +973,31 @@ namespace Platform.Data
             return existing;
         }
         
+        public async Task<List<TimeAttendance>> GetTimeAttendanceByEmployeeIdAsync(int employeeId)
+        {
+            return await TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.EmployeeId == employeeId)
+                .OrderByDescending(ta => ta.TransactionTime)
+                .ToListAsync();
+        }
+
+        public async Task<List<TimeAttendance>> GetTimeAttendanceReportAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
+        {
+            var query = TimeAttendances
+                .AsNoTracking()
+                .Where(ta => ta.TransactionTime >= startDate && ta.TransactionTime <= endDate);
+
+            if (employeeId.HasValue)
+            {
+                query = query.Where(ta => ta.EmployeeId == employeeId.Value);
+            }
+
+            return await query
+                .OrderBy(ta => ta.TransactionTime)
+                .ToListAsync();
+        }
+
         #endregion
     }
 }

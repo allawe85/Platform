@@ -1,0 +1,100 @@
+@page "/attendance/report"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.TimeAttendance
+@inject ITimeAttendanceService AttendanceService
+@inject ISnackbar Snackbar
+
+<PageTitle>HR Attendance Report</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Attendance Report</MudText>
+
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudGrid>
+            <MudItem xs="12" sm="4">
+                <MudDatePicker Label="From Date" @bind-Date="dateFrom" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudDatePicker Label="To Date" @bind-Date="dateTo" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="filterEmployeeId" Label="Employee ID (Optional)" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" class="d-flex justify-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateReport" Disabled="isLoading">Generate Report</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    @if (isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+    }
+
+    <MudTable Items="@reportData" Hover="true" Striped="true" Filter="new Func<TimeAttendance,bool>(FilterFunc)">
+        <HeaderContent>
+            <MudTh>ID</MudTh>
+            <MudTh>Employee ID</MudTh>
+            <MudTh>Date</MudTh>
+            <MudTh>Time</MudTh>
+            <MudTh>Type</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="ID">@context.Id</MudTd>
+            <MudTd DataLabel="Employee ID">@context.EmployeeId</MudTd>
+            <MudTd DataLabel="Date">@context.TransactionTime.ToString("d")</MudTd>
+            <MudTd DataLabel="Time">@context.TransactionTime.ToString("T")</MudTd>
+            <MudTd DataLabel="Type">
+                <MudChip T="string" Color="@(context.TransactionType == "IN" ? Color.Success : Color.Error)" Size="Size.Small">@context.TransactionType</MudChip>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private DateTime? dateFrom = DateTime.Today.AddDays(-7);
+    private DateTime? dateTo = DateTime.Today;
+    private int? filterEmployeeId;
+    private bool isLoading = false;
+    private List<TimeAttendance> reportData = new List<TimeAttendance>();
+
+    private async Task GenerateReport()
+    {
+        if (dateFrom == null || dateTo == null)
+        {
+            Snackbar.Add("Please select a date range", Severity.Warning);
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            // Adding time components to ensure full day coverage
+            var start = dateFrom.Value.Date;
+            var end = dateTo.Value.Date.AddDays(1).AddTicks(-1);
+            
+            // Treat 0 as null for ease of use in text field
+            int? empId = (filterEmployeeId.HasValue && filterEmployeeId.Value > 0) ? filterEmployeeId : null;
+
+            reportData = await AttendanceService.GetReportAsync(start, end, empId);
+            
+            if (!reportData.Any())
+            {
+                Snackbar.Add("No records found for the selected criteria", Severity.Info);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating report: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool FilterFunc(TimeAttendance element) => true; // Client-side filter placeholder if needed
+}

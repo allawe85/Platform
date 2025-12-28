@@ -5,26 +5,27 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Event Types</MudText>
+<PageTitle>@Loc["EventTypes"]</PageTitle>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["EventTypes"]</MudText>
 
 <MudPaper Class="pa-4">
     <MudTable Items="@_eventTypes" Hover="true" Loading="@_loading" Filter="new Func<EventType,bool>(FilterFunc)">
          <ToolBarContent>
-            <MudText Typo="Typo.h6">Manage Types</MudText>
+            <MudText Typo="Typo.h6">@Loc["ManageTypes"]</MudText>
             <MudSpacer />
-            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddType" Class="ml-3">Add Type</MudButton>
+            <MudTextField @bind-Value="_searchString" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddType" Class="ml-3">@Loc["Add"]</MudButton>
         </ToolBarContent>
         <HeaderContent>
             <MudTh>Id</MudTh>
-            <MudTh>Name</MudTh>
-             <MudTh>Name (Arabic)</MudTh>
-            <MudTh>Actions</MudTh>
+            <MudTh>@Loc["Name"]</MudTh>
+             <MudTh>@Loc["NameAr"]</MudTh>
+            <MudTh>@Loc["Actions"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Id">@context.Id</MudTd>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-             <MudTd DataLabel="Name (Arabic)">@context.NameAr</MudTd>
+            <MudTd DataLabel="@Loc["Name"]">@context.Name</MudTd>
+             <MudTd DataLabel="@Loc["NameAr"]">@context.NameAr</MudTd>
             <MudTd DataLabel="Actions">
                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => EditType(context))" />
                 <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteType(context))" />
@@ -38,18 +39,18 @@
 
 <MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-6" Style="width: 400px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Type" : "Add Type")</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["Edit"] : Loc["Add"])</MudText>
         
         <MudForm @ref="_form" @bind-IsValid="_success">
              <MudStack Spacing="3">
-                <MudTextField Label="Name" @bind-Value="_currentType.Name" Required="true" />
-                <MudTextField Label="Name (Arabic)" @bind-Value="_currentType.NameAr" Required="true" />
+                <MudTextField Label="@Loc["Name"]" @bind-Value="_currentType.Name" Required="true" />
+                <MudTextField Label="@Loc["NameAr"]" @bind-Value="_currentType.NameAr" Required="true" />
              </MudStack>
         </MudForm>
 
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-6">
-            <MudButton OnClick="CancelDialog">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitType" Disabled="@(!_success)">Save</MudButton>
+            <MudButton OnClick="CancelDialog">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitType" Disabled="@(!_success)">@Loc["Save"]</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
@@ -124,15 +125,15 @@
     {
         Task.Run(async () => {
              bool? result = await DialogService.ShowMessageBox(
-                "Warning", 
-                $"Deleting {type.Name} will remove links to existing events. Continue?", 
-                yesText:"Delete!", cancelText:"Cancel");
+                Loc["Warning"], 
+                string.Format(Loc["ConfirmDelete"].ToString(), type.Name), 
+                yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
              if (result == true)
              {
                  try {
                     await EventsService.DeleteEventTypeAsync(type.Id);
-                    Snackbar.Add("Event Type deleted", Severity.Success);
+                    Snackbar.Add(Loc["Success"], Severity.Success);
                     await LoadTypes();
                  } catch (Exception ex) {
                      Snackbar.Add(ex.Message, Severity.Error);
@@ -153,12 +154,12 @@
             if (_isEdit)
             {
                 await EventsService.UpdateEventTypeAsync(_currentType.Id, _currentType);
-                Snackbar.Add("Event Type updated", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
             }
             else
             {
                 await EventsService.CreateEventTypeAsync(_currentType);
-                Snackbar.Add("Event Type created", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
             }
 
             _showDialog = false;

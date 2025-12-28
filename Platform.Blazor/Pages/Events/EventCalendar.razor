@@ -5,15 +5,15 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Event Calendar</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["EventCalendarTitle"]</MudText>
 
 <MudPaper Class="pa-4 mb-4">
     <MudGrid>
         <MudItem xs="12" md="4">
-            <MudDateRangePicker Label="Date Range" @bind-DateRange="_dateRange" PlaceholderStart="Start Date" PlaceholderEnd="End Date" />
+            <MudDateRangePicker Label="@Loc["DateRange"]" @bind-DateRange="_dateRange" PlaceholderStart="@Loc["StartDate"]" PlaceholderEnd="@Loc["EndDate"]" />
         </MudItem>
         <MudItem xs="12" md="4">
-             <MudSelect T="int?" Label="Event Type" @bind-Value="_selectedEventTypeId" Clearable="true">
+             <MudSelect T="int?" Label="@Loc["EventType"]" @bind-Value="_selectedEventTypeId" Clearable="true">
                 @foreach (var type in _eventTypes)
                 {
                     <MudSelectItem Value="@((int?)type.Id)">@type.Name</MudSelectItem>
@@ -21,9 +21,9 @@
             </MudSelect>
         </MudItem>
         <MudItem xs="12" md="4" Class="d-flex align-center">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadEvents" Class="mr-2">Filter</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadEvents" Class="mr-2">@Loc["Filter"]</MudButton>
              <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddEvent">Add Event</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddEvent">@Loc["Add"]</MudButton>
         </MudItem>
     </MudGrid>
 </MudPaper>
@@ -75,41 +75,41 @@ else
         }
         else
         {
-             <MudText Class="ma-4">No events found for the selected range.</MudText>
+             <MudText Class="ma-4">@Loc["NoEventsFound"]</MudText>
         }
     </MudPaper>
 }
 
 <MudOverlay @bind-Visible="_showDialog" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-6" Style="width: 500px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Event" : "Add Event")</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["Edit"] : Loc["Add"])</MudText>
         
         <MudForm @ref="_form" @bind-IsValid="_success">
             <MudStack Spacing="3">
-                <MudTextField Label="Name" @bind-Value="_currentEvent.Name" Required="true" />
-                <MudTextField Label="Name (Arabic)" @bind-Value="_currentEvent.NameAr" Required="true" />
+                <MudTextField Label="@Loc["Name"]" @bind-Value="_currentEvent.Name" Required="true" />
+                <MudTextField Label="@Loc["NameAr"]" @bind-Value="_currentEvent.NameAr" Required="true" />
                 
-                <MudDateRangePicker Label="Period" @bind-DateRange="_dialogDateRange" Required="true" />
-                <MudTimePicker Label="Start Time" @bind-Time="_startTime" />
-                 <MudTimePicker Label="End Time" @bind-Time="_endTime" />
-
-                <MudTextField Label="Location" @bind-Value="_currentEvent.Location" Required="true" />
-                <MudTextField Label="Location (Arabic)" @bind-Value="_currentEvent.LocationAr" Required="true" />
+                <MudDateRangePicker Label="@Loc["Period"]" @bind-DateRange="_dialogDateRange" Required="true" />
+                <MudTimePicker Label="@Loc["StartTime"]" @bind-Time="_startTime" />
+                 <MudTimePicker Label="@Loc["EndTime"]" @bind-Time="_endTime" />
+\t\t\t\t
+                <MudTextField Label="@Loc["Location"]" @bind-Value="_currentEvent.Location" Required="true" />
+                <MudTextField Label="@Loc["LocationAr"]" @bind-Value="_currentEvent.LocationAr" Required="true" />
                 
-                <MudSelect T="int" Label="Type" @bind-Value="_currentEvent.EventTypeId" AnchorOrigin="Origin.BottomCenter" Required="true">
+                <MudSelect T="int" Label="@Loc["Type"]" @bind-Value="_currentEvent.EventTypeId" AnchorOrigin="Origin.BottomCenter" Required="true">
                     @foreach (var type in _eventTypes)
                     {
                         <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudTextField Label="Description" @bind-Value="_currentEvent.Description" Lines="3" />
+                <MudTextField Label="@Loc["Description"]" @bind-Value="_currentEvent.Description" Lines="3" />
             </MudStack>
         </MudForm>
 
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-6">
-            <MudButton OnClick="CancelDialog">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitEvent" Disabled="@(!_success)">Save</MudButton>
+            <MudButton OnClick="CancelDialog">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SubmitEvent" Disabled="@(!_success)">@Loc["Save"]</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
@@ -118,7 +118,7 @@ else
     private List<Event> _events = new();
     private List<EventType> _eventTypes = new();
     private bool _loading = true;
-    private DateRange _dateRange = new DateRange(DateTime.Now.Date, DateTime.Now.Date.AddDays(30));
+    private DateRange _dateRange = new DateRange(null, null);
     private int? _selectedEventTypeId;
 
     // Dialog
@@ -155,17 +155,23 @@ else
         _loading = true;
         try
         {
+            List<Event> events;
+
             if (_dateRange.Start.HasValue && _dateRange.End.HasValue)
             {
-                var events = await EventsService.GetEventsByRangeAsync(_dateRange.Start.Value, _dateRange.End.Value);
-                
-                if (_selectedEventTypeId.HasValue)
-                {
-                    events = events.Where(e => e.EventTypeId == _selectedEventTypeId.Value).ToList();
-                }
-
-                _events = events.OrderBy(e => e.StartDate).ToList();
+                events = await EventsService.GetEventsByRangeAsync(_dateRange.Start.Value, _dateRange.End.Value);
             }
+            else
+            {
+                events = await EventsService.GetEventsAsync();
+            }
+                
+            if (_selectedEventTypeId.HasValue)
+            {
+                events = events.Where(e => e.EventTypeId == _selectedEventTypeId.Value).ToList();
+            }
+
+            _events = events.OrderBy(e => e.StartDate).ToList();
         }
         catch (Exception ex)
         {
@@ -223,12 +229,19 @@ else
 
     private void DeleteEvent(Event e)
     {
-        // Add confirmation logic here if needed
          Task.Run(async () => {
              try {
-                await EventsService.DeleteEventAsync(e.Id);
-                Snackbar.Add("Event deleted", Severity.Success);
-                await LoadEvents();
+                bool? result = await DialogService.ShowMessageBox(
+                    Loc["Warning"], 
+                    string.Format(Loc["ConfirmDelete"].ToString(), e.Name), 
+                    yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+                if (result == true)
+                {
+                    await EventsService.DeleteEventAsync(e.Id);
+                    Snackbar.Add(Loc["Success"], Severity.Success);
+                    await LoadEvents();
+                }
              } catch (Exception ex) {
                  Snackbar.Add(ex.Message, Severity.Error);
              }
@@ -254,12 +267,12 @@ else
             if (_isEdit)
             {
                 await EventsService.UpdateEventAsync(_currentEvent.Id, _currentEvent);
-                Snackbar.Add("Event updated", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
             }
             else
             {
                 await EventsService.CreateEventAsync(_currentEvent);
-                Snackbar.Add("Event created", Severity.Success);
+                Snackbar.Add(Loc["Success"], Severity.Success);
             }
 
             _showDialog = false;

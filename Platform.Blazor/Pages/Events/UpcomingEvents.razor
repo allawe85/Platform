@@ -1,0 +1,84 @@
+@page "/upcoming-events"
+@using Platform.Blazor.Services.Events
+@using Platform.Data.DTOs
+@inject IEventsService EventsService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Upcoming Events</MudText>
+
+@if (_loading)
+{
+    <MudProgressCircular Indeterminate="true" Class="ma-4" />
+}
+else if (!_events.Any())
+{
+    <MudAlert Severity="Severity.Info">No upcoming events found.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        @foreach (var evt in _events)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="3" Class="h-100">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@evt.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@evt.EventType?.Name</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@evt.StartDate.ToString("MMM dd")</MudChip>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudStack Spacing="1">
+                            <MudText Typo="Typo.body2">
+                                <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" Class="mr-1" />
+                                @evt.StartDate.ToShortTimeString() - @evt.EndDate.ToShortTimeString()
+                            </MudText>
+                            <MudText Typo="Typo.body2">
+                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-1" />
+                                @evt.Location
+                            </MudText>
+                             @if (!string.IsNullOrEmpty(evt.Description))
+                            {
+                                <MudText Typo="Typo.body2" Class="mt-2 text-truncate">@evt.Description</MudText>
+                            }
+                        </MudStack>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private List<Event> _events = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEvents();
+    }
+
+    private async Task LoadEvents()
+    {
+        _loading = true;
+        try
+        {
+            // Fetch events for the next year
+            var start = DateTime.Now;
+            var end = DateTime.Now.AddYears(1);
+            _events = await EventsService.GetEventsByRangeAsync(start, end);
+            _events = _events.OrderBy(e => e.StartDate).ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading events: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

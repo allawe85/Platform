@@ -1,0 +1,136 @@
+@page "/attendance/checkin"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.TimeAttendance
+@using Platform.Blazor.Services.Employees
+@inject ITimeAttendanceService AttendanceService
+@inject IEmployeesService EmployeesService
+@inject ISnackbar Snackbar
+
+<PageTitle>Time Attendance - Check In/Out</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Class="pa-8 d-flex flex-column align-center gap-4" Elevation="4">
+        <MudText Typo="Typo.h4" Color="Color.Primary">Time Attendance</MudText>
+        <MudText Typo="Typo.subtitle1">@DateTime.Now.ToString("D")</MudText>
+        <MudText Typo="Typo.h3" Class="mb-4">@DateTime.Now.ToString("T")</MudText>
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <MudTextField @bind-Value="employeeId" Label="Enter Employee ID" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" />
+
+            <div class="d-flex gap-4 mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large" StartIcon="@Icons.Material.Filled.Login" OnClick="PerformCheckIn">Check In</MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large" StartIcon="@Icons.Material.Filled.Logout" OnClick="PerformCheckOut">Check Out</MudButton>
+
+            </div>
+        }
+    </MudPaper>
+
+    @if (recentLogs != null && recentLogs.Any())
+    {
+        <MudPaper Class="mt-8 pa-4" Elevation="2">
+            <MudText Typo="Typo.h6" Class="mb-2">Recent Activity</MudText>
+            <MudTable Items="@recentLogs" Hover="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Time</MudTh>
+                    <MudTh>Type</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Time">@context.TransactionTime.ToString("g")</MudTd>
+                    <MudTd DataLabel="Type">
+                         <MudChip T="string" Color="@(context.TransactionType == "IN" ? Color.Success : Color.Error)" Size="Size.Small">@context.TransactionType</MudChip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private int employeeId;
+    private bool isLoading = false;
+    private List<TimeAttendance> recentLogs = new List<TimeAttendance>();
+
+    private async Task PerformCheckIn()
+
+    {
+        if (employeeId <= 0)
+        {
+            Snackbar.Add("Please enter a valid Employee ID", Severity.Warning);
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            var attendance = new TimeAttendance
+            {
+                EmployeeId = employeeId,
+                TransactionTime = DateTime.Now
+            };
+
+            await AttendanceService.CheckInAsync(attendance);
+            Snackbar.Add("Checked In Successfully", Severity.Success);
+            await LoadRecentLogs();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error checking in: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task PerformCheckOut()
+
+    {
+        if (employeeId <= 0)
+        {
+            Snackbar.Add("Please enter a valid Employee ID", Severity.Warning);
+            return;
+        }
+
+        isLoading = true;
+        try
+        {
+            var attendance = new TimeAttendance
+            {
+                EmployeeId = employeeId,
+                TransactionTime = DateTime.Now
+            };
+
+            await AttendanceService.CheckOutAsync(attendance);
+            Snackbar.Add("Checked Out Successfully", Severity.Success);
+            await LoadRecentLogs();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error checking out: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadRecentLogs()
+    {
+        if (employeeId > 0)
+        {
+             try
+            {
+                 recentLogs = await AttendanceService.GetByEmployeeAsync(employeeId);
+                 // Keep only top 5 for brief view
+                 recentLogs = recentLogs.Take(5).ToList();
+            }
+            catch (Exception) { /* Ignore for simplicity */ }
+        }
+    }
+}
