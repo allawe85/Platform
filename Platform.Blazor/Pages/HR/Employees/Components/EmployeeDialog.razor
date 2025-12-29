@@ -11,21 +11,21 @@
 
 <MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Employee" : "Add Employee")</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["EditEmployee"] : Loc["AddEmployee"])</MudText>
         <MudForm @ref="_form" @bind-IsValid="_success">
             <MudStack Spacing="3">
                 <MudTextField @bind-Value="_employee.FullName" Label="Full Name" Required="true" RequiredError="Full Name is required!" />
                 <MudTextField @bind-Value="_employee.CivilId" Label="Civil ID" Required="true" RequiredError="Civil ID is required!" />
                 <MudTextField @bind-Value="_employee.EmployeeId" Label="Employee ID" Required="true" RequiredError="Employee ID is required!" />
                 
-                <MudSelect T="int" @bind-Value="_employee.HierarchyId" Label="Hierarchy" Required="true" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect T="int" @bind-Value="_employee.HierarchyId" Label="@Loc["Hierarchy"]" Required="true" AnchorOrigin="Origin.BottomCenter">
                     @foreach (var hierarchy in _hierarchies)
                     {
                         <MudSelectItem Value="@hierarchy.Id">@hierarchy.Name</MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudSelect T="string" @bind-Value="_employee.AspnetusersId" Label="User Account" HelperText="Optional: Assign a login account" AnchorOrigin="Origin.BottomCenter" Clearable="true">
+                <MudSelect T="string" @bind-Value="_employee.AspnetusersId" Label="@Loc["UserAccount"]" HelperText="Optional: Assign a login account" AnchorOrigin="Origin.BottomCenter" Clearable="true">
                         @foreach (var user in _users)
                     {
                         <MudSelectItem Value="@user.Id">@user.UserName (@user.Email)</MudSelectItem>
@@ -50,8 +50,8 @@
             </MudStack>
         </MudForm>
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? "Update" : "Create")</MudButton>
+            <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? Loc["Update"] : Loc["Create"])</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
