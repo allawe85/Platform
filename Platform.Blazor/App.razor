@@ -5,10 +5,9 @@
 @implements IDisposable
 
 <MudThemeProvider Theme="@_azureTheme" IsDarkMode="@LayoutService.IsDarkMode" />
-<MudDialogProvider />
-<MudSnackbarProvider />
-<MudPopoverProvider />
 <MudRTLProvider RightToLeft="@IsRtl">
+    <MudDialogProvider />
+    <MudSnackbarProvider />
     <CascadingAuthenticationState>
         <Router AppAssembly="@typeof(App).Assembly">
             <Found Context="routeData">

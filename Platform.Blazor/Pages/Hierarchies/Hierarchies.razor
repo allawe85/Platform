@@ -358,10 +358,10 @@
         EditHierarchy(_selectedHierarchy);
     }
     
-    private void DeleteSelectedHierarchy()
+    private async Task DeleteSelectedHierarchy()
     {
         if (_selectedHierarchy == null) return;
-        DeleteHierarchy(_selectedHierarchy);
+        await DeleteHierarchy(_selectedHierarchy);
     }
 
     private void EditHierarchy(Hierarchy hierarchy)
