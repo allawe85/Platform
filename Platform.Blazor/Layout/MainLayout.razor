@@ -20,6 +20,10 @@
         .mud-drawer.mud-drawer-fixed {
             top: 100px !important;
         }
+        /* Boost Popover Z-Index to be above Dialogs (1400) */
+        :root {
+            --mud-zindex-popover: 2000 !important;
+        }
         .mud-nav-link-text {
             font-weight: 700 !important;
             font-size: 1.1rem !important;
@@ -97,11 +101,17 @@
             @Body
         </MudContainer>
     </MudMainContent>
+    
+    <MudThemeProvider @ref="@_mudThemeProvider" Theme="@LayoutService.CurrentTheme" IsDarkMode="@LayoutService.IsDarkMode" />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    <MudPopoverProvider />
 </MudLayout>
 
 @code {
     bool _drawerOpen = true;
     string? _username;
+    MudThemeProvider _mudThemeProvider;
 
     protected override async Task OnInitializedAsync()
     {
