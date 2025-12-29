@@ -72,7 +72,7 @@
             return true;
         if (element.FullName != null && element.FullName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
-        if (element.EmployeeId != null && element.EmployeeId.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        if (element.EmployeeId.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
         if (element.Email != null && element.Email.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
