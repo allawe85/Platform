@@ -121,9 +121,9 @@
         try
         {
             bool? result = await DialogService.ShowMessageBox(
-                "Warning",
-                "Deleting can not be undone!",
-                yesText: "Delete!", cancelText: "Cancel");
+                Loc["Warning"], 
+                string.Format(Loc["ConfirmDelete"], $"({announcement.Title})"), 
+                yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
             if (result == true)
             {

@@ -1,17 +1,15 @@
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.Announcements
+@using Platform.Blazor.Resources
+@using Microsoft.Extensions.Localization
 @inject IAnnouncementsService AnnouncementsService
 @inject ISnackbar Snackbar
+@inject IStringLocalizer<AppStrings> Loc
 
 <MudDialog>
     <DialogContent>
-        @{
-            var isArabic = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
-            var direction = isArabic ? "rtl" : "ltr";
-            var inputAttributes = new Dictionary<string, object> { { "dir", direction } };
-        }
-        <MudTextField @bind-Value="Announcement.Title" Label="@Loc["AnnouncementTitle"]" Required="true" RequiredError="Title is required" UserAttributes="@inputAttributes" />
-        <MudTextField @bind-Value="Announcement.Description" Label="@Loc["AnnouncementDescription"]" Lines="5" Required="true" RequiredError="Description is required" UserAttributes="@inputAttributes" />
+        <MudTextField T="string" Label="@Loc["AnnouncementTitle"]" @bind-Value="Announcement.Title" Required="true" RequiredError="@Loc["Required"]" />
+        <MudTextField T="string" Label="@Loc["AnnouncementDescription"]" @bind-Value="Announcement.Description" Lines="5" Required="true" RequiredError="@Loc["Required"]" />
         <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="@Loc["IsActive"]" Color="Color.Primary" />
     </DialogContent>
     <DialogActions>
@@ -23,13 +21,13 @@
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
 
-    [Parameter] public Announcement Announcement { get; set; } = new Announcement { IsActive = true, CreatedDate = DateTime.Now };
+    [Parameter] public Announcement Announcement { get; set; } = new Announcement();
 
     private async Task Submit()
     {
-        if (string.IsNullOrWhiteSpace(Announcement.Title))
+        if (string.IsNullOrWhiteSpace(Announcement.Title) || string.IsNullOrWhiteSpace(Announcement.Description))
         {
-            Snackbar.Add("Title is required", Severity.Warning);
+            Snackbar.Add(Loc["RequiredFieldsError"], Severity.Warning);
             return;
         }
 
@@ -37,14 +35,14 @@
         {
             if (Announcement.AnnouncementId == 0)
             {
-                // New
+                // Create
                 Announcement.CreatedDate = DateTime.Now;
                 await AnnouncementsService.CreateAnnouncementAsync(Announcement);
                 Snackbar.Add(Loc["AnnouncementCreated"], Severity.Success);
             }
             else
             {
-                // Edit
+                // Update
                 await AnnouncementsService.UpdateAnnouncementAsync(Announcement.AnnouncementId, Announcement);
                 Snackbar.Add(Loc["AnnouncementUpdated"], Severity.Success);
             }

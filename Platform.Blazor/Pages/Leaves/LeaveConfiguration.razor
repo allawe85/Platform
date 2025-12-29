@@ -188,10 +188,13 @@
 
     private async Task DeleteType(int id)
     {
+        var type = LeaveTypes.FirstOrDefault(x => x.Id == id);
+        if (type == null) return;
+
         bool? result = await DialogService.ShowMessageBox(
-            "Warning", 
-            "Deleting can not be undone!", 
-            yesText:"Delete!", cancelText:"Cancel");
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? type.NameAr : type.Name)})"),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {
@@ -263,10 +266,13 @@
 
     private async Task DeleteStatus(int id)
     {
+        var status = LeaveStatuses.FirstOrDefault(x => x.Id == id);
+        if (status == null) return;
+
         bool? result = await DialogService.ShowMessageBox(
-            "Warning", 
-            "Deleting can not be undone!", 
-            yesText:"Delete!", cancelText:"Cancel");
+            Loc["Warning"], 
+            string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? status.NameAr : status.Name)})"), 
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {

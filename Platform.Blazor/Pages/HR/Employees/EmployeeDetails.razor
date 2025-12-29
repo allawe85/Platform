@@ -173,9 +173,9 @@ else
     private async Task DeleteAsset(Asset asset)
     {
         bool? result = await DialogService.ShowMessageBox(
-            "Delete Confirmation",
-            $"Are you sure you want to delete asset {asset.Details}?",
-            yesText: "Delete", cancelText: "Cancel");
+            Loc["Warning"],
+            string.Format(Loc["ConfirmDelete"], $"({asset.Details})"),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {
@@ -216,9 +216,9 @@ else
     private async Task DeleteDocument(Document doc)
     {
         bool? result = await DialogService.ShowMessageBox(
-            "Delete Confirmation",
-            $"Are you sure you want to delete document {doc.Title}?",
-            yesText: "Delete", cancelText: "Cancel");
+            Loc["Warning"],
+            string.Format(Loc["ConfirmDelete"], $"({doc.Title})"),
+            yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
         {

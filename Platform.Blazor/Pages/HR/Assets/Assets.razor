@@ -102,7 +102,7 @@
     {
         bool? result = await DialogService.ShowMessageBox(
             Loc["Warning"],
-            string.Format(Loc["ConfirmDelete"].ToString(), asset.Details),
+            string.Format(Loc["ConfirmDelete"], $"({asset.Details})"),
             yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
