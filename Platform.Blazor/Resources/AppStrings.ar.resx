@@ -394,4 +394,28 @@
   <data name="NoUpcomingEvents" xml:space="preserve">
     <value>لا توجد أحداث قادمة.</value>
   </data>
+  <data name="Sector" xml:space="preserve">
+    <value>القطاع</value>
+  </data>
+  <data name="AddHierarchy" xml:space="preserve">
+    <value>إضافة هيكل تنظيمي</value>
+  </data>
+  <data name="EditHierarchy" xml:space="preserve">
+    <value>تعديل الهيكل التنظيمي</value>
+  </data>
+  <data name="HierarchyLevel" xml:space="preserve">
+    <value>مستوى الهيكل</value>
+  </data>
+  <data name="Parent" xml:space="preserve">
+    <value>الأب</value>
+  </data>
+  <data name="Root" xml:space="preserve">
+    <value>جذر</value>
+  </data>
+  <data name="HierarchyUpdated" xml:space="preserve">
+    <value>تم تحديث الهيكل التنظيمي</value>
+  </data>
+  <data name="HierarchyCreated" xml:space="preserve">
+    <value>تم إنشاء الهيكل التنظيمي</value>
+  </data>
 </root>

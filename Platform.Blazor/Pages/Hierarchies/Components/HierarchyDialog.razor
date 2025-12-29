@@ -1,36 +1,50 @@
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.Hierarchies
 @using MudBlazor
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
 @inject IHierarchiesService HierarchiesService
 @inject ISnackbar Snackbar
+@inject IStringLocalizer<AppStrings> Loc
 
-<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
-    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Hierarchy" : "Add Hierarchy")</MudText>
+@code {
+    private bool IsRtl => System.Globalization.CultureInfo.CurrentUICulture.TextInfo.IsRightToLeft;
+    private bool IsArabic => System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar");
+}
+
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="1200">
+    <MudPaper Class="pa-4" Style="width: 450px; max-width: 95vw;" dir="@(IsRtl ? "rtl" : "ltr")">
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["EditHierarchy"] : Loc["AddHierarchy"])</MudText>
         <MudForm @ref="_form" @bind-IsValid="_success">
             <MudStack Spacing="2">
-                <MudTextField Label="Name" @bind-Value="_hierarchy.Name" Required="true" For="@(() => _hierarchy.Name)" />
-                <MudTextField Label="Name (Arabic)" @bind-Value="_hierarchy.NameAr" For="@(() => _hierarchy.NameAr)" />
+                <MudTextField Label="@Loc["Name"]" @bind-Value="_hierarchy.Name" Required="true" For="@(() => _hierarchy.Name)" />
+                <MudTextField Label="@Loc["NameAr"]" @bind-Value="_hierarchy.NameAr" For="@(() => _hierarchy.NameAr)" />
                 
-                <MudSelect T="int" Label="Hierarchy Level" @bind-Value="_hierarchy.HierarchyLevelId" AnchorOrigin="Origin.BottomCenter" Required="true">
+                <MudSelect T="int" Label="@Loc["HierarchyLevel"]" @bind-Value="_hierarchy.HierarchyLevelId" 
+                           AnchorOrigin="Origin.BottomCenter" PopOverInheritStyle="true" Required="true">
                     @foreach (var level in _levels)
                     {
-                        <MudSelectItem Value="@level.Id">@level.Name</MudSelectItem>
+                        <MudSelectItem Value="@level.Id">
+                            @(IsArabic && !string.IsNullOrEmpty(level.NameAr) ? level.NameAr : level.Name)
+                        </MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudSelect T="int" Label="Parent" @bind-Value="_hierarchy.ParentId" AnchorOrigin="Origin.BottomCenter">
-                    <MudSelectItem Value="0">Root</MudSelectItem>
+                <MudSelect T="int" Label="@Loc["Parent"]" @bind-Value="_hierarchy.ParentId" 
+                           AnchorOrigin="Origin.BottomCenter" PopOverInheritStyle="true">
+                    <MudSelectItem Value="0">@Loc["Root"]</MudSelectItem>
                     @foreach (var h in _potentialParents) 
                     {
-                        <MudSelectItem Value="@h.Id">@h.Name</MudSelectItem>
+                        <MudSelectItem Value="@h.Id">
+                            @(IsArabic && !string.IsNullOrEmpty(h.NameAr) ? h.NameAr : h.Name)
+                        </MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
         </MudForm>
-        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-6">
+            <MudButton OnClick="Cancel" Class="px-6">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Class="px-8">@Loc["Save"]</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
@@ -98,12 +112,12 @@
                 if (_isEdit)
                 {
                     await HierarchiesService.UpdateHierarchyAsync(_hierarchy.Id, _hierarchy);
-                    Snackbar.Add("Hierarchy updated", Severity.Success);
+                    Snackbar.Add(Loc["HierarchyUpdated"], Severity.Success);
                 }
                 else
                 {
                     await HierarchiesService.CreateHierarchyAsync(_hierarchy);
-                    Snackbar.Add("Hierarchy created", Severity.Success);
+                    Snackbar.Add(Loc["HierarchyCreated"], Severity.Success);
                 }
                 await Close(true);
             }
