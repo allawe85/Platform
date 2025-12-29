@@ -5,8 +5,13 @@
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="Announcement.Title" Label="@Loc["AnnouncementTitle"]" Required="true" RequiredError="Title is required" />
-        <MudTextField @bind-Value="Announcement.Description" Label="@Loc["AnnouncementDescription"]" Lines="5" Required="true" RequiredError="Description is required" />
+        @{
+            var isArabic = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar");
+            var direction = isArabic ? "rtl" : "ltr";
+            var inputAttributes = new Dictionary<string, object> { { "dir", direction } };
+        }
+        <MudTextField @bind-Value="Announcement.Title" Label="@Loc["AnnouncementTitle"]" Required="true" RequiredError="Title is required" UserAttributes="@inputAttributes" />
+        <MudTextField @bind-Value="Announcement.Description" Label="@Loc["AnnouncementDescription"]" Lines="5" Required="true" RequiredError="Description is required" UserAttributes="@inputAttributes" />
         <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="@Loc["IsActive"]" Color="Color.Primary" />
     </DialogContent>
     <DialogActions>

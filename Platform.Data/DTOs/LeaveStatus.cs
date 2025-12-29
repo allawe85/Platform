@@ -13,5 +13,9 @@ namespace Platform.Data.DTOs
         [Column("name_ar")]
         [StringLength(10)]
         public string NameAr { get; set; }
+
+        [Column("name")]
+        [StringLength(10)]
+        public string? Name { get; set; }
     }
 }

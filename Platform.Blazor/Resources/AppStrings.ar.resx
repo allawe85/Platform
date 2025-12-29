@@ -519,4 +519,24 @@
   <data name="Days" xml:space="preserve"><value>أيام</value></data>
   <data name="SelectLeaveType" xml:space="preserve"><value>يرجى اختيار نوع الإجازة</value></data>
   <data name="SelectDates" xml:space="preserve"><value>يرجى اختيار التواريخ</value></data>
+  <data name="AddNewPoll" xml:space="preserve"><value>إضافة استطلاع جديد</value></data>
+  <data name="EditPoll" xml:space="preserve"><value>تعديل الاستطلاع</value></data>
+  <data name="Question" xml:space="preserve"><value>السؤال</value></data>
+  <data name="QuestionAr" xml:space="preserve"><value>السؤال (عربي)</value></data>
+  <data name="Options" xml:space="preserve"><value>الخيارات</value></data>
+  <data name="Option" xml:space="preserve"><value>خيار</value></data>
+  <data name="OptionAr" xml:space="preserve"><value>خيار (عربي)</value></data>
+  <data name="AddOption" xml:space="preserve"><value>إضافة خيار</value></data>
+  <data name="PollMinOptions" xml:space="preserve"><value>يجب أن يحتوي الاستطلاع على خيارين على الأقل.</value></data>
+  <data name="PollUpdated" xml:space="preserve"><value>تم تحديث الاستطلاع بنجاح</value></data>
+  <data name="PollAdded" xml:space="preserve"><value>تم إضافة الاستطلاع بنجاح</value></data>
+  <data name="ErrorSavingPoll" xml:space="preserve"><value>خطأ في حفظ الاستطلاع</value></data>
+  <data name="PollsManagementTitle" xml:space="preserve"><value>إدارة الاستطلاعات</value></data>
+  <data name="Results" xml:space="preserve"><value>النتائج</value></data>
+  <data name="Warning" xml:space="preserve"><value>تحذير</value></data>
+  <data name="ConfirmDelete" xml:space="preserve"><value>هل أنت متأكد أنك تريد حذف {0}؟</value></data>
+  <data name="Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="Success" xml:space="preserve"><value>نجاح</value></data>
+  <data name="Error" xml:space="preserve"><value>خطأ</value></data>
+  <data name="NameEn" xml:space="preserve"><value>الاسم (إنجليزي)</value></data>
 </root>

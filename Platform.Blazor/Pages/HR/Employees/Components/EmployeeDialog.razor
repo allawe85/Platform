@@ -40,9 +40,10 @@
                     <MudStack Spacing="2" Class="mt-2">
                         @foreach (var item in _leaveBalanceModels)
                         {
-                            <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudCheckBox @bind-Value="item.IsSelected" Label="@item.Type.Name" Dense="true" Color="Color.Primary" />
-                                <MudNumericField @bind-Value="item.Balance" Label="Balance" Disabled="@(!item.IsSelected)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width: 100px;" />
+                            var name = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? item.Type.NameAr : item.Type.Name;
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <MudCheckBox @bind-Value="item.IsSelected" Label="@name" Dense="true" Color="Color.Primary" />
+                                <MudNumericField @bind-Value="item.Balance" Label="@Loc["Balance"]" Disabled="@(!item.IsSelected)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width: 100px;" HideSpinButtons="true" />
                             </MudStack>
                         }
                     </MudStack>

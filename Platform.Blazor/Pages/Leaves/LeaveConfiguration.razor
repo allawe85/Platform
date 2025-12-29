@@ -66,10 +66,12 @@
                           IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.EditButton">
                     <HeaderContent>
                         <MudTh>@Loc["NameAr"]</MudTh>
+                        <MudTh>@Loc["NameEn"]</MudTh>
                         <MudTh>@Loc["Actions"]</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Name (AR)">@context.NameAr</MudTd>
+                        <MudTd DataLabel="Name (EN)">@context.Name</MudTd>
                          <MudTd>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteStatus(context.Id))" />
                         </MudTd>
@@ -78,11 +80,15 @@
                         <MudTd DataLabel="Name (AR)">
                             <MudTextField @bind-Value="@context.NameAr" Required />
                         </MudTd>
+                         <MudTd DataLabel="Name (EN)">
+                            <MudTextField @bind-Value="@context.Name" />
+                        </MudTd>
                     </RowEditingTemplate>
                 </MudTable>
 
                  <div class="d-flex gap-2 mt-4">
                      <MudTextField @bind-Value="NewStatusName" Label="@Loc["NameAr"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                     <MudTextField @bind-Value="NewStatusNameEn" Label="@Loc["NameEn"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
                      <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddStatus">@Loc["Add"]</MudButton>
                  </div>
             </MudCardContent>
@@ -97,6 +103,7 @@
     private string NewTypeName;
     private int? NewTypeBalance;
     private string NewStatusName;
+    private string NewStatusNameEn;
 
     // Backup for edit revert
     private LeaveType _typeBeforeEdit;
@@ -170,9 +177,10 @@
     private async Task AddStatus()
     {
         if (string.IsNullOrWhiteSpace(NewStatusName)) return;
-        var status = new LeaveStatus { NameAr = NewStatusName };
+        var status = new LeaveStatus { NameAr = NewStatusName, Name = NewStatusNameEn };
         await Http.PostAsJsonAsync("api/LeaveStatuses", status);
         NewStatusName = "";
+        NewStatusNameEn = "";
         Snackbar.Add("Status added", Severity.Success);
         await LoadData();
     }
@@ -180,7 +188,7 @@
     private void BackupStatusItem(object element)
     {
         var item = (LeaveStatus)element;
-        _statusBeforeEdit = new LeaveStatus { Id = item.Id, NameAr = item.NameAr };
+        _statusBeforeEdit = new LeaveStatus { Id = item.Id, NameAr = item.NameAr, Name = item.Name };
     }
 
     private void ResetStatusItem(object element)
@@ -189,6 +197,7 @@
         if (_statusBeforeEdit != null)
         {
             item.NameAr = _statusBeforeEdit.NameAr;
+            item.Name = _statusBeforeEdit.Name;
         }
     }
 

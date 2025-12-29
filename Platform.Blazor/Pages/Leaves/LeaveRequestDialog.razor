@@ -3,7 +3,7 @@
 @using MudBlazor
 @inject LeaveService LeaveService
 
-<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false">
     <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
         <MudText Typo="Typo.h6" Class="mb-4">@Loc["NewLeaveRequest"]</MudText>
         
@@ -42,11 +42,14 @@
     private DateTime? EndDate = DateTime.Today;
     private string ErrorMessage;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        if (Visible && LeaveRequest == null) // Reset on showing if needed, or keep state
+        if (Visible)
         {
-            // Reset logic if desired every time it opens
+             if (LeaveTypes == null || !LeaveTypes.Any())
+             {
+                 LeaveTypes = await LeaveService.GetLeaveTypes();
+             }
         }
     }
 
