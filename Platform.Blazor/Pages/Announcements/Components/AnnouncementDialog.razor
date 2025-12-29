@@ -5,13 +5,13 @@
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="Announcement.Title" Label="Title" Required="true" RequiredError="Title is required" />
-        <MudTextField @bind-Value="Announcement.Description" Label="Description" Lines="5" Required="true" RequiredError="Description is required" />
-        <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="Is Active" Color="Color.Primary" />
+        <MudTextField @bind-Value="Announcement.Title" Label="@Loc["AnnouncementTitle"]" Required="true" RequiredError="Title is required" />
+        <MudTextField @bind-Value="Announcement.Description" Label="@Loc["AnnouncementDescription"]" Lines="5" Required="true" RequiredError="Description is required" />
+        <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="@Loc["IsActive"]" Color="Color.Primary" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+        <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@Loc["Save"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -35,13 +35,13 @@
                 // New
                 Announcement.CreatedDate = DateTime.Now;
                 await AnnouncementsService.CreateAnnouncementAsync(Announcement);
-                Snackbar.Add("Announcement Created", Severity.Success);
+                Snackbar.Add(Loc["AnnouncementCreated"], Severity.Success);
             }
             else
             {
                 // Edit
                 await AnnouncementsService.UpdateAnnouncementAsync(Announcement.AnnouncementId, Announcement);
-                Snackbar.Add("Announcement Updated", Severity.Success);
+                Snackbar.Add(Loc["AnnouncementUpdated"], Severity.Success);
             }
             MudDialog.Close(DialogResult.Ok(true));
         }

@@ -454,4 +454,69 @@
   <data name="NoRecordsFound" xml:space="preserve">
     <value>No records found for the selected criteria</value>
   </data>
+  <data name="LeavesManagement" xml:space="preserve"><value>Leaves Management</value></data>
+  <data name="MyLeaves" xml:space="preserve"><value>My Leaves</value></data>
+  <data name="LeaveApprovals" xml:space="preserve"><value>Leave Approvals</value></data>
+  <data name="LeaveConfiguration" xml:space="preserve"><value>Leave Configuration</value></data>
+  <data name="Announcements" xml:space="preserve"><value>Announcements</value></data>
+  <data name="ManageAnnouncements" xml:space="preserve"><value>Manage Announcements</value></data>
+  <data name="AddAnnouncement" xml:space="preserve"><value>Add Announcement</value></data>
+  <data name="EditAnnouncement" xml:space="preserve"><value>Edit Announcement</value></data>
+  <data name="AnnouncementTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="AnnouncementDescription" xml:space="preserve"><value>Description</value></data>
+  <data name="IsActive" xml:space="preserve"><value>Is Active</value></data>
+  <data name="AnnouncementCreated" xml:space="preserve"><value>Announcement Created</value></data>
+  <data name="AnnouncementUpdated" xml:space="preserve"><value>Announcement Updated</value></data>
+  <data name="AnnouncementDeleted" xml:space="preserve"><value>Announcement Deleted</value></data>
+  <data name="AddEmployee" xml:space="preserve"><value>Add Employee</value></data>
+  <data name="EditEmployee" xml:space="preserve"><value>Edit Employee</value></data>
+  <data name="FullName" xml:space="preserve"><value>Full Name</value></data>
+  <data name="FullNameRequired" xml:space="preserve"><value>Full Name is required!</value></data>
+  <data name="CivilIdRequired" xml:space="preserve"><value>Civil ID is required!</value></data>
+  <data name="EmployeeIdRequired" xml:space="preserve"><value>Employee ID is required!</value></data>
+  <data name="InitialLeaveBalances" xml:space="preserve"><value>Initial Leave Balances</value></data>
+  <data name="AddAsset" xml:space="preserve"><value>Add Asset</value></data>
+  <data name="EditAsset" xml:space="preserve"><value>Edit Asset</value></data>
+  <data name="AssetType" xml:space="preserve"><value>Asset Type</value></data>
+  <data name="AssignedEmployee" xml:space="preserve"><value>Assigned Employee</value></data>
+  <data name="AssetCreated" xml:space="preserve"><value>Asset created successfully</value></data>
+  <data name="AssetUpdated" xml:space="preserve"><value>Asset updated successfully</value></data>
+  <data name="AssetDeleted" xml:space="preserve"><value>Asset deleted</value></data>
+  <data name="AddDocument" xml:space="preserve"><value>Add Document</value></data>
+  <data name="EditDocument" xml:space="preserve"><value>Edit Document</value></data>
+  <data name="DocumentType" xml:space="preserve"><value>Document Type</value></data>
+  <data name="DocumentCreated" xml:space="preserve"><value>Document created successfully</value></data>
+  <data name="DocumentUpdated" xml:space="preserve"><value>Document updated successfully</value></data>
+  <data name="DocumentDeleted" xml:space="preserve"><value>Document deleted</value></data>
+  <data name="AddStatus" xml:space="preserve"><value>Add Status</value></data>
+  <data name="EditStatus" xml:space="preserve"><value>Edit Status</value></data>
+  <data name="StatusCreated" xml:space="preserve"><value>Status created</value></data>
+  <data name="StatusUpdated" xml:space="preserve"><value>Status updated</value></data>
+  <data name="StatusDeleted" xml:space="preserve"><value>Status deleted</value></data>
+  <data name="AddType" xml:space="preserve"><value>Add Type</value></data>
+  <data name="EditType" xml:space="preserve"><value>Edit Type</value></data>
+  <data name="TypeCreated" xml:space="preserve"><value>Type created</value></data>
+  <data name="TypeUpdated" xml:space="preserve"><value>Type updated</value></data>
+  <data name="AddLevel" xml:space="preserve"><value>Add Level</value></data>
+  <data name="EditLevel" xml:space="preserve"><value>Edit Level</value></data>
+  <data name="LevelCreated" xml:space="preserve"><value>Level created</value></data>
+  <data name="LevelUpdated" xml:space="preserve"><value>Level updated</value></data>
+  <data name="NewLeaveRequest" xml:space="preserve"><value>New Leave Request</value></data>
+  <data name="MyBalances" xml:space="preserve"><value>My Balances</value></data>
+  <data name="LeaveHistory" xml:space="preserve"><value>Leave History</value></data>
+  <data name="LeaveType" xml:space="preserve"><value>Leave Type</value></data>
+  <data name="RequestApproved" xml:space="preserve"><value>Request approved</value></data>
+  <data name="RequestRejected" xml:space="preserve"><value>Request rejected</value></data>
+  <data name="LeaveTypes" xml:space="preserve"><value>Leave Types</value></data>
+  <data name="LeaveStatuses" xml:space="preserve"><value>Leave Statuses</value></data>
+  <data name="Reject" xml:space="preserve"><value>Reject</value></data>
+  <data name="Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="ConfirmDeleteSimple" xml:space="preserve"><value>Deleting can not be undone!</value></data>
+  <data name="Update" xml:space="preserve"><value>Update</value></data>
+  <data name="Create" xml:space="preserve"><value>Create</value></data>
+  <data name="TypeDeleted" xml:space="preserve"><value>Type deleted</value></data>
+  <data name="Balance" xml:space="preserve"><value>Balance</value></data>
+  <data name="Days" xml:space="preserve"><value>Days</value></data>
+  <data name="SelectLeaveType" xml:space="preserve"><value>Please select a leave type</value></data>
+  <data name="SelectDates" xml:space="preserve"><value>Please select dates</value></data>
 </root>

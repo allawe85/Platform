@@ -80,7 +80,7 @@
     private void AddStatus()
     {
         _currentStatus = new AssetStatus();
-        _dialogTitle = "Add Status";
+        _dialogTitle = Loc["AddStatus"];
         _isEdit = false;
         _showDialog = true;
     }
@@ -88,7 +88,7 @@
     private void EditStatus(AssetStatus status)
     {
         _currentStatus = new AssetStatus { Id = status.Id, Name = status.Name, NameAr = status.NameAr };
-        _dialogTitle = "Edit Status";
+        _dialogTitle = Loc["EditStatus"];
         _isEdit = true;
         _showDialog = true;
     }
@@ -138,7 +138,7 @@
             try
             {
                 await LookupsService.DeleteAssetStatusAsync(status.Id);
-                Snackbar.Add("Status deleted", Severity.Success);
+                Snackbar.Add(Loc["StatusDeleted"], Severity.Success);
                 await LoadStatuses();
             }
             catch (Exception ex)

@@ -10,32 +10,32 @@
 
 <MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Document" : "Add Document")</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["EditDocument"] : Loc["AddDocument"])</MudText>
         <MudForm @ref="_form" @bind-IsValid="_success">
             <MudStack Spacing="3">
-                <MudTextField @bind-Value="_document.Title" Label="Title" Required="true" />
-                <MudTextField @bind-Value="_document.Details" Label="Details" Lines="3" />
+                <MudTextField @bind-Value="_document.Title" Label="@Loc["Title"]" Required="true" />
+                <MudTextField @bind-Value="_document.Details" Label="@Loc["Details"]" Lines="3" />
                 
-                <MudSelect T="int" @bind-Value="_document.DocumentTypeId" Label="Document Type" Required="true" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect T="int" @bind-Value="_document.DocumentTypeId" Label="@Loc["DocumentType"]" Required="true" AnchorOrigin="Origin.BottomCenter">
                     @foreach (var type in _documentTypes)
                     {
                         <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudSelect T="int" @bind-Value="_document.EmployeeId" Label="Employee" Required="true" AnchorOrigin="Origin.BottomCenter" Disabled="@(_fixedEmployee)">
+                <MudSelect T="int" @bind-Value="_document.EmployeeId" Label="@Loc["AssignedEmployee"]" Required="true" AnchorOrigin="Origin.BottomCenter" Disabled="@(_fixedEmployee)">
                     @foreach (var emp in _employees)
                     {
                         <MudSelectItem Value="@emp.Id">@emp.CivilId - @emp.EmployeeId</MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudDatePicker Label="Expiry Date" @bind-Date="_expiryDate" Required="true" />
+                <MudDatePicker Label="@Loc["ExpiryDate"]" @bind-Date="_expiryDate" Required="true" />
             </MudStack>
         </MudForm>
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? "Update" : "Create")</MudButton>
+            <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? Loc["Update"] : Loc["Create"])</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
@@ -109,12 +109,12 @@
                 var result = await DocumentsService.UpdateDocumentAsync(_document.Id, _document);
                 if (result != null)
                 {
-                    Snackbar.Add("Document updated successfully", Severity.Success);
+                    Snackbar.Add(Loc["DocumentUpdated"], Severity.Success);
                     await Close(true);
                 }
                 else
                 {
-                    Snackbar.Add("Failed to update document", Severity.Error);
+                    Snackbar.Add(Loc["Error"], Severity.Error);
                 }
             }
             else
@@ -123,12 +123,12 @@
                 {
                     _document.Id = 0;
                     await DocumentsService.CreateDocumentAsync(_document);
-                    Snackbar.Add("Document created successfully", Severity.Success);
+                    Snackbar.Add(Loc["DocumentCreated"], Severity.Success);
                     await Close(true);
                 }
                 catch (Exception ex)
                 {
-                    Snackbar.Add($"Failed to create document: {ex.Message}", Severity.Error);
+                    Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
                 }
             }
         }

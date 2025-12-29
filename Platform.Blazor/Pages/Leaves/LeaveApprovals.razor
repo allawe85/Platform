@@ -4,17 +4,17 @@
 @inject LeaveService LeaveService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" GutterBottom="true">Leave Approvals</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@Loc["LeaveApprovals"]</MudText>
 
 <MudTable Items="PendingLeaves" Hover="true" Loading="@(PendingLeaves == null)">
     <HeaderContent>
-        <MudTh>Employee</MudTh>
-        <MudTh>Type</MudTh>
-        <MudTh>Start Date</MudTh>
-        <MudTh>End Date</MudTh>
-        <MudTh>Days</MudTh>
-        <MudTh>Details</MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh>@Loc["Employee"]</MudTh>
+        <MudTh>@Loc["LeaveType"]</MudTh>
+        <MudTh>@Loc["StartDate"]</MudTh>
+        <MudTh>@Loc["EndDate"]</MudTh>
+        <MudTh>@Loc["Days"]</MudTh>
+        <MudTh>@Loc["Details"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Employee">@context.Employee?.CivilId</MudTd>
@@ -24,12 +24,14 @@
         <MudTd DataLabel="Days">@((context.EndDate - context.StartDate).Days + 1)</MudTd>
         <MudTd DataLabel="Details">@context.Details</MudTd>
         <MudTd>
-            <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Success" OnClick="() => Approve(context.Id)">Approve</MudButton>
-            <MudButton Variant="Variant.Filled" Size="Size.Small" Color="Color.Error" OnClick="() => Reject(context.Id)" Class="ml-2">Reject</MudButton>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" OnClick="@(() => Approve(context))">@Loc["Approve"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small" OnClick="@(() => Reject(context))">@Loc["Reject"]</MudButton>
+            </MudStack>
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
-        <MudText>No pending leave requests.</MudText>
+        <MudText>@Loc["NoRecordsFound"]</MudText>
     </NoRecordsContent>
 </MudTable>
 
@@ -46,17 +48,23 @@
         PendingLeaves = await LeaveService.GetPendingLeaves();
     }
 
-    private async Task Approve(int id)
+    private async Task Approve(Leave leave)
     {
-        await LeaveService.ApproveLeave(id);
-        Snackbar.Add("Request approved", Severity.Success);
-        await LoadData();
+        var result = await LeaveService.ApproveLeave(leave.Id);
+        if (result.IsSuccessStatusCode)
+        {
+            Snackbar.Add(Loc["RequestApproved"], Severity.Success);
+            await LoadData();
+        }
     }
 
-    private async Task Reject(int id)
+    private async Task Reject(Leave leave)
     {
-        await LeaveService.RejectLeave(id);
-         Snackbar.Add("Request rejected", Severity.Info);
-        await LoadData();
+        var result = await LeaveService.RejectLeave(leave.Id);
+        if (result.IsSuccessStatusCode)
+        {
+            Snackbar.Add(Loc["RequestRejected"], Severity.Info);
+            await LoadData();
+        }
     }
 }

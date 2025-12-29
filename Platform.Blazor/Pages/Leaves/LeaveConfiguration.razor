@@ -13,7 +13,7 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Leave Types</MudText>
+                    <MudText Typo="Typo.h6">@Loc["LeaveTypes"]</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
@@ -22,9 +22,9 @@
                           RowEditPreview="BackupTypeItem" RowEditCancel="ResetTypeItem" RowEditCommit="TypeItemHasBeenCommitted"
                           IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.EditButton">
                     <HeaderContent>
-                        <MudTh>Name (AR)</MudTh>
-                        <MudTh>Balance</MudTh>
-                        <MudTh>Actions</MudTh>
+                        <MudTh>@Loc["NameAr"]</MudTh>
+                        <MudTh>@Loc["Balance"]</MudTh>
+                        <MudTh>@Loc["Actions"]</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Name (AR)">@context.NameAr</MudTd>
@@ -44,9 +44,9 @@
                 </MudTable>
 
                 <div class="d-flex gap-2 mt-4">
-                     <MudTextField @bind-Value="NewTypeName" Label="New Type Name (AR)" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
-                     <MudNumericField @bind-Value="NewTypeBalance" Label="Balance" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
-                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddType">Add</MudButton>
+                     <MudTextField @bind-Value="NewTypeName" Label="@Loc["NameAr"]" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
+                     <MudNumericField @bind-Value="NewTypeBalance" Label="@Loc["Balance"]" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" />
+                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddType">@Loc["Add"]</MudButton>
                 </div>
             </MudCardContent>
         </MudCard>
@@ -56,7 +56,7 @@
         <MudCard>
             <MudCardHeader>
                  <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Leave Statuses</MudText>
+                    <MudText Typo="Typo.h6">@Loc["LeaveStatuses"]</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
@@ -65,8 +65,8 @@
                           RowEditPreview="BackupStatusItem" RowEditCancel="ResetStatusItem" RowEditCommit="StatusItemHasBeenCommitted"
                           IsEditRowSwitchingBlocked="true" ApplyButtonPosition="TableApplyButtonPosition.End" EditButtonPosition="TableEditButtonPosition.End" EditTrigger="TableEditTrigger.EditButton">
                     <HeaderContent>
-                        <MudTh>Name (AR)</MudTh>
-                        <MudTh>Actions</MudTh>
+                        <MudTh>@Loc["NameAr"]</MudTh>
+                        <MudTh>@Loc["Actions"]</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Name (AR)">@context.NameAr</MudTd>
@@ -82,8 +82,8 @@
                 </MudTable>
 
                  <div class="d-flex gap-2 mt-4">
-                     <MudTextField @bind-Value="NewStatusName" Label="New Status Name (AR)" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddStatus">Add</MudButton>
+                     <MudTextField @bind-Value="NewStatusName" Label="@Loc["NameAr"]" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddStatus">@Loc["Add"]</MudButton>
                  </div>
             </MudCardContent>
         </MudCard>
@@ -160,7 +160,7 @@
         if (result == true)
         {
             await Http.DeleteAsync($"api/LeaveTypes/{id}");
-            Snackbar.Add("Type deleted", Severity.Success);
+            Snackbar.Add(Loc["TypeDeleted"], Severity.Success);
             await LoadData();
         }
     }
@@ -209,7 +209,7 @@
         if (result == true)
         {
             await Http.DeleteAsync($"api/LeaveStatuses/{id}");
-            Snackbar.Add("Status deleted", Severity.Success);
+            Snackbar.Add(Loc["StatusDeleted"], Severity.Success);
             await LoadData();
         }
     }

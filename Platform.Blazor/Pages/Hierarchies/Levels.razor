@@ -97,7 +97,7 @@
             try
             {
                 await HierarchiesService.DeleteLevelAsync(level.Id);
-                Snackbar.Add(Loc["Success"], Severity.Success);
+                Snackbar.Add(Loc["LevelDeleted"], Severity.Success);
                 await LoadLevels();
             }
             catch (Exception ex)

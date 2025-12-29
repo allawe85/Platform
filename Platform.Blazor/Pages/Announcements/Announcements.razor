@@ -6,21 +6,21 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Announcements</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["Announcements"]</MudText>
 
 <MudTable T="Announcement" ServerData="ServerReload"
           Dense="true" Hover="true" @ref="_table">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Manage Announcements</MudText>
+        <MudText Typo="Typo.h6">@Loc["ManageAnnouncements"]</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAnnouncement" StartIcon="@Icons.Material.Filled.Add">Add Announcement</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAnnouncement" StartIcon="@Icons.Material.Filled.Add">@Loc["AddAnnouncement"]</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>Title</MudTh>
-        <MudTh>Description</MudTh>
-        <MudTh>Date</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh>@Loc["AnnouncementTitle"]</MudTh>
+        <MudTh>@Loc["AnnouncementDescription"]</MudTh>
+        <MudTh>@Loc["ReceiveDate"]</MudTh>
+        <MudTh>@Loc["Status"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Title">@context.Title</MudTd>
@@ -33,11 +33,11 @@
         <MudTd DataLabel="Status">
             @if (context.IsActive)
             {
-                <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                <MudChip T="string" Color="Color.Success" Size="Size.Small">@Loc["Active"]</MudChip>
             }
             else
             {
-                <MudChip T="string" Color="Color.Error" Size="Size.Small">Inactive</MudChip>
+                <MudChip T="string" Color="Color.Error" Size="Size.Small">@Loc["Inactive"]</MudChip>
             }
         </MudTd>
         <MudTd DataLabel="Actions">
@@ -46,7 +46,7 @@
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
-        <MudText>No announcements found.</MudText>
+        <MudText>@Loc["NoRecordsFound"]</MudText>
     </NoRecordsContent>
     <LoadingContent>
         <MudText>Loading...</MudText>
@@ -68,7 +68,7 @@
     private async Task AddAnnouncement()
     {
         var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = DialogService.Show<AnnouncementDialog>("Add Announcement", options);
+        var dialog = DialogService.Show<AnnouncementDialog>(Loc["AddAnnouncement"], options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -81,7 +81,7 @@
     {
         var parameters = new DialogParameters { ["Announcement"] = announcement };
         var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = DialogService.Show<AnnouncementDialog>("Edit Announcement", parameters, options);
+        var dialog = DialogService.Show<AnnouncementDialog>(Loc["EditAnnouncement"], parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -102,7 +102,7 @@
             try
             {
                 await AnnouncementsService.DeleteAnnouncementAsync(announcement.AnnouncementId);
-                Snackbar.Add("Deleted", Severity.Success);
+                Snackbar.Add(Loc["AnnouncementDeleted"], Severity.Success);
                 await _table.ReloadServerData();
             }
             catch (Exception ex)
