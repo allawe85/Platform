@@ -17,7 +17,7 @@
         <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Employee">@context.Employee?.CivilId</MudTd>
+        <MudTd DataLabel="Employee">@context.Employee?.FullName</MudTd>
         <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>
         <MudTd DataLabel="Start">@context.StartDate.ToShortDateString()</MudTd>
         <MudTd DataLabel="End">@context.EndDate.ToShortDateString()</MudTd>
