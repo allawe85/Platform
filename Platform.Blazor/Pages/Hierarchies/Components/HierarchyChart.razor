@@ -1,0 +1,143 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Pages.Hierarchies.Components
+@inject IJSRuntime JSRuntime
+
+<div class="chart-container-scroll" @ref="_chartContainer">
+    <div class="chart-pan-wrapper" @ref="_panContainer">
+        <div class="chart-scale-wrapper" style="transform: scale(@ZoomLevel); transform-origin: top center;">
+            <div class="org-tree">
+                <ul>
+                    @if (Roots != null)
+                    {
+                         @RenderChartTree(Roots)
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<Hierarchy> Roots { get; set; } = new();
+    [Parameter] public Dictionary<int, string> LevelColors { get; set; } = new();
+    
+    [Parameter] public EventCallback<Hierarchy> OnNodeSelect { get; set; }
+    [Parameter] public EventCallback<Hierarchy> OnAddChild { get; set; }
+    [Parameter] public EventCallback<Hierarchy> OnEdit { get; set; }
+    [Parameter] public EventCallback<Hierarchy> OnDelete { get; set; }
+    
+    // Zoom control exposed or handled internally? 
+    // The user wants zoom in the standalone view too.
+    // The Toolbar in Hierarchies.razor controls zoom.
+    // Ideally this component should accept ZoomLevel.
+    [Parameter] public double ZoomLevel { get; set; } = 1.0;
+    [Parameter] public EventCallback<double> ZoomLevelChanged { get; set; }
+
+    private ElementReference _chartContainer;
+    private ElementReference _panContainer;
+    private IJSObjectReference? _chartModule;
+    private DotNetObjectReference<HierarchyChart>? _dotNetHelper;
+    private bool _eventsActive = false;
+
+    // We can't use OnAfterRenderAsync(firstRender) blindly if the component is re-used or parameters change.
+    // But for now setup seems consistent with previous logic.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || _chartModule == null)
+        {
+            try 
+            {
+                _chartModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/charts.js");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load charts.js: {ex.Message}");
+            }
+        }
+
+        if (_chartModule != null && !_eventsActive)
+        {
+             if (_dotNetHelper == null) _dotNetHelper = DotNetObjectReference.Create(this);
+             await _chartModule.InvokeVoidAsync("initChartEvents", _chartContainer, _panContainer, _dotNetHelper);
+             _eventsActive = true;
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnZoom(double delta)
+    {
+        double newZoom = ZoomLevel;
+        if (delta > 0) newZoom = Math.Min(ZoomLevel + 0.1, 2.0);
+        else newZoom = Math.Max(ZoomLevel - 0.1, 0.4);
+        
+        if (newZoom != ZoomLevel)
+        {
+            ZoomLevel = newZoom;
+            await ZoomLevelChanged.InvokeAsync(ZoomLevel);
+            StateHasChanged(); // Ensure UI updates
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try {
+            if (_chartModule != null)
+            {
+                if (_eventsActive) // Check if valid
+                   await _chartModule.InvokeVoidAsync("stopChartEvents", _chartContainer);
+                
+                await _chartModule.DisposeAsync();
+            }
+            _dotNetHelper?.Dispose();
+        } catch {} 
+    }
+
+    private RenderFragment RenderChartTree(List<Hierarchy> nodes) => __builder =>
+    {
+        foreach (var node in nodes)
+        {
+            <li>
+                <div class="@GetNodeClass(node)" 
+                     style="background: @GetLevelColorImpl(node.HierarchyLevelId)"
+                     @onclick="() => OnNodeSelect.InvokeAsync(node)"
+                     @onclick:stopPropagation="true">
+                    
+                    <div class="node-title">@node.Name</div>
+                    <div class="node-title">@node.NameAr</div>
+                    <div class="node-subtitle">@(node.HierarchyLevel?.Name ?? "")</div>
+                    
+                    <div class="node-actions">
+                         <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
+                                        Variant="Variant.Filled" Color="Color.Surface" 
+                                        OnClick="@(() => OnAddChild.InvokeAsync(node))" Title="Add Child" />
+                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                        Variant="Variant.Filled" Color="Color.Surface" 
+                                        OnClick="@(() => OnEdit.InvokeAsync(node))" Title="Edit" />
+                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
+                                        Variant="Variant.Filled" Color="Color.Error" 
+                                        OnClick="@(() => OnDelete.InvokeAsync(node))" Title="Delete" />
+                    </div>
+                </div>
+                @if (node.Children != null && node.Children.Count > 0)
+                {
+                    <ul>
+                      @RenderChartTree(node.Children)
+                    </ul>
+                }
+            </li>
+        }
+    };
+
+    private string GetNodeClass(Hierarchy node)
+    {
+        // Selection logic needs to be aware of currently selected node.
+        // For simplicity, passing "Is Selected" state might be complex if we don't pass the whole state.
+        // We can just omit selection styling inside the re-usable component OR pass SelectedId.
+        return "node-card"; // Simplified for now, or add [Parameter] SelectedHierarchyId
+    }
+
+    private string GetLevelColorImpl(int levelId) 
+    {
+        return LevelColors.ContainsKey(levelId) ? LevelColors[levelId] : "#999"; 
+    }
+}

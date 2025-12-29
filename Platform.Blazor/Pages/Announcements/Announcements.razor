@@ -1,0 +1,114 @@
+@page "/announcements"
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Announcements
+@using Platform.Blazor.Pages.Announcements.Components
+@inject IAnnouncementsService AnnouncementsService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h5" Class="mb-4">Announcements</MudText>
+
+<MudTable T="Announcement" ServerData="ServerReload"
+          Dense="true" Hover="true" @ref="_table">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Manage Announcements</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAnnouncement" StartIcon="@Icons.Material.Filled.Add">Add Announcement</MudButton>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Title</MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Date</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Description">
+            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+                @(context.Description.Length > 50 ? context.Description.Substring(0, 50) + "..." : context.Description)
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Date">@context.CreatedDate.ToString("g")</MudTd>
+        <MudTd DataLabel="Status">
+            @if (context.IsActive)
+            {
+                <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Error" Size="Size.Small">Inactive</MudChip>
+            }
+        </MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => EditAnnouncement(context))" Size="Size.Small" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteAnnouncement(context))" Size="Size.Small" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No announcements found.</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private MudTable<Announcement> _table;
+
+    private async Task<TableData<Announcement>> ServerReload(TableState state, CancellationToken token)
+    {
+        var data = await AnnouncementsService.GetAnnouncementsAsync();
+        return new TableData<Announcement>() { TotalItems = data.Count, Items = data };
+    }
+
+    private async Task AddAnnouncement()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = DialogService.Show<AnnouncementDialog>("Add Announcement", options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task EditAnnouncement(Announcement announcement)
+    {
+        var parameters = new DialogParameters { ["Announcement"] = announcement };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        var dialog = DialogService.Show<AnnouncementDialog>("Edit Announcement", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task DeleteAnnouncement(Announcement announcement)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            "Warning",
+            "Deleting can not be undone!",
+            yesText: "Delete!", cancelText: "Cancel");
+
+        if (result == true)
+        {
+            try
+            {
+                await AnnouncementsService.DeleteAnnouncementAsync(announcement.AnnouncementId);
+                Snackbar.Add("Deleted", Severity.Success);
+                await _table.ReloadServerData();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+}

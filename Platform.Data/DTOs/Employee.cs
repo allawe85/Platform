@@ -24,5 +24,8 @@ namespace Platform.Data.DTOs
 
         [Column("aspnetusers_id")]
         public string AspnetusersId { get; set; }
+
+        [Column("full_name")]
+        public string FullName { get; set; }
     }
 }

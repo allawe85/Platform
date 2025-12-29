@@ -6,13 +6,18 @@
 @inject IEmployeesService EmployeesService
 @inject ISnackbar Snackbar
 
-<PageTitle>Time Attendance - Check In/Out</PageTitle>
+@inject IStringLocalizer<AppStrings> Loc
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@using System.Globalization
+
+<PageTitle>@Loc["TimeAttendance"] - @Loc["CheckInOut"]</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
     <MudPaper Class="pa-8 d-flex flex-column align-center gap-4" Elevation="4">
-        <MudText Typo="Typo.h4" Color="Color.Primary">Time Attendance</MudText>
-        <MudText Typo="Typo.subtitle1">@DateTime.Now.ToString("D")</MudText>
-        <MudText Typo="Typo.h3" Class="mb-4">@DateTime.Now.ToString("T")</MudText>
+        <MudText Typo="Typo.h4" Color="Color.Primary">@Loc["TimeAttendance"]</MudText>
+        <MudText Typo="Typo.subtitle1">@DateTime.Now.ToString("D", CultureInfo.CurrentCulture)</MudText>
+        <MudText Typo="Typo.h3" Class="mb-4">@DateTime.Now.ToString("T", CultureInfo.CurrentCulture)</MudText>
 
         @if (isLoading)
         {
@@ -20,12 +25,12 @@
         }
         else
         {
-            <MudTextField @bind-Value="employeeId" Label="Enter Employee ID" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" />
+            <MudTextField @bind-Value="employeeId" Label="@Loc["EnterEmployeeId"]" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" />
 
             <div class="d-flex gap-4 mt-4">
-                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large" StartIcon="@Icons.Material.Filled.Login" OnClick="PerformCheckIn">Check In</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large" StartIcon="@Icons.Material.Filled.Login" OnClick="PerformCheckIn">@Loc["CheckIn"]</MudButton>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large" StartIcon="@Icons.Material.Filled.Logout" OnClick="PerformCheckOut">Check Out</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large" StartIcon="@Icons.Material.Filled.Logout" OnClick="PerformCheckOut">@Loc["CheckOut"]</MudButton>
 
             </div>
         }
@@ -34,15 +39,15 @@
     @if (recentLogs != null && recentLogs.Any())
     {
         <MudPaper Class="mt-8 pa-4" Elevation="2">
-            <MudText Typo="Typo.h6" Class="mb-2">Recent Activity</MudText>
+            <MudText Typo="Typo.h6" Class="mb-2">@Loc["RecentActivity"]</MudText>
             <MudTable Items="@recentLogs" Hover="true" Dense="true">
                 <HeaderContent>
-                    <MudTh>Time</MudTh>
-                    <MudTh>Type</MudTh>
+                    <MudTh>@Loc["Time"]</MudTh>
+                    <MudTh>@Loc["Type"]</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Time">@context.TransactionTime.ToString("g")</MudTd>
-                    <MudTd DataLabel="Type">
+                    <MudTd DataLabel="@Loc["Time"]">@context.TransactionTime.ToString("g", CultureInfo.CurrentCulture)</MudTd>
+                    <MudTd DataLabel="@Loc["Type"]">
                          <MudChip T="string" Color="@(context.TransactionType == "IN" ? Color.Success : Color.Error)" Size="Size.Small">@context.TransactionType</MudChip>
                     </MudTd>
                 </RowTemplate>
@@ -61,7 +66,7 @@
     {
         if (employeeId <= 0)
         {
-            Snackbar.Add("Please enter a valid Employee ID", Severity.Warning);
+            Snackbar.Add(Loc["PleaseEnterValidId"], Severity.Warning);
             return;
         }
 
@@ -75,12 +80,12 @@
             };
 
             await AttendanceService.CheckInAsync(attendance);
-            Snackbar.Add("Checked In Successfully", Severity.Success);
+            Snackbar.Add(Loc["CheckInSuccess"], Severity.Success);
             await LoadRecentLogs();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error checking in: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -93,7 +98,7 @@
     {
         if (employeeId <= 0)
         {
-            Snackbar.Add("Please enter a valid Employee ID", Severity.Warning);
+            Snackbar.Add(Loc["PleaseEnterValidId"], Severity.Warning);
             return;
         }
 
@@ -107,12 +112,12 @@
             };
 
             await AttendanceService.CheckOutAsync(attendance);
-            Snackbar.Add("Checked Out Successfully", Severity.Success);
+            Snackbar.Add(Loc["CheckOutSuccess"], Severity.Success);
             await LoadRecentLogs();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error checking out: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
         }
         finally
         {

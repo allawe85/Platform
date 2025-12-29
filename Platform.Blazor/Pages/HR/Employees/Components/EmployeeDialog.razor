@@ -7,14 +7,16 @@
 @inject IHierarchiesService HierarchiesService
 @inject IApplicationUsersService UsersService
 @inject ISnackbar Snackbar
+@inject Platform.Blazor.Services.Leaves.LeaveService LeaveService
 
 <MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
         <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["EditEmployee"] : Loc["AddEmployee"])</MudText>
         <MudForm @ref="_form" @bind-IsValid="_success">
             <MudStack Spacing="3">
-                <MudTextField @bind-Value="_employee.CivilId" Label="@Loc["CivilId"]" Required="true" RequiredError="Civil ID is required!" />
-                <MudTextField @bind-Value="_employee.EmployeeId" Label="@Loc["EmployeeId"]" Required="true" RequiredError="Employee ID is required!" />
+                <MudTextField @bind-Value="_employee.FullName" Label="Full Name" Required="true" RequiredError="Full Name is required!" />
+                <MudTextField @bind-Value="_employee.CivilId" Label="Civil ID" Required="true" RequiredError="Civil ID is required!" />
+                <MudTextField @bind-Value="_employee.EmployeeId" Label="Employee ID" Required="true" RequiredError="Employee ID is required!" />
                 
                 <MudSelect T="int" @bind-Value="_employee.HierarchyId" Label="@Loc["Hierarchy"]" Required="true" AnchorOrigin="Origin.BottomCenter">
                     @foreach (var hierarchy in _hierarchies)
@@ -29,6 +31,22 @@
                         <MudSelectItem Value="@user.Id">@user.UserName (@user.Email)</MudSelectItem>
                     }
                 </MudSelect>
+
+
+                @if (!_isEdit)
+                {
+                    <MudText Typo="Typo.subtitle1" Class="mt-4">Initial Leave Balances</MudText>
+                    <MudDivider />
+                    <MudStack Spacing="2" Class="mt-2">
+                        @foreach (var item in _leaveBalanceModels)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudCheckBox @bind-Value="item.IsSelected" Label="@item.Type.Name" Dense="true" Color="Color.Primary" />
+                                <MudNumericField @bind-Value="item.Balance" Label="Balance" Disabled="@(!item.IsSelected)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width: 100px;" />
+                            </MudStack>
+                        }
+                    </MudStack>
+                }
             </MudStack>
         </MudForm>
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
@@ -45,9 +63,11 @@
 
     [Parameter] public int? EmployeeId { get; set; }
 
-    private Employee _employee = new Employee();
+    private EmployeeInfo _employee = new EmployeeInfo();
     private List<Hierarchy> _hierarchies = new();
+
     private List<ApplicationUser> _users = new();
+    private List<LeaveBalanceModel> _leaveBalanceModels = new();
     
     private MudForm _form;
     private bool _success;
@@ -70,19 +90,12 @@
                  var info = await EmployeesService.GetEmployeeInfoByIdAsync(EmployeeId.Value);
                  if (info != null)
                  {
-                     _employee = new Employee
-                     {
-                         Id = info.Id,
-                         CivilId = info.CivilId,
-                         EmployeeId = info.EmployeeId,
-                         HierarchyId = info.HierarchyId,
-                         AspnetusersId = info.AspnetusersId
-                     };
+                     _employee = info;
                  }
              }
              else
              {
-                 _employee = new Employee();
+                 _employee = new EmployeeInfo();
              }
         }
     }
@@ -95,7 +108,20 @@
         await Task.WhenAll(hierarchyTask, usersTask);
         
         _hierarchies = await hierarchyTask;
+
         _users = await usersTask;
+
+        // Load Leave Types for new employee
+        if (!_isEdit)
+        {
+            var leaveTypes = await LeaveService.GetLeaveTypes();
+            _leaveBalanceModels = leaveTypes.Select(lt => new LeaveBalanceModel
+            {
+                Type = lt,
+                IsSelected = true,
+                Balance = lt.TypeBalance
+            }).ToList();
+        }
     }
 
     private async Task Submit()
@@ -106,7 +132,17 @@
         {
             if (_isEdit)
             {
-                var result = await EmployeesService.UpdateEmployeeAsync(_employee.Id, _employee);
+                var employeeToUpdate = new Employee
+                {
+                    Id = _employee.Id,
+                    CivilId = _employee.CivilId,
+                    EmployeeId = _employee.EmployeeId,
+                    HierarchyId = _employee.HierarchyId,
+                    AspnetusersId = _employee.AspnetusersId,
+                    FullName = _employee.FullName
+                };
+
+                var result = await EmployeesService.UpdateEmployeeAsync(_employee.Id, employeeToUpdate);
                 if (result != null)
                 {
                     Snackbar.Add("Employee updated successfully", Severity.Success);
@@ -121,9 +157,31 @@
             {
                 try
                 {
-                     // Ensure ID is 0
-                    _employee.Id = 0; 
-                    await EmployeesService.CreateEmployeeAsync(_employee);
+                    // Ensure ID is 0
+                    var employeeToCreate = new Employee
+                    {
+                        Id = 0,
+                        CivilId = _employee.CivilId,
+                        EmployeeId = _employee.EmployeeId,
+                        HierarchyId = _employee.HierarchyId,
+                        AspnetusersId = _employee.AspnetusersId,
+                        FullName = _employee.FullName
+                    };
+
+                    var request = new CreateEmployeeRequest
+                    {
+                        Employee = employeeToCreate,
+                        LeaveBalances = _leaveBalanceModels
+                            .Where(x => x.IsSelected)
+                            .Select(x => new LeaveBalance
+                            {
+                                LeaveTypeId = x.Type.Id,
+                                Balance = x.Balance,
+                                EmployeeId = 0 // Will be set by server
+                            }).ToList()
+                    };
+
+                    await EmployeesService.CreateEmployeeAsync(request);
                     Snackbar.Add("Employee created successfully", Severity.Success);
                     await Close(true);
                 }
@@ -143,4 +201,11 @@
     }
     
     private async Task Cancel() => await Close(false);
+
+    public class LeaveBalanceModel
+    {
+        public LeaveType Type { get; set; }
+        public bool IsSelected { get; set; }
+        public int? Balance { get; set; }
+    }
 }
