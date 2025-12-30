@@ -12,8 +12,8 @@
                 <MudSelectItem Value="@((int?)type.Id)">@type.NameAr</MudSelectItem>
             }
         </MudSelect>
-        <MudDatePicker Label="@Loc["StartDate"]" @bind-Date="StartDate" PickerVariant="PickerVariant.Dialog" />
-        <MudDatePicker Label="@Loc["EndDate"]" @bind-Date="EndDate" PickerVariant="PickerVariant.Dialog" />
+        <MudDatePicker Label="@Loc["StartDate"]" @bind-Date="StartDate" />
+        <MudDatePicker Label="@Loc["EndDate"]" @bind-Date="EndDate" />
         <MudTextField Label="@Loc["Details"]" @bind-Value="LeaveRequest.Details" Lines="3" />
         
         @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -28,7 +28,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] public MudDialogInstance DialogInstance { get; set; }
 
     [Parameter] public List<LeaveType> LeaveTypes { get; set; } = new();
     [Parameter] public int EmployeeId { get; set; }
@@ -68,7 +68,7 @@
         var response = await LeaveService.SubmitLeaveRequest(LeaveRequest);
         if (response.IsSuccessStatusCode)
         {
-            MudDialog.Close(DialogResult.Ok(true));
+            DialogInstance?.Close(DialogResult.Ok(true));
         }
         else
         {
@@ -76,5 +76,5 @@
         }
     }
 
-    private void Cancel() => MudDialog.Cancel();
+    private void Cancel() => DialogInstance?.Cancel();
 }
