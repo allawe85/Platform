@@ -3,7 +3,7 @@
 @using Platform.Blazor.Services.Leaves
 @inject LeaveService LeaveService
 @inject AuthenticationStateProvider AuthStateProvider
-@* Removed DialogService injection *@
+@inject IDialogService DialogService
 
 <MudText Typo="Typo.h5" GutterBottom="true">@Loc["MyLeaves"]</MudText>
 
@@ -77,8 +77,6 @@
     </MudItem>
 </MudGrid>
 
-<LeaveRequestDialog @bind-Visible="_showDialog" LeaveTypes="LeaveTypes" EmployeeId="CurrentEmployeeId" OnClose="OnDialogClose" />
-
 @code {
     private List<LeaveBalance> Balances;
     private List<Leave> MyLeavesList;
@@ -86,8 +84,6 @@
     
     // Hardcoded for now
     private int CurrentEmployeeId = 1; 
-
-    private bool _showDialog;
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,14 +97,19 @@
         MyLeavesList = await LeaveService.GetMyLeavesAndRequests(CurrentEmployeeId);
     }
 
-    private void OpenRequestDialog()
+    private async Task OpenRequestDialog()
     {
-        _showDialog = true;
-    }
+        var parameters = new DialogParameters
+        {
+            { nameof(LeaveRequestDialog.LeaveTypes), LeaveTypes },
+            { nameof(LeaveRequestDialog.EmployeeId), CurrentEmployeeId }
+        };
 
-    private async Task OnDialogClose(bool result)
-    {
-        if (result)
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<LeaveRequestDialog>(Loc["NewLeaveRequest"], parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool success && success)
         {
             await LoadData();
         }

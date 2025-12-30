@@ -10,6 +10,7 @@
 @inject LayoutService LayoutService
 
 <MudText Typo="Typo.h5" Class="mb-4">@Loc["Hierarchies"]</MudText>
+<MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4">@_debugMsg</MudAlert>
 
 <MudPaper Class="pa-4">
     <MudToolBar>
@@ -25,6 +26,13 @@
                 <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">@Loc["Reset"]</MudButton>
             }
             <MudIconButton Icon="@Icons.Material.Filled.Print" OnClick="Print" Color="Color.Default" Variant="Variant.Outlined" Title="Print" Class="ml-2"/>
+
+            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                           OnClick="OpenInNewWindow"
+                           Color="Color.Default"
+                           Variant="Variant.Outlined"
+                           Title="@Loc["OpenInNewWindow"]"
+                           Class="ml-2" />
         </div>
         <MudSpacer />
         
@@ -128,6 +136,7 @@
                  OnClose="OnDialogClose" />
 
 @code {
+    private string _debugMsg = "Loading...";
     private List<Hierarchy> HierarchyList = new();
     private List<Hierarchy> TreeRoots = new();
     private HashSet<TreeItemData<Hierarchy>> TreeItems = new();
@@ -241,17 +250,26 @@
                 if (level2Exists)
                 {
                     _sectorLevelHierarchies = HierarchyList.Where(x => x.HierarchyLevelId == 2).OrderBy(x => x.Name).ToList();
+                    _debugMsg += $" | Fallback to Level 2, Matches: {_sectorLevelHierarchies.Count}";
                 }
-                else
+                else 
                 {
-                    _sectorLevelHierarchies = HierarchyList.Where(x => x.ParentId == 0).OrderBy(x => x.Name).ToList();
+                    _debugMsg += " | Level 2 has no items";
                 }
+            }
+
+            // Attempt 3: Fallback to Roots (if previous attempts failed)
+            if (!_sectorLevelHierarchies.Any())
+            {
+                _sectorLevelHierarchies = HierarchyList.Where(x => x.ParentId == 0).OrderBy(x => x.Name).ToList();
+                _debugMsg += $" | Fallback to Roots (ParentId=0), Matches: {_sectorLevelHierarchies.Count}";
             }
             
             BuildTree();
         }
         catch (Exception ex)
         {
+            _debugMsg = $"Error: {ex.Message}";
             Snackbar.Add($"Error loading hierarchies: {ex.Message}", Severity.Error);
         }
         finally

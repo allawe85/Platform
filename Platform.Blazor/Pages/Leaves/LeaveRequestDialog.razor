@@ -3,12 +3,11 @@
 @using MudBlazor
 @inject LeaveService LeaveService
 
-<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false">
-    <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
-        <MudText Typo="Typo.h6" Class="mb-4">@Loc["NewLeaveRequest"]</MudText>
-        
-        <MudSelect T="int?" Label="@Loc["LeaveType"]" @bind-Value="LeaveRequest.LeaveTypeId" Required="true" RequiredError="@Loc["SelectLeaveType"]">
-             @foreach (var type in LeaveTypes)
+<MudDialog>
+    <DialogContent>
+        <MudSelect T="int?" Label="@Loc["LeaveType"]" @bind-Value="LeaveRequest.LeaveTypeId" Required="true" RequiredError="@Loc["SelectLeaveType"]"
+                   RelativeWidth="false" Dense="true" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter">
+                @foreach (var type in LeaveTypes)
             {
                 <MudSelectItem Value="@((int?)type.Id)">@type.NameAr</MudSelectItem>
             }
@@ -21,18 +20,15 @@
         {
             <MudAlert Severity="Severity.Error" Class="mt-2">@ErrorMessage</MudAlert>
         }
-
-        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@Loc["Save"]</MudButton>
-        </MudStack>
-    </MudPaper>
-</MudOverlay>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@Loc["Save"]</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
-    [Parameter] public bool Visible { get; set; }
-    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
-    [Parameter] public EventCallback<bool> OnClose { get; set; }
+    [CascadingParameter] public MudDialogInstance DialogInstance { get; set; }
 
     [Parameter] public List<LeaveType> LeaveTypes { get; set; } = new();
     [Parameter] public int EmployeeId { get; set; }
@@ -42,15 +38,12 @@
     private DateTime? EndDate = DateTime.Today;
     private string ErrorMessage;
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        if (Visible)
-        {
-             if (LeaveTypes == null || !LeaveTypes.Any())
-             {
-                 LeaveTypes = await LeaveService.GetLeaveTypes();
-             }
-        }
+         if (LeaveTypes == null || !LeaveTypes.Any())
+         {
+             LeaveTypes = await LeaveService.GetLeaveTypes();
+         }
     }
 
     private async Task Submit()
@@ -64,8 +57,8 @@
         
         if (StartDate == null || EndDate == null)
         {
-             ErrorMessage = Loc["SelectDates"];
-             return;
+                ErrorMessage = Loc["SelectDates"];
+                return;
         }
 
         LeaveRequest.EmployeeId = EmployeeId;
@@ -75,12 +68,7 @@
         var response = await LeaveService.SubmitLeaveRequest(LeaveRequest);
         if (response.IsSuccessStatusCode)
         {
-            // Reset for next time
-            LeaveRequest = new Leave(); 
-            StartDate = DateTime.Today;
-            EndDate = DateTime.Today;
-            
-            await Close(true);
+            DialogInstance?.Close(DialogResult.Ok(true));
         }
         else
         {
@@ -88,12 +76,5 @@
         }
     }
 
-    private async Task Close(bool result)
-    {
-        Visible = false;
-        await VisibleChanged.InvokeAsync(false);
-        await OnClose.InvokeAsync(result);
-    }
-
-    private async Task Cancel() => await Close(false);
+    private void Cancel() => DialogInstance?.Cancel();
 }
