@@ -19,7 +19,7 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] public MudDialogInstance DialogInstance { get; set; }
 
     [Parameter] public Announcement Announcement { get; set; } = new Announcement();
 
@@ -46,7 +46,7 @@
                 await AnnouncementsService.UpdateAnnouncementAsync(Announcement.AnnouncementId, Announcement);
                 Snackbar.Add(Loc["AnnouncementUpdated"], Severity.Success);
             }
-            MudDialog.Close(DialogResult.Ok(true));
+            DialogInstance?.Close(DialogResult.Ok(true));
         }
         catch (Exception ex)
         {
@@ -54,5 +54,5 @@
         }
     }
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => DialogInstance?.Cancel();
 }
