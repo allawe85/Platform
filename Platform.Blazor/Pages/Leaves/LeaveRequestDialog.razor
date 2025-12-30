@@ -3,19 +3,19 @@
 @using MudBlazor
 @inject LeaveService LeaveService
 
-<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
+<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false">
     <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
-        <MudText Typo="Typo.h6" Class="mb-4">New Leave Request</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@Loc["NewLeaveRequest"]</MudText>
         
-        <MudSelect T="int?" Label="Leave Type" @bind-Value="LeaveRequest.LeaveTypeId" Required="true" RequiredError="Type is required">
+        <MudSelect T="int?" Label="@Loc["LeaveType"]" @bind-Value="LeaveRequest.LeaveTypeId" Required="true" RequiredError="@Loc["SelectLeaveType"]">
              @foreach (var type in LeaveTypes)
             {
                 <MudSelectItem Value="@((int?)type.Id)">@type.NameAr</MudSelectItem>
             }
         </MudSelect>
-        <MudDatePicker Label="Start Date" @bind-Date="StartDate" />
-        <MudDatePicker Label="End Date" @bind-Date="EndDate" />
-        <MudTextField Label="Details" @bind-Value="LeaveRequest.Details" Lines="3" />
+        <MudDatePicker Label="@Loc["StartDate"]" @bind-Date="StartDate" />
+        <MudDatePicker Label="@Loc["EndDate"]" @bind-Date="EndDate" />
+        <MudTextField Label="@Loc["Details"]" @bind-Value="LeaveRequest.Details" Lines="3" />
         
         @if (!string.IsNullOrEmpty(ErrorMessage))
         {
@@ -23,8 +23,8 @@
         }
 
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Submit</MudButton>
+            <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@Loc["Save"]</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
@@ -42,11 +42,14 @@
     private DateTime? EndDate = DateTime.Today;
     private string ErrorMessage;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        if (Visible && LeaveRequest == null) // Reset on showing if needed, or keep state
+        if (Visible)
         {
-            // Reset logic if desired every time it opens
+             if (LeaveTypes == null || !LeaveTypes.Any())
+             {
+                 LeaveTypes = await LeaveService.GetLeaveTypes();
+             }
         }
     }
 
@@ -55,13 +58,13 @@
         ErrorMessage = null;
         if (LeaveRequest.LeaveTypeId == null)
         {
-            ErrorMessage = "Please select a leave type.";
+            ErrorMessage = Loc["SelectLeaveType"];
             return;
         }
         
         if (StartDate == null || EndDate == null)
         {
-             ErrorMessage = "Please select dates.";
+             ErrorMessage = Loc["SelectDates"];
              return;
         }
 

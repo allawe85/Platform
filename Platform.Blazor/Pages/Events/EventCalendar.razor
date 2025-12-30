@@ -227,7 +227,7 @@ else
              try {
                 bool? result = await DialogService.ShowMessageBox(
                     Loc["Warning"], 
-                    string.Format(Loc["ConfirmDelete"].ToString(), e.Name), 
+                    string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? e.NameAr : e.Name)})"), 
                     yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
                 if (result == true)

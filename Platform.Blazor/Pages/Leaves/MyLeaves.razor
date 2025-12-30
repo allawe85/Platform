@@ -5,10 +5,10 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @* Removed DialogService injection *@
 
-<MudText Typo="Typo.h5" GutterBottom="true">My Leaves</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@Loc["MyLeaves"]</MudText>
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenRequestDialog" Class="mb-4">
-    New Leave Request
+    @Loc["NewLeaveRequest"]
 </MudButton>
 
 <MudGrid>
@@ -16,7 +16,7 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">My Balances</MudText>
+                    <MudText Typo="Typo.h6">@Loc["MyBalances"]</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
@@ -28,8 +28,8 @@
                 {
                     <MudTable Items="Balances" Dense="true" Hover="true" Striped="true" Elevation="0">
                         <HeaderContent>
-                            <MudTh>Type</MudTh>
-                            <MudTh>Balance (Days)</MudTh>
+                            <MudTh>@Loc["Type"]</MudTh>
+                            <MudTh>@Loc["Balance"]</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>
@@ -45,7 +45,7 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Leave History</MudText>
+                    <MudText Typo="Typo.h6">@Loc["LeaveHistory"]</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
@@ -57,11 +57,11 @@
                 {
                      <MudTable Items="MyLeavesList" Dense="true" Hover="true" Striped="true" Elevation="0">
                         <HeaderContent>
-                            <MudTh>Type</MudTh>
-                            <MudTh>Start Date</MudTh>
-                            <MudTh>End Date</MudTh>
-                            <MudTh>Status</MudTh>
-                            <MudTh>Details</MudTh>
+                            <MudTh>@Loc["Type"]</MudTh>
+                            <MudTh>@Loc["StartDate"]</MudTh>
+                            <MudTh>@Loc["EndDate"]</MudTh>
+                            <MudTh>@Loc["Status"]</MudTh>
+                            <MudTh>@Loc["Details"]</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>

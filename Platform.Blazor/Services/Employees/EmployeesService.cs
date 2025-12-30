@@ -22,7 +22,7 @@ namespace Platform.Blazor.Services.Employees
             return await _http.GetFromJsonAsync<EmployeeInfo>($"api/employees/{id}");
         }
 
-        public async Task<Employee?> GetEmployeeRecordByIdAsync(int id)
+        public Task<Employee?> GetEmployeeRecordByIdAsync(int id)
         {
              // The controller returns EmployeeInfo for GetEmployeeById. 
              // We might need a separate endpoint to get the raw Employee record for editing if EmployeeInfo doesn't map back 1:1 or is read-only view.
@@ -43,7 +43,7 @@ namespace Platform.Blazor.Services.Employees
              // I should probably add one to the controller to make editing safe.
              
              // For now, I'll implement what I can.
-             return null; 
+             return Task.FromResult<Employee?>(null); 
         }
 
         public async Task<Employee> CreateEmployeeAsync(CreateEmployeeRequest request)

@@ -89,7 +89,7 @@
     {
         bool? result = await DialogService.ShowMessageBox(
             Loc["Warning"], 
-            string.Format(Loc["ConfirmDelete"].ToString(), level.Name), 
+            string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? level.NameAr : level.Name)})"), 
             yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
@@ -97,7 +97,7 @@
             try
             {
                 await HierarchiesService.DeleteLevelAsync(level.Id);
-                Snackbar.Add(Loc["Success"], Severity.Success);
+                Snackbar.Add(Loc["LevelDeleted"], Severity.Success);
                 await LoadLevels();
             }
             catch (Exception ex)

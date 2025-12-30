@@ -40,7 +40,7 @@ namespace Platform.Api.Controllers
         public async Task<ActionResult<Announcement>> PostAnnouncement(Announcement announcement)
         {
             var created = await _context.AddAnnouncementAsync(announcement);
-            return CreatedAtAction("GetAnnouncement", new { id = created.AnnouncementId }, created);
+            return Ok(created);
         }
 
         [HttpPut("{id}")]

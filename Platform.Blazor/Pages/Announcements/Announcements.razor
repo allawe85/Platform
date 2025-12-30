@@ -6,38 +6,38 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" Class="mb-4">Announcements</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["Announcements"]</MudText>
 
 <MudTable T="Announcement" ServerData="ServerReload"
           Dense="true" Hover="true" @ref="_table">
     <ToolBarContent>
-        <MudText Typo="Typo.h6">Manage Announcements</MudText>
+        <MudText Typo="Typo.h6">@Loc["ManageAnnouncements"]</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAnnouncement" StartIcon="@Icons.Material.Filled.Add">Add Announcement</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAnnouncement" StartIcon="@Icons.Material.Filled.Add">@Loc["AddAnnouncement"]</MudButton>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>Title</MudTh>
-        <MudTh>Description</MudTh>
-        <MudTh>Date</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Actions</MudTh>
+        <MudTh>@Loc["AnnouncementTitle"]</MudTh>
+        <MudTh>@Loc["AnnouncementDescription"]</MudTh>
+        <MudTh>@Loc["ReceiveDate"]</MudTh>
+        <MudTh>@Loc["Status"]</MudTh>
+        <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Title">@context.Title</MudTd>
         <MudTd DataLabel="Description">
             <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
-                @(context.Description.Length > 50 ? context.Description.Substring(0, 50) + "..." : context.Description)
+                @((context.Description ?? "").Length > 50 ? (context.Description ?? "").Substring(0, 50) + "..." : context.Description)
             </MudText>
         </MudTd>
         <MudTd DataLabel="Date">@context.CreatedDate.ToString("g")</MudTd>
         <MudTd DataLabel="Status">
             @if (context.IsActive)
             {
-                <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+                <MudChip T="string" Color="Color.Success" Size="Size.Small">@Loc["Active"]</MudChip>
             }
             else
             {
-                <MudChip T="string" Color="Color.Error" Size="Size.Small">Inactive</MudChip>
+                <MudChip T="string" Color="Color.Error" Size="Size.Small">@Loc["Inactive"]</MudChip>
             }
         </MudTd>
         <MudTd DataLabel="Actions">
@@ -46,7 +46,7 @@
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
-        <MudText>No announcements found.</MudText>
+        <MudText>@Loc["NoRecordsFound"]</MudText>
     </NoRecordsContent>
     <LoadingContent>
         <MudText>Loading...</MudText>
@@ -61,54 +61,80 @@
 
     private async Task<TableData<Announcement>> ServerReload(TableState state, CancellationToken token)
     {
-        var data = await AnnouncementsService.GetAnnouncementsAsync();
-        return new TableData<Announcement>() { TotalItems = data.Count, Items = data };
+        try
+        {
+            var data = await AnnouncementsService.GetAnnouncementsAsync();
+            if (data == null)
+            {
+                 return new TableData<Announcement>() { TotalItems = 0, Items = new List<Announcement>() };
+            }
+            return new TableData<Announcement>() { TotalItems = data.Count, Items = data };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+            return new TableData<Announcement>() { TotalItems = 0, Items = new List<Announcement>() };
+        }
     }
 
     private async Task AddAnnouncement()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = DialogService.Show<AnnouncementDialog>("Add Announcement", options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
+        try
         {
-            await _table.ReloadServerData();
+            var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            var dialog = DialogService.Show<AnnouncementDialog>(Loc["AddAnnouncement"], options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled)
+            {
+                await _table.ReloadServerData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding announcement: {ex.Message}", Severity.Error);
         }
     }
 
     private async Task EditAnnouncement(Announcement announcement)
     {
-        var parameters = new DialogParameters { ["Announcement"] = announcement };
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = DialogService.Show<AnnouncementDialog>("Edit Announcement", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
+        try
         {
-            await _table.ReloadServerData();
+            var parameters = new DialogParameters { ["Announcement"] = announcement };
+            var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            var dialog = DialogService.Show<AnnouncementDialog>(Loc["EditAnnouncement"], parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled)
+            {
+                await _table.ReloadServerData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error editing announcement: {ex.Message}", Severity.Error);
         }
     }
 
     private async Task DeleteAnnouncement(Announcement announcement)
     {
-        bool? result = await DialogService.ShowMessageBox(
-            "Warning",
-            "Deleting can not be undone!",
-            yesText: "Delete!", cancelText: "Cancel");
-
-        if (result == true)
+        try
         {
-            try
+            bool? result = await DialogService.ShowMessageBox(
+                Loc["Warning"], 
+                string.Format(Loc["ConfirmDelete"], $"({announcement.Title})"), 
+                yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+            if (result == true)
             {
                 await AnnouncementsService.DeleteAnnouncementAsync(announcement.AnnouncementId);
-                Snackbar.Add("Deleted", Severity.Success);
+                Snackbar.Add(Loc["AnnouncementDeleted"], Severity.Success);
                 await _table.ReloadServerData();
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting announcement: {ex.Message}", Severity.Error);
         }
     }
 }

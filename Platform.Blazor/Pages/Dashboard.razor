@@ -41,10 +41,10 @@
                         {
                             <div class="pa-2">
                                 <div class="d-flex justify-space-between align-center">
-                                    <MudText Typo="Typo.subtitle2">@item.Title</MudText>
+                                    <MudText Typo="Typo.subtitle2">@(item.Title ?? "No Title")</MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Default">@item.CreatedDate.ToString("g")</MudText>
                                 </div>
-                                <MudText Typo="Typo.body2" Class="mt-1">@item.Description</MudText>
+                                <MudText Typo="Typo.body2" Class="mt-1">@(item.Description ?? "")</MudText>
                             </div>
                             @if (item != _announcements.Last())
                             {

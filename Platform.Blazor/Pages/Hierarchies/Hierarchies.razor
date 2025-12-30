@@ -1,6 +1,4 @@
 @page "/hierarchies"
-@implements IAsyncDisposable
-@using Microsoft.JSInterop
 @using Platform.Blazor.Pages.Hierarchies.Components
 @using Platform.Blazor.Services.Auth
 @using Platform.Blazor.Services.Hierarchies
@@ -25,7 +23,6 @@
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomIn" OnClick="ZoomIn" Color="Color.Secondary" />
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomOut" OnClick="ZoomOut" Color="Color.Secondary" />
                 <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">@Loc["Reset"]</MudButton>
-                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" OnClick="OpenInNewWindow" Color="Color.Primary" Title="@Loc["OpenInNewWindow"]" />
             }
             <MudIconButton Icon="@Icons.Material.Filled.Print" OnClick="Print" Color="Color.Default" Variant="Variant.Outlined" Title="Print" Class="ml-2"/>
         </div>
@@ -130,13 +127,7 @@
                  DefaultParentId="_targetParentId"
                  OnClose="OnDialogClose" />
 
-@inject NavigationManager NavigationManager
-
 @code {
-    // Component References removed as they are now inside HierarchyChart
-    // private ElementReference _chartContainer; ... removed
-    // private IJSObjectReference? _chartModule; ... removed 
-    
     private List<Hierarchy> HierarchyList = new();
     private List<Hierarchy> TreeRoots = new();
     private HashSet<TreeItemData<Hierarchy>> TreeItems = new();
@@ -420,10 +411,10 @@
         EditHierarchy(_selectedHierarchy);
     }
     
-    private void DeleteSelectedHierarchy()
+    private async Task DeleteSelectedHierarchy()
     {
         if (_selectedHierarchy == null) return;
-        DeleteHierarchy(_selectedHierarchy);
+        await DeleteHierarchy(_selectedHierarchy);
     }
 
     private void EditHierarchy(Hierarchy hierarchy)
@@ -444,7 +435,7 @@
     {
         bool? result = await DialogService.ShowMessageBox(
             Loc["Warning"], 
-            string.Format(Loc["ConfirmDelete"].ToString(), hierarchy.Name), 
+            string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? hierarchy.NameAr : hierarchy.Name)})"), 
             yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
@@ -532,7 +523,46 @@
         await JSRuntime.InvokeVoidAsync("print");
     }
 
-    // RenderChartTree removed (moved to component)
+    // --- Renderers ---
+
+    // 1. Chart Render
+    private RenderFragment RenderChartTree(List<Hierarchy> nodes) => __builder =>
+    {
+        foreach (var node in nodes)
+        {
+            <li style="@($"--level-color: {GetLevelColor(node.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(node.HierarchyLevelId)};")">
+                <div class="@GetNodeClass(node)" 
+                     style="@($"--level-color: {GetLevelColor(node.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(node.HierarchyLevelId)};")"
+                     @onclick="() => OnSelectNode(node)"
+                     @onclick:stopPropagation="true">
+                    
+                    <div class="node-title">
+                        @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(node.NameAr) ? node.NameAr : node.Name)
+                    </div>
+                    <div class="node-subtitle">@(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(node.HierarchyLevel?.NameAr) ? node.HierarchyLevel.NameAr : node.HierarchyLevel?.Name ?? "")</div>
+                    
+                    <div class="node-actions">
+                         <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
+                                        Variant="Variant.Text" Color="Color.Primary" 
+                                        OnClick="@(() => AddChildToNode(node))" Title="@Loc["AddChild"]" />
+                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                        Variant="Variant.Text" Color="Color.Default" 
+                                        OnClick="@(() => EditHierarchy(node))" Title="@Loc["Edit"]" />
+                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
+                                        Variant="Variant.Text" Color="Color.Error" 
+                                        OnClick="@(() => DeleteHierarchy(node))" Title="@Loc["Delete"]" />
+                    </div>
+                </div>
+                @if (node.Children != null && node.Children.Count > 0)
+                {
+                    <ul>
+                      @RenderChartTree(node.Children)
+                    </ul>
+                }
+            </li>
+        }
+    };
+
     private string GetNodeClass(Hierarchy node)
     {
         return (_selectedHierarchy != null && _selectedHierarchy.Id == node.Id) ? "node-card selected" : "node-card";

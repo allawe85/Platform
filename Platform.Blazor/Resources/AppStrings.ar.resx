@@ -389,10 +389,10 @@
     <value>أنواع الفعاليات</value>
   </data>
   <data name="UpcomingEvents" xml:space="preserve">
-    <value>الأحداث القادمة</value>
+    <value>الفعاليات القادمة</value>
   </data>
-  <data name="NoUpcomingEvents" xml:space="preserve">
-    <value>لا توجد أحداث قادمة.</value>
+  <data name="NoUpcomingEventsFound" xml:space="preserve">
+    <value>لا توجد فعاليات قادمة.</value>
   </data>
   <data name="Sector" xml:space="preserve">
     <value>القطاع</value>
@@ -418,4 +418,149 @@
   <data name="HierarchyCreated" xml:space="preserve">
     <value>تم إنشاء الهيكل التنظيمي</value>
   </data>
+  <data name="TimeAttendance" xml:space="preserve">
+    <value>تسجيل الحضور</value>
+  </data>
+  <data name="CheckInOut" xml:space="preserve">
+    <value>تسجيل الحضور/الإنصراف</value>
+  </data>
+  <data name="AttendanceReport" xml:space="preserve">
+    <value>تقرير الحضور</value>
+  </data>
+  <data name="CheckInTitle" xml:space="preserve">
+    <value>تسجيل الحضور - الحضور/الإنصراف</value>
+  </data>
+  <data name="EnterEmployeeId" xml:space="preserve">
+    <value>أدخل رقم الموظف</value>
+  </data>
+  <data name="CheckIn" xml:space="preserve">
+    <value>تسجيل حضور</value>
+  </data>
+  <data name="CheckOut" xml:space="preserve">
+    <value>تسجيل إنصراف</value>
+  </data>
+  <data name="RecentActivity" xml:space="preserve">
+    <value>النشاط الأخير</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>الوقت</value>
+  </data>
+  <data name="PleaseEnterValidId" xml:space="preserve">
+    <value>يرجى إدخال رقم موظف صحيح</value>
+  </data>
+  <data name="CheckInSuccess" xml:space="preserve">
+    <value>تم تسجيل الحضور بنجاح</value>
+  </data>
+  <data name="CheckOutSuccess" xml:space="preserve">
+    <value>تم تسجيل الإنصراف بنجاح</value>
+  </data>
+  <data name="HRAttendanceReportTitle" xml:space="preserve">
+    <value>تقرير حضور الموارد البشرية</value>
+  </data>
+  <data name="FromDate" xml:space="preserve">
+    <value>من تاريخ</value>
+  </data>
+  <data name="ToDate" xml:space="preserve">
+    <value>إلى تاريخ</value>
+  </data>
+  <data name="EmployeeIdOptional" xml:space="preserve">
+    <value>رقم الموظف (اختياري)</value>
+  </data>
+  <data name="GenerateReport" xml:space="preserve">
+    <value>إنشاء التقرير</value>
+  </data>
+  <data name="EmployeeID" xml:space="preserve">
+    <value>رقم الموظف</value>
+  </data>
+  <data name="PleaseSelectDateRange" xml:space="preserve">
+    <value>يرجى اختيار نطاق تاريخ</value>
+  </data>
+  <data name="NoRecordsFound" xml:space="preserve">
+    <value>لم يتم العثور على سجلات للمعايير المحددة</value>
+  </data>
+  <data name="LeavesManagement" xml:space="preserve"><value>إدارة الإجازات</value></data>
+  <data name="MyLeaves" xml:space="preserve"><value>إجازاتي</value></data>
+  <data name="LeaveApprovals" xml:space="preserve"><value>الموافقات على الإجازات</value></data>
+  <data name="LeaveConfiguration" xml:space="preserve"><value>إعدادات الإجازات</value></data>
+  <data name="Announcements" xml:space="preserve"><value>الإعلانات</value></data>
+  <data name="ManageAnnouncements" xml:space="preserve"><value>إدارة الإعلانات</value></data>
+  <data name="AddAnnouncement" xml:space="preserve"><value>إضافة إعلان</value></data>
+  <data name="EditAnnouncement" xml:space="preserve"><value>تعديل إعلان</value></data>
+  <data name="AnnouncementTitle" xml:space="preserve"><value>العنوان</value></data>
+  <data name="AnnouncementDescription" xml:space="preserve"><value>الوصف</value></data>
+  <data name="IsActive" xml:space="preserve"><value>نشط</value></data>
+  <data name="AnnouncementCreated" xml:space="preserve"><value>تم إنشاء الإعلان</value></data>
+  <data name="AnnouncementUpdated" xml:space="preserve"><value>تم تحديث الإعلان</value></data>
+  <data name="AnnouncementDeleted" xml:space="preserve"><value>تم حذف الإعلان</value></data>
+  <data name="AddEmployee" xml:space="preserve"><value>إضافة موظف</value></data>
+  <data name="EditEmployee" xml:space="preserve"><value>تعديل موظف</value></data>
+  <data name="FullName" xml:space="preserve"><value>الاسم الكامل</value></data>
+  <data name="FullNameRequired" xml:space="preserve"><value>الاسم الكامل مطلوب!</value></data>
+  <data name="CivilIdRequired" xml:space="preserve"><value>الرقم المدني مطلوب!</value></data>
+  <data name="EmployeeIdRequired" xml:space="preserve"><value>رقم الموظف مطلوب!</value></data>
+  <data name="InitialLeaveBalances" xml:space="preserve"><value>أرصدة الإجازات الأولية</value></data>
+  <data name="AddAsset" xml:space="preserve"><value>إضافة أصل</value></data>
+  <data name="EditAsset" xml:space="preserve"><value>تعديل أصل</value></data>
+  <data name="AssetType" xml:space="preserve"><value>نوع الأصل</value></data>
+  <data name="AssignedEmployee" xml:space="preserve"><value>الموظف المعين</value></data>
+  <data name="AssetCreated" xml:space="preserve"><value>تم إنشاء الأصل بنجاح</value></data>
+  <data name="AssetUpdated" xml:space="preserve"><value>تم تحديث الأصل بنجاح</value></data>
+  <data name="AssetDeleted" xml:space="preserve"><value>تم حذف الأصل</value></data>
+  <data name="AddDocument" xml:space="preserve"><value>إضافة مستند</value></data>
+  <data name="EditDocument" xml:space="preserve"><value>تعديل مستند</value></data>
+  <data name="DocumentType" xml:space="preserve"><value>نوع المستند</value></data>
+  <data name="DocumentCreated" xml:space="preserve"><value>تم إنشاء المستند بنجاح</value></data>
+  <data name="DocumentUpdated" xml:space="preserve"><value>تم تحديث المستند بنجاح</value></data>
+  <data name="DocumentDeleted" xml:space="preserve"><value>تم حذف المستند</value></data>
+  <data name="AddStatus" xml:space="preserve"><value>إضافة حالة</value></data>
+  <data name="EditStatus" xml:space="preserve"><value>تعديل حالة</value></data>
+  <data name="StatusCreated" xml:space="preserve"><value>تم إنشاء الحالة</value></data>
+  <data name="StatusUpdated" xml:space="preserve"><value>تم تحديث الحالة</value></data>
+  <data name="StatusDeleted" xml:space="preserve"><value>تم حذف الحالة</value></data>
+  <data name="AddType" xml:space="preserve"><value>إضافة نوع</value></data>
+  <data name="EditType" xml:space="preserve"><value>تعديل نوع</value></data>
+  <data name="TypeCreated" xml:space="preserve"><value>تم إنشاء النوع</value></data>
+  <data name="TypeUpdated" xml:space="preserve"><value>تم تحديث النوع</value></data>
+  <data name="AddLevel" xml:space="preserve"><value>إضافة مستوى</value></data>
+  <data name="EditLevel" xml:space="preserve"><value>تعديل مستوى</value></data>
+  <data name="LevelCreated" xml:space="preserve"><value>تم إنشاء المستوى</value></data>
+  <data name="LevelUpdated" xml:space="preserve"><value>تم تحديث المستوى</value></data>
+  <data name="NewLeaveRequest" xml:space="preserve"><value>طلب إجازة جديد</value></data>
+  <data name="MyBalances" xml:space="preserve"><value>أرصدتي</value></data>
+  <data name="LeaveHistory" xml:space="preserve"><value>سجل الإجازات</value></data>
+  <data name="LeaveType" xml:space="preserve"><value>نوع الإجازة</value></data>
+  <data name="RequestApproved" xml:space="preserve"><value>تمت الموافقة على الطلب</value></data>
+  <data name="RequestRejected" xml:space="preserve"><value>تم رفض الطلب</value></data>
+  <data name="LeaveTypes" xml:space="preserve"><value>أنواع الإجازات</value></data>
+  <data name="LeaveStatuses" xml:space="preserve"><value>حالات الإجازات</value></data>
+  <data name="Reject" xml:space="preserve"><value>رفض</value></data>
+  <data name="Approve" xml:space="preserve"><value>موافقة</value></data>
+  <data name="ConfirmDeleteSimple" xml:space="preserve"><value>لا يمكن التراجع عن الحذف!</value></data>
+  <data name="Update" xml:space="preserve"><value>تحديث</value></data>
+  <data name="Create" xml:space="preserve"><value>إنشاء</value></data>
+  <data name="TypeDeleted" xml:space="preserve"><value>تم حذف النوع</value></data>
+  <data name="Balance" xml:space="preserve"><value>الرصيد</value></data>
+  <data name="Days" xml:space="preserve"><value>أيام</value></data>
+  <data name="SelectLeaveType" xml:space="preserve"><value>يرجى اختيار نوع الإجازة</value></data>
+  <data name="SelectDates" xml:space="preserve"><value>يرجى اختيار التواريخ</value></data>
+  <data name="AddNewPoll" xml:space="preserve"><value>إضافة استطلاع جديد</value></data>
+  <data name="EditPoll" xml:space="preserve"><value>تعديل الاستطلاع</value></data>
+  <data name="Question" xml:space="preserve"><value>السؤال</value></data>
+  <data name="QuestionAr" xml:space="preserve"><value>السؤال (عربي)</value></data>
+  <data name="Options" xml:space="preserve"><value>الخيارات</value></data>
+  <data name="Option" xml:space="preserve"><value>خيار</value></data>
+  <data name="OptionAr" xml:space="preserve"><value>خيار (عربي)</value></data>
+  <data name="AddOption" xml:space="preserve"><value>إضافة خيار</value></data>
+  <data name="PollMinOptions" xml:space="preserve"><value>يجب أن يحتوي الاستطلاع على خيارين على الأقل.</value></data>
+  <data name="PollUpdated" xml:space="preserve"><value>تم تحديث الاستطلاع بنجاح</value></data>
+  <data name="PollAdded" xml:space="preserve"><value>تم إضافة الاستطلاع بنجاح</value></data>
+  <data name="ErrorSavingPoll" xml:space="preserve"><value>خطأ في حفظ الاستطلاع</value></data>
+  <data name="PollsManagementTitle" xml:space="preserve"><value>إدارة الاستطلاعات</value></data>
+  <data name="Results" xml:space="preserve"><value>النتائج</value></data>
+  <data name="Warning" xml:space="preserve"><value>تحذير</value></data>
+  <data name="ConfirmDelete" xml:space="preserve"><value>هل أنت متأكد أنك تريد حذف {0}؟</value></data>
+  <data name="Delete" xml:space="preserve"><value>حذف</value></data>
+  <data name="Success" xml:space="preserve"><value>نجاح</value></data>
+  <data name="Error" xml:space="preserve"><value>خطأ</value></data>
+  <data name="NameEn" xml:space="preserve"><value>الاسم (إنجليزي)</value></data>
 </root>

@@ -126,7 +126,7 @@
         Task.Run(async () => {
              bool? result = await DialogService.ShowMessageBox(
                 Loc["Warning"], 
-                string.Format(Loc["ConfirmDelete"].ToString(), type.Name), 
+                string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? type.NameAr : type.Name)})"), 
                 yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
              if (result == true)
