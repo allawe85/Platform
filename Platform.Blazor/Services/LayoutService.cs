@@ -1,9 +1,10 @@
-using System;
+using MudBlazor;
 
 namespace Platform.Blazor.Services
 {
     public class LayoutService
     {
+        public MudTheme CurrentTheme { get; private set; } = new MudTheme();
         public bool IsDarkMode { get; private set; }
         public event Action OnMajorUpdate;
 
