@@ -7,12 +7,19 @@
     height: 100%;
     /* Fill parent */
     /* Adjust based on your layout */
-    border: 1px solid #ddd;
+    border: 1px solid var(--mud-palette-lines-default);
     position: relative;
     background-color: #f9f9f9;
     text-align: center;
     cursor: grab;
     overscroll-behavior: contain;
+    --tree-connector-color: rgba(0, 0, 0, 0.6);
+}
+
+.chart-container-scroll.dark-theme {
+    background-color: var(--mud-palette-background-grey);
+    border-color: rgba(255, 255, 255, 0.1);
+    --tree-connector-color: rgba(255, 255, 255, 0.85);
 }
 
 .chart-pan-wrapper {
@@ -42,35 +49,48 @@
     padding-left: 0;
 }
 
+/* RTL: Reverse the flex direction to mirror children visually */
+[dir="rtl"] .org-tree ul {
+    flex-direction: row-reverse;
+}
+
 .org-tree li {
-    float: left;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     list-style-type: none;
     position: relative;
     padding: 20px 5px 0 5px;
     transition: all 0.5s;
     -webkit-transition: all 0.5s;
     -moz-transition: all 0.5s;
+    flex-shrink: 0;
 }
 
-/* Connectors */
+/* ============================================
+   CONNECTORS - Works for both LTR and RTL
+   ============================================ */
+
+/* Base horizontal lines for all children */
 .org-tree li::before,
 .org-tree li::after {
     content: '';
     position: absolute;
     top: 0;
     right: 50%;
-    border-top: 2px solid #ccc;
-    width: 50%;
+    border-top: 4px solid var(--tree-connector-color);
+    width: calc(50% + 2px);
     height: 20px;
 }
 
+/* Right side horizontal + vertical line */
 .org-tree li::after {
     right: auto;
     left: 50%;
-    border-left: 2px solid #ccc;
+    border-left: 4px solid var(--tree-connector-color);
 }
 
+/* Hide connectors for only children */
 .org-tree li:only-child::after,
 .org-tree li:only-child::before {
     display: none;
@@ -80,64 +100,160 @@
     padding-top: 0;
 }
 
-.org-tree li:first-child::before,
+/* First child: hide left line */
+.org-tree li:first-child::before {
+    display: none;
+}
+
+/* Last child: hide right line entirely */
 .org-tree li:last-child::after {
-    border: 0 none;
+    display: none;
 }
 
+/* Last child: show horizontal line from left and turn down into vertical */
 .org-tree li:last-child::before {
-    border-right: 2px solid #ccc;
+    border-right: 4px solid var(--tree-connector-color);
     border-radius: 0 5px 0 0;
-    -webkit-border-radius: 0 5px 0 0;
-    -moz-border-radius: 0 5px 0 0;
 }
 
+/* First child: vertical line stays (from ::after), but add corner radius */
 .org-tree li:first-child::after {
     border-radius: 5px 0 0 0;
-    -webkit-border-radius: 5px 0 0 0;
-    -moz-border-radius: 5px 0 0 0;
 }
 
+/* Vertical connector from parent to children group */
 .org-tree ul ul::before {
     content: '';
     position: absolute;
     top: 0;
     left: 50%;
-    border-left: 2px solid #ccc;
+    border-left: 4px solid var(--tree-connector-color);
     width: 0;
     height: 20px;
 }
 
+/* ============================================
+   DARK MODE - Bolder Connectors
+   ============================================ */
+
+/* Redundant thickness removed - 4px is now universal */
+
 .org-tree li .node-card {
-    border: 1px solid #ccc;
-    padding: 10px;
+    padding: 0;
     text-decoration: none;
-    color: #666;
     font-family: 'Cairo', sans-serif;
-    font-size: 14px;
     display: inline-block;
-    border-radius: 5px;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    transition: all 0.5s;
-    -webkit-transition: all 0.5s;
-    -moz-transition: all 0.5s;
-    background: white;
-    color: white;
-    min-width: 140px;
-    max-width: 180px;
+    border-radius: 8px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: var(--level-color) !important;
+    min-width: 160px;
+    max-width: 200px;
     cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
     position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.org-tree li .node-card.dark-theme {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.org-tree li .node-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.org-tree li .node-card.selected {
+    border: 3px solid var(--mud-palette-primary) !important;
+    transform: scale(1.05);
+    z-index: 10;
+}
+
+.org-tree li .node-card .accent-bar {
+    display: none;
+}
+
+[dir="rtl"] .org-tree li .node-card .accent-bar {
+    display: none;
+}
+
+.org-tree li .node-card .node-content {
+    padding: 12px;
+    text-align: center;
+    flex-grow: 1;
+}
+
+[dir="rtl"] .org-tree li .node-card .node-content {
+    padding: 12px;
+    text-align: center;
+}
+
+.org-tree li .node-card .node-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    line-height: 1.2;
+}
+
+.org-tree li .node-card .node-title.ar {
+    display: none;
+}
+
+.org-tree li .node-card.dark-theme .node-title {
+    color: white !important;
+}
+
+.org-tree li .node-card .node-subtitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white !important;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+    display: block;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+
+.org-tree li .node-card.dark-theme .node-subtitle {
+    opacity: 0.9;
+}
+
+.org-tree li .node-card .node-actions {
+    padding: 4px 8px 8px 8px;
+    background: rgba(0, 0, 0, 0.02);
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    border-top: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.org-tree li .node-card.dark-theme .node-actions {
+    background: rgba(255, 255, 255, 0.02);
+    border-top-color: rgba(255, 255, 255, 0.03);
 }
 
 .org-tree li .node-card:hover,
 .org-tree li .node-card.selected {
-    transform: scale(1.05);
-    z-index: 10;
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
-    border: 2px solid #fff;
-    outline: 2px solid #333;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--level-color);
+}
+
+.org-tree li .node-card.dark-theme:hover,
+.org-tree li .node-card.dark-theme.selected {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    border-color: var(--level-color);
 }
 
 .org-tree li .node-card .node-title {
@@ -146,15 +262,6 @@
     margin-bottom: 2px;
 }
 
-.org-tree li .node-card .node-subtitle {
-    font-size: 0.8rem;
-    opacity: 0.9;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    padding: 2px 4px;
-    display: inline-block;
-    margin-bottom: 5px;
-}
 
 .org-tree li .node-card .node-actions {
     margin-top: 5px;

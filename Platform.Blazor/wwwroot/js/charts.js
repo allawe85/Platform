@@ -1,91 +1,96 @@
 export function initChartEvents(container, panElement, dotNetHelper) {
-    if (!container || !(container instanceof Element)) {
-        console.warn("initChartEvents: container is not a valid Element", container);
-        return;
-    }
-    if (!panElement || !(panElement instanceof Element)) {
-        console.warn("initChartEvents: panElement is not a valid Element", panElement);
-        return;
-    }
+    if (!container || !panElement) return;
 
-    let isDown = false;
-    let startX;
-    let startY;
-    let currentX = 0;
-    let currentY = 0;
+    let state = {
+        isDown: false,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0
+    };
 
-    // Read initial transform if any
+    // Read initial transform
     try {
         const style = window.getComputedStyle(panElement);
-        const transform = style.transform || 'none';
-        // Use DOMMatrix if available (standard), fallback to WebKitCSSMatrix
-        const matrix = (window.DOMMatrix)
-            ? new DOMMatrix(transform)
-            : new WebKitCSSMatrix(transform);
-
-        currentX = matrix.m41;
-        currentY = matrix.m42;
+        const matrix = new (window.DOMMatrix || window.WebKitCSSMatrix)(style.transform || 'none');
+        state.currentX = matrix.m41;
+        state.currentY = matrix.m42;
     } catch (err) {
-        console.warn("initChartEvents: failed to parse transform, checking legacy/fallback", err);
-        currentX = 0;
-        currentY = 0;
+        state.currentX = 0;
+        state.currentY = 0;
     }
 
+    const updateTransform = () => {
+        panElement.style.transform = `translate(${state.currentX}px, ${state.currentY}px)`;
+    };
+
     const onMouseDown = (e) => {
-        isDown = true;
+        state.isDown = true;
         container.style.cursor = 'grabbing';
-        container.style.userSelect = 'none';
-        startX = e.pageX - currentX;
-        startY = e.pageY - currentY;
+        state.startX = e.pageX - state.currentX;
+        state.startY = e.pageY - state.currentY;
     };
 
     const stopDragging = () => {
-        isDown = false;
+        state.isDown = false;
         container.style.cursor = 'grab';
-        container.style.removeProperty('user-select');
     };
 
-    const onMouseLeave = stopDragging;
-    const onMouseUp = stopDragging;
-
     const onMouseMove = (e) => {
-        if (!isDown) return;
-        e.preventDefault(); // Prevent selection
-
-        const x = e.pageX - startX;
-        const y = e.pageY - startY;
-
-        currentX = x;
-        currentY = y;
-
-        panElement.style.transform = `translate(${x}px, ${y}px)`;
+        if (!state.isDown) return;
+        e.preventDefault();
+        state.currentX = e.pageX - state.startX;
+        state.currentY = e.pageY - state.startY;
+        updateTransform();
     };
 
     const onWheel = (e) => {
         if (e.ctrlKey) {
             e.preventDefault();
             const delta = Math.sign(e.deltaY) * -1;
-            dotNetHelper.invokeMethodAsync('OnZoom', delta)
-                .catch(err => console.error("Error in OnZoom invoke:", err));
+            dotNetHelper.invokeMethodAsync('OnZoom', delta);
         }
     };
 
     container.addEventListener('mousedown', onMouseDown);
-    container.addEventListener('mouseleave', onMouseLeave);
-    container.addEventListener('mouseup', onMouseUp);
-    container.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', stopDragging);
+    window.addEventListener('mousemove', onMouseMove);
     container.addEventListener('wheel', onWheel, { passive: false });
 
-    container.style.cursor = 'grab';
-
+    container._chartState = state;
+    container._chartUpdate = updateTransform;
     container._chartCleanup = () => {
         container.removeEventListener('mousedown', onMouseDown);
-        container.removeEventListener('mouseleave', onMouseLeave);
-        container.removeEventListener('mouseup', onMouseUp);
-        container.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', stopDragging);
+        window.removeEventListener('mousemove', onMouseMove);
         container.removeEventListener('wheel', onWheel);
-        delete container._chartCleanup;
     };
+}
+
+export function centerElement(container, panElement, targetSelector) {
+    if (!container || !panElement || !container._chartState) return;
+
+    const targetNode = targetSelector ? panElement.querySelector(targetSelector) : panElement.querySelector('.node-card');
+    if (!targetNode) return;
+
+    // Get rects
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = targetNode.getBoundingClientRect();
+
+    // Calculate current center difference
+    const containerCenterX = containerRect.left + containerRect.width / 2;
+    const containerCenterY = containerRect.top + 200; // Prefer top-centering for trees
+
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+
+    const diffX = containerCenterX - targetCenterX;
+    const diffY = containerCenterY - targetCenterY;
+
+    // Apply new translation
+    container._chartState.currentX += diffX;
+    container._chartState.currentY += diffY;
+    container._chartUpdate();
 }
 
 export function stopChartEvents(element) {

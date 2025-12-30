@@ -27,8 +27,21 @@
             <MudIconButton Icon="@Icons.Material.Filled.Print" OnClick="Print" Color="Color.Default" Variant="Variant.Outlined" Title="Print" Class="ml-2"/>
         </div>
         <MudSpacer />
+        
+        <MudSelect T="int?" Label="@Loc["Sector"]" Value="_selectedSectorId" 
+                   ValueChanged="OnSectorSelected"
+                   Variant="Variant.Outlined" Dense="true" Class="ms-8 me-4" Style="max-width: 200px;"
+                   Clearable="true" AnchorOrigin="Origin.BottomCenter">
+            @foreach (var sector in _sectorLevelHierarchies)
+            {
+                <MudSelectItem T="int?" Value="@((int?)sector.Id)">
+                    @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(sector.NameAr) ? sector.NameAr : sector.Name)
+                </MudSelectItem>
+            }
+        </MudSelect>
+
         <MudTextField @bind-Value="_searchQuery" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" 
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mr-4"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="me-8"
                       Clearable="true" OnClearButtonClick="HandleSearchClear"
                       OnKeyUp="HandleSearchKeyUp"
                       Style="max-width: 300px; font-size: 1.1rem; font-weight: 700;" />
@@ -49,15 +62,16 @@
     {
         @if (_isChartView)
         {
-            <div class="@($"chart-container-scroll {(LayoutService.IsDarkMode ? "dark-theme" : "light-theme")}")">
-                <div class="chart-scale-wrapper" style="@($"transform: scale({_zoomLevel.ToString(System.Globalization.CultureInfo.InvariantCulture)});")">
-                    <div class="org-tree">
-                        <ul>
-                           @RenderChartTree(TreeRoots)
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <HierarchyChart Roots="TreeRoots" 
+                            LevelColors="_levelColors" 
+                            @bind-ZoomLevel="_zoomLevel"
+                            @ref="_chartComponent"
+                            SelectedNodeId="_selectedHierarchy?.Id"
+                            IsDarkMode="@LayoutService.IsDarkMode"
+                            OnNodeSelect="OnSelectNode" 
+                            OnAddChild="AddChildToNode"
+                            OnEdit="EditHierarchy"
+                            OnDelete="DeleteHierarchy" />
         }
         else
         {
@@ -67,16 +81,15 @@
                     <MudTreeViewItem Items="@item.Children" Value="@item.Value" @bind-Expanded="@item.Expanded">
                         <Content>
                             <div class="@($"modern-tree-item {(_selectedHierarchy?.Id == item.Value.Id ? "selected" : "")}")" 
-                                 style="@($"--level-color: {GetLevelColor(item.Value.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; background: {(LayoutService.IsDarkMode ? "var(--mud-palette-surface)" : "white")}; border-left-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; border-right-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)};")"
-                                 @onclick="@(() => HandleItemClick(item))">
-                                <div class="level-indicator-bar" style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}")"></div>
+                                  style="@($"--level-color: {GetLevelColor(item.Value.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; background: {GetLevelColor(item.Value.HierarchyLevelId)}; border-color: rgba(255,255,255,0.2);")"
+                                  @onclick="@(() => HandleItemClick(item))">
                                 
                                 <div class="node-info-group">
                                     <div class="expand-icon-wrapper">
                                          @if (item.Children?.Any() == true)
                                          {
                                              <MudIcon Icon="@Icons.Material.Filled.ChevronRight" 
-                                                      Style="@($"transform: rotate({(item.Expanded ? "90deg" : "0deg")}); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: var(--mud-palette-text-secondary);")" />
+                                                      Style="@($"transform: rotate({(item.Expanded ? "90deg" : "0deg")}); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: white;")" />
                                          }
                                     </div>
                                     
@@ -85,14 +98,14 @@
                                     </div>
                                     
                                     <div class="node-main-text">
-                                        <span class="node-name-primary">
-                                            @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(item.Value.NameAr) ? item.Value.NameAr : item.Value.Name)
+                                        <span class="node-name-primary" style="color: white !important; font-weight: 800; font-size: 1.3rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                                            @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(item.Value.NameAr) ? item.Value.NameAr : item.Value.Name)
                                         </span>
                                     </div>
                                 </div>
 
-                                <div class="node-level-tag" style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}")">
-                                    @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(item.Value.HierarchyLevel?.NameAr) ? item.Value.HierarchyLevel.NameAr : item.Value.HierarchyLevel?.Name ?? "")
+                                <div class="node-level-tag" style="background: rgba(0,0,0,0.15); color: white !important; font-weight: 700; border: none;">
+                                    @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(item.Value.HierarchyLevel?.NameAr) ? item.Value.HierarchyLevel.NameAr : item.Value.HierarchyLevel?.Name ?? "")
                                 </div>
                             </div>
                         </Content>
@@ -124,6 +137,7 @@
     // View State
     private bool _isChartView = true;
     private double _zoomLevel = 1.0;
+    private HierarchyChart? _chartComponent;
 
     // Dialog State
     private bool _showDialog;
@@ -135,6 +149,8 @@
 
     // Search
     private string _searchQuery = "";
+    private int? _selectedSectorId;
+    private List<Hierarchy> _sectorLevelHierarchies = new();
 
     private void HandleSearchKeyUp(KeyboardEventArgs e)
     {
@@ -187,6 +203,31 @@
         try
         {
             HierarchyList = await HierarchiesService.GetHierarchiesAsync();
+            
+            // Priority:
+            // 1. Level named "Sector" or "قطاع"
+            // 2. HierarchyLevelId == 2 (assuming Level 1 is Ministry)
+            // 3. Fallback to Root
+            var sectorLevel = Levels.FirstOrDefault(l => (l.Name != null && l.Name.Contains("Sector", StringComparison.OrdinalIgnoreCase)) || 
+                                                        (l.NameAr != null && l.NameAr.Contains("قطاع", StringComparison.OrdinalIgnoreCase)));
+            
+            if (sectorLevel != null)
+            {
+                _sectorLevelHierarchies = HierarchyList.Where(x => x.HierarchyLevelId == sectorLevel.Id).OrderBy(x => x.Name).ToList();
+            }
+            else
+            {
+                var level2Exists = HierarchyList.Any(x => x.HierarchyLevelId == 2);
+                if (level2Exists)
+                {
+                    _sectorLevelHierarchies = HierarchyList.Where(x => x.HierarchyLevelId == 2).OrderBy(x => x.Name).ToList();
+                }
+                else
+                {
+                    _sectorLevelHierarchies = HierarchyList.Where(x => x.ParentId == 0).OrderBy(x => x.Name).ToList();
+                }
+            }
+            
             BuildTree();
         }
         catch (Exception ex)
@@ -215,10 +256,22 @@
              // But simpler: just show matching nodes as roots if their parent is NOT in the filtered set.
              TreeRoots = filteredList.Where(x => x.ParentId == 0 || !filteredList.Any(p => p.Id == x.ParentId)).ToList();
          }
-         else
-         {
-             TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
-         }
+          else if (_selectedSectorId.HasValue)
+          {
+              var sector = HierarchyList.FirstOrDefault(x => x.Id == _selectedSectorId.Value);
+              if (sector != null)
+              {
+                  TreeRoots = new List<Hierarchy> { sector };
+              }
+              else
+              {
+                  TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
+              }
+          }
+          else
+          {
+              TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
+          }
 
          foreach(var item in filteredList)
          {
@@ -424,10 +477,46 @@
         _isChartView = !_isChartView;
         _zoomLevel = 1.0; 
     }
+    
+    private async Task OnSectorSelected(int? sectorId)
+    {
+        _selectedSectorId = sectorId;
+        BuildTree();
+        
+        if (_selectedSectorId.HasValue)
+        {
+            var sector = HierarchyList.FirstOrDefault(h => h.Id == _selectedSectorId.Value);
+            if (sector != null)
+            {
+                _selectedHierarchy = sector;
+                if (_chartComponent != null && _isChartView)
+                {
+                    await Task.Delay(100); // Allow UI to update
+                    await _chartComponent.CenterView(sectorId);
+                }
+            }
+        }
+    }
+
+    // JS Event initialization removed (handled by component)
+    
+    public ValueTask DisposeAsync()
+    {
+        return ValueTask.CompletedTask;
+    }
 
     private void ZoomIn() => _zoomLevel = Math.Min(_zoomLevel + 0.1, 2.0);
-    private void ZoomOut() => _zoomLevel = Math.Max(_zoomLevel - 0.1, 0.4);
-    private void ResetZoom() => _zoomLevel = 1.0;
+    private void ZoomOut() => _zoomLevel = Math.Max(_zoomLevel - 0.1, 0.2);
+    private async Task ResetZoom() 
+    {
+        _zoomLevel = 1.0;
+        if (_chartComponent != null) await _chartComponent.CenterView();
+    }
+    
+    private async Task OpenInNewWindow()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "/hierarchy-viewer", "_blank");
+    }
 
     private async Task Print()
     {
