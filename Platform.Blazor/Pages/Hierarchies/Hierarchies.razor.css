@@ -374,7 +374,7 @@
 
 .mud-treeview-item {
     position: relative;
-    padding-left: 0 !important;
+    padding-left: 64px !important;
 }
 
 .expand-icon-wrapper {
@@ -389,13 +389,13 @@
 
 [dir="rtl"] .mud-treeview-item {
     padding-left: 0 !important;
-    padding-right: 24px !important;
+    padding-right: 80px !important;
 }
 
 .mud-treeview-item::before {
     content: '';
     position: absolute;
-    left: 10px;
+    left: 32px;
     top: -10px;
     bottom: 0;
     border-left: 3px solid var(--tree-connector-color);
@@ -405,30 +405,30 @@
 .mud-treeview-item::after {
     content: '';
     position: absolute;
-    left: 10px;
+    left: 32px;
     top: 24px;
-    width: 14px;
+    width: 36px;
     border-top: 3px solid var(--tree-connector-color);
     z-index: 1;
 }
 
 [dir="rtl"] .mud-treeview-item::before {
     left: auto;
-    right: 10px;
+    right: 48px;
     border-left: 0;
     border-right: 3px solid var(--tree-connector-color);
 }
 
 [dir="rtl"] .mud-treeview-item::after {
     left: auto;
-    right: 10px;
+    right: 48px;
     border-left: 0;
     border-right: 0;
     border-top: 3px solid var(--tree-connector-color);
-    width: 14px;
+    width: 36px;
 }
 
 .mud-treeview-item:last-of-type::before {
     bottom: auto;
-    height: 35px;
+    height: 38px;
 }
