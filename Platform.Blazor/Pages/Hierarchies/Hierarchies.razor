@@ -31,7 +31,7 @@
         <MudSelect T="int?" Label="@Loc["Sector"]" Value="_selectedSectorId" 
                    ValueChanged="OnSectorSelected"
                    Variant="Variant.Outlined" Dense="true" Class="ms-8 me-4" Style="max-width: 200px;"
-                   Clearable="true" AnchorOrigin="Origin.BottomCenter">
+                   Clearable="true" AnchorOrigin="Origin.BottomCenter" PopOverInheritStyle="true">
             @foreach (var sector in _sectorLevelHierarchies)
             {
                 <MudSelectItem T="int?" Value="@((int?)sector.Id)">
@@ -45,7 +45,7 @@
                       Clearable="true" OnClearButtonClick="HandleSearchClear"
                       OnKeyUp="HandleSearchKeyUp"
                       Style="max-width: 300px; font-size: 1.1rem; font-weight: 700;" />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="BuildTree" Class="mr-2">@Loc["Search"]</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ExecuteSearch" Class="mr-2">@Loc["Search"]</MudButton>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">@Loc["AddRoot"]</MudButton>
          @if (!_isChartView) {
             <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">@Loc["AddChild"]</MudButton>
@@ -152,18 +152,37 @@
     private int? _selectedSectorId;
     private List<Hierarchy> _sectorLevelHierarchies = new();
 
-    private void HandleSearchKeyUp(KeyboardEventArgs e)
+    private async Task HandleSearchKeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            BuildTree();
+            await ExecuteSearch();
         }
     }
 
-    private void HandleSearchClear()
+    private async Task HandleSearchClear()
     {
         _searchQuery = "";
+        await ExecuteSearch();
+    }
+
+    private async Task ExecuteSearch()
+    {
         BuildTree();
+        if (_isChartView && _chartComponent != null)
+        {
+            await Task.Delay(150); // Allow tree to render
+            if (!string.IsNullOrWhiteSpace(_searchQuery) && TreeRoots.Any())
+            {
+                // Center on the first matching root
+                await _chartComponent.CenterView(TreeRoots.First().Id);
+            }
+            else
+            {
+                // Reset to center the whole tree
+                await _chartComponent.CenterView();
+            }
+        }
     }
 
     // Colors mapping
@@ -193,8 +212,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadHierarchies();
+        LayoutService.OnMajorUpdate += StateHasChanged;
         await LoadLevels();
+        await LoadHierarchies();
     }
 
     private async Task LoadHierarchies()
@@ -204,19 +224,19 @@
         {
             HierarchyList = await HierarchiesService.GetHierarchiesAsync();
             
-            // Priority:
-            // 1. Level named "Sector" or "قطاع"
-            // 2. HierarchyLevelId == 2 (assuming Level 1 is Ministry)
-            // 3. Fallback to Root
-            var sectorLevel = Levels.FirstOrDefault(l => (l.Name != null && l.Name.Contains("Sector", StringComparison.OrdinalIgnoreCase)) || 
-                                                        (l.NameAr != null && l.NameAr.Contains("قطاع", StringComparison.OrdinalIgnoreCase)));
+            // Identify levels that match "Sector" or "قطاع"
+            var sectorLevels = Levels.Where(l => (l.Name != null && l.Name.Contains("Sector", StringComparison.OrdinalIgnoreCase)) || 
+                                                 (l.NameAr != null && l.NameAr.Contains("قطاع", StringComparison.OrdinalIgnoreCase)))
+                                     .Select(l => l.Id)
+                                     .ToList();
             
-            if (sectorLevel != null)
+            if (sectorLevels.Any())
             {
-                _sectorLevelHierarchies = HierarchyList.Where(x => x.HierarchyLevelId == sectorLevel.Id).OrderBy(x => x.Name).ToList();
+                _sectorLevelHierarchies = HierarchyList.Where(x => sectorLevels.Contains(x.HierarchyLevelId)).OrderBy(x => x.Name).ToList();
             }
             else
             {
+                // Fallback: Check if there's a Level 2, or use roots
                 var level2Exists = HierarchyList.Any(x => x.HierarchyLevelId == 2);
                 if (level2Exists)
                 {
@@ -247,10 +267,19 @@
          var filteredList = HierarchyList;
          if (!string.IsNullOrWhiteSpace(_searchQuery))
          {
-             filteredList = HierarchyList.Where(x => 
+             var initialMatches = HierarchyList.Where(x => 
                 (x.Name != null && x.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)) ||
                 (x.NameAr != null && x.NameAr.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
              ).ToList();
+
+             // Include all descendants of matching nodes
+             var allMatches = new HashSet<int>();
+             foreach (var match in initialMatches)
+             {
+                 AddNodeAndDescendants(match.Id, allMatches);
+             }
+
+             filteredList = HierarchyList.Where(x => allMatches.Contains(x.Id)).ToList();
 
              // When searching, we include root nodes that match OR have matching children
              // But simpler: just show matching nodes as roots if their parent is NOT in the filtered set.
@@ -284,6 +313,18 @@
          
          CalculateHierarchyNumbers();
          UpdateTreeItems();
+    }
+
+    private void AddNodeAndDescendants(int nodeId, HashSet<int> resultSet)
+    {
+        if (resultSet.Contains(nodeId)) return;
+        resultSet.Add(nodeId);
+        
+        var children = HierarchyList.Where(x => x.ParentId == nodeId).ToList();
+        foreach (var child in children)
+        {
+            AddNodeAndDescendants(child.Id, resultSet);
+        }
     }
 
     private Dictionary<int, string> _hierarchyNumbers = new();
@@ -502,6 +543,7 @@
     
     public ValueTask DisposeAsync()
     {
+        LayoutService.OnMajorUpdate -= StateHasChanged;
         return ValueTask.CompletedTask;
     }
 

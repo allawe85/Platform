@@ -5,10 +5,13 @@
 @using Platform.Data.DTOs
 @inject IHierarchiesService HierarchiesService
 @inject ISnackbar Snackbar
+@inject LayoutService LayoutService
+@implements IDisposable
 
 <HierarchyChart Roots="_trees" 
                 LevelColors="_levelColors" 
                 @bind-ZoomLevel="_zoomLevel"
+                IsDarkMode="@LayoutService.IsDarkMode"
                 OnNodeSelect="OnNodeSelect" 
                 OnAddChild="OnAddChild"
                 OnEdit="OnEdit"
@@ -43,6 +46,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        LayoutService.OnMajorUpdate += StateHasChanged;
         await LoadData();
     }
 
@@ -120,5 +124,10 @@
     private void OnDelete(Hierarchy node)
     {
         Snackbar.Add("Feature not available in viewer mode", Severity.Info);
+    }
+
+    public void Dispose()
+    {
+        LayoutService.OnMajorUpdate -= StateHasChanged;
     }
 }
