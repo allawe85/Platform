@@ -7,9 +7,11 @@
     <DialogContent>
         <MudSelect T="int?" Label="@Loc["LeaveType"]" @bind-Value="LeaveRequest.LeaveTypeId" Required="true" RequiredError="@Loc["SelectLeaveType"]"
                    RelativeWidth="false" Dense="true" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter">
-                @foreach (var type in LeaveTypes)
+            @foreach (var type in LeaveTypes)
             {
-                <MudSelectItem Value="@((int?)type.Id)">@type.NameAr</MudSelectItem>
+                <MudSelectItem Value="@((int?)type.Id)">
+                    @(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? type.NameAr : type.Name)
+                </MudSelectItem>
             }
         </MudSelect>
         <MudDatePicker Label="@Loc["StartDate"]" @bind-Date="StartDate" />
