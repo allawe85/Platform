@@ -1,0 +1,313 @@
+@page "/employee-home"
+@layout HomeLayout
+@using Platform.Blazor.Services.Announcements
+@using Platform.Blazor.Services.Events
+@using Platform.Blazor.Services.Polls
+@using Platform.Blazor.Services.Leaves
+@using Platform.Blazor.Services.TimeAttendance
+@using Platform.Blazor.Services.Employees
+@using Platform.Data.DTOs
+@using System.Security.Claims
+@inject IAnnouncementsService AnnouncementsService
+@inject IEventsService EventsService
+@inject IPollsService PollsService
+@inject LeaveService LeavesService
+@inject ITimeAttendanceService AttendanceService
+@inject IEmployeesService EmployeesService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@attribute [Authorize(Roles = "Employee,HR")]
+
+<MudText Typo="Typo.h4" Class="mb-4">@Loc["WelcomeBack"], @_currentEmployeeName</MudText>
+
+<MudGrid>
+    <!-- Cell 1: Announcements -->
+    <MudItem xs="12" md="6" lg="4">
+        <MudCard Style="height: 100%;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@Loc["ActiveAnnouncements"]</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_announcements == null)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else if (!_announcements.Any())
+                {
+                    <MudText>@Loc["NoAnnouncements"]</MudText>
+                }
+                else
+                {
+                    <MudList T="Announcement" Dense="true" Clickable="true">
+                        @foreach (var item in _announcements.Take(3))
+                        {
+                            <MudListItem Text="@item.Title" SecondaryText="@(item.Description?.Length > 50 ? item.Description.Substring(0, 50) + "..." : item.Description)" />
+                        }
+                    </MudList>
+                }
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/announcements"))">@Loc["ViewAll"]</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <!-- Cell 2: Upcoming Events -->
+    <MudItem xs="12" md="6" lg="4">
+        <MudCard Style="height: 100%;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@Loc["UpcomingEvents"]</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                     <MudIconButton Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Default" OnClick="@(() => Nav.NavigateTo("/events"))" />
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                 @if (_events == null)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else if (!_events.Any())
+                {
+                    <MudText>@Loc["NoEvents"]</MudText>
+                }
+                else
+                {
+                     <MudList T="Event" Dense="true">
+                        @foreach (var item in _events.Take(3))
+                        {
+                            <MudListItem Icon="@Icons.Material.Filled.Event" Text="@item.Name" SecondaryText="@item.StartDate.ToString("g")" />
+                        }
+                    </MudList>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <!-- Cell 3: Polls -->
+    <MudItem xs="12" md="6" lg="4">
+        <MudCard Style="height: 100%;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@Loc["ActivePolls"]</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (_polls == null)
+                {
+                    <MudProgressCircular Indeterminate="true" />
+                }
+                else if (!_polls.Any())
+                {
+                    <MudText>@Loc["NoActivePolls"]</MudText>
+                }
+                else
+                {
+                    <MudList T="Poll" Dense="true">
+                        @foreach (var item in _polls.Take(3))
+                        {
+                            <MudListItem Text="@item.Question" SecondaryText="@Loc["NeedsVoting"]" />
+                        }
+                    </MudList>
+                }
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/poll-vote"))">@Loc["VoteNow"]</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    <!-- Cell 4: Leaves -->
+    <MudItem xs="12" md="6" lg="4">
+        <MudCard Style="height: 100%;">
+             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+                <MudTabPanel Text="@Loc["RequestLeave"]">
+                    <MudText Class="mb-4">@Loc["QuickRequest"]</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="@(() => Nav.NavigateTo("/my-leaves"))">@Loc["NewRequest"]</MudButton>
+                </MudTabPanel>
+                <MudTabPanel Text="@Loc["Balances"]">
+                    @if (_balances == null)
+                    {
+                         <MudProgressCircular Indeterminate="true" />
+                    }
+                    else
+                    {
+                        <MudList T="LeaveBalance" Dense="true">
+                            @foreach(var b in _balances)
+                            {
+                                <MudListItem Text="@GetLeaveTypeName(b)" SecondaryText="@($"{b.Balance} {Loc["Days"]}")" />
+                            }
+                        </MudList>
+                    }
+                </MudTabPanel>
+            </MudTabs>
+        </MudCard>
+    </MudItem>
+
+    <!-- Cell 5: Attendance -->
+    <MudItem xs="12" md="6" lg="4">
+        <MudCard Style="height: 100%;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@Loc["Attendance"]</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent Class="d-flex flex-column justify-center align-center gap-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large" FullWidth="true" OnClick="CheckIn">@Loc["CheckIn"]</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large" FullWidth="true" OnClick="CheckOut">@Loc["CheckOut"]</MudButton>
+            </MudCardContent>
+            <MudCardActions>
+                 <MudButton Variant="Variant.Text" OnClick="@(() => Nav.NavigateTo("/attendance/report"))">@Loc["ViewReport"]</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+     <!-- Cell 6: Team -->
+    <MudItem xs="12" md="6" lg="4">
+        <MudCard Style="height: 100%;">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@Loc["MyTeam"]</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText>@Loc["TeamFeatureComingSoon"]</MudText>
+            </MudCardContent>
+            <MudCardActions>
+                 <MudButton Variant="Variant.Text" OnClick="@(() => Nav.NavigateTo("/hierarchies"))">@Loc["ViewOrgChart"]</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+</MudGrid>
+
+@code {
+    private string _currentEmployeeName = "";
+    private int _employeeId = 0;
+    private List<Announcement> _announcements;
+    private List<Event> _events;
+    private List<Poll> _polls;
+    private List<LeaveBalance> _balances;
+    private List<LeaveType> _leaveTypes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserAsync();
+        
+        var t1 = LoadAnnouncements();
+        var t2 = LoadEvents();
+        var t3 = LoadPolls();
+        var t4 = LoadLeaves();
+
+        await Task.WhenAll(t1, t2, t3, t4);
+    }
+
+    private async Task LoadUserAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                     ?? user.FindFirst("sub")?.Value 
+                     ?? user.FindFirst("id")?.Value;
+
+        if (user.Identity?.IsAuthenticated == true && userId != null)
+        {
+            try {
+                // Wrap in try-catch as GetAllEmployeesAsync might fail if API is down
+                var employees = await EmployeesService.GetAllEmployeesAsync();
+                var emp = employees.FirstOrDefault(e => e.AspnetusersId == userId);
+                if (emp != null)
+                {
+                    _employeeId = emp.Id;
+                    _currentEmployeeName = emp.FullName;
+                }
+            } catch {
+                _currentEmployeeName = "User"; // Fallback
+            }
+        }
+    }
+
+    private async Task LoadAnnouncements()
+    {
+        try
+        {
+            _announcements = await AnnouncementsService.GetAnnouncementsAsync();
+             _announcements = _announcements.OrderByDescending(a => a.CreatedDate).ToList();
+        }
+        catch
+        {
+            _announcements = new List<Announcement>();
+        }
+    }
+
+    private async Task LoadEvents()
+    {
+        try
+        {
+            _events = await EventsService.GetEventsAsync(); 
+            _events = _events.Where(e => e.StartDate >= DateTime.Now).OrderBy(e => e.StartDate).ToList();
+        }
+        catch
+        {
+            _events = new List<Event>();
+        }
+    }
+
+    private async Task LoadPolls()
+    {
+        try
+        {
+            _polls = await PollsService.GetActivePollsAsync();
+        }
+        catch
+        {
+            _polls = new List<Poll>();
+        }
+    }
+
+    private async Task LoadLeaves()
+    {
+        try 
+        {
+             _leaveTypes = await LeavesService.GetLeaveTypes();
+
+            if (_employeeId > 0)
+            {
+                _balances = await LeavesService.GetMyBalances(_employeeId);
+            }
+            else
+            {
+                _balances = new List<LeaveBalance>();
+            }
+        }
+        catch
+        {
+            _balances = new List<LeaveBalance>();
+            _leaveTypes = new List<LeaveType>();
+        }
+    }
+    
+    private string GetLeaveTypeName(LeaveBalance b)
+    {
+        if (b.LeaveType != null) return b.LeaveType.Name ?? "My Leave";
+        var type = _leaveTypes?.FirstOrDefault(t => t.Id == b.LeaveTypeId);
+        return type?.Name ?? $"Type {b.LeaveTypeId}";
+    }
+
+    private void CheckIn()
+    {
+        Nav.NavigateTo("/attendance/checkin");
+    }
+
+    private void CheckOut()
+    {
+        Nav.NavigateTo("/attendance/checkin"); 
+    }
+}

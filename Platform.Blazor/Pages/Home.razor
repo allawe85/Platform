@@ -12,7 +12,14 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            Nav.NavigateTo("/dashboard");
+            if (authState.User.IsInRole("Employee") || authState.User.IsInRole("HR"))
+            {
+                Nav.NavigateTo("/employee-home");
+            }
+            else
+            {
+                Nav.NavigateTo("/dashboard");
+            }
         }
         else
         {
