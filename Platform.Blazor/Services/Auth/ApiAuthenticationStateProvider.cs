@@ -56,12 +56,23 @@ namespace Platform.Blazor.Services.Auth
             {
                 foreach (var kvp in keyValuePairs)
                 {
-                    claims.Add(new Claim(kvp.Key, kvp.Value.ToString() ?? ""));
+                    if (kvp.Value is JsonElement element && element.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in element.EnumerateArray())
+                        {
+                            claims.Add(new Claim(kvp.Key, item.ToString()));
+                        }
+                    }
+                    else
+                    {
+                        claims.Add(new Claim(kvp.Key, kvp.Value.ToString() ?? ""));
+                    }
                 }
             }
 
             return claims;
         }
+
 
         private byte[] ParseBase64WithoutPadding(string base64)
         {

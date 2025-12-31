@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Platform.Data.DTOs;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,24 @@ namespace Platform.Data
         // No Singltone implementation because we will use DI (Dependency Injection)
         public PlatformDbContext(DbContextOptions options) : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // Seed Roles
+            builder.Entity<IdentityRole>().HasData(
+                new IdentityRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN" },
+                new IdentityRole { Id = "2", Name = "HR", NormalizedName = "HR" },
+                new IdentityRole { Id = "3", Name = "Employee", NormalizedName = "EMPLOYEE" },
+                new IdentityRole { Id = "4", Name = "User", NormalizedName = "USER" }
+            );
+
+            // Configure View
+            builder.Entity<EmployeeInfo>()
+                .HasNoKey()
+                .ToView("view_employee_info");
         }
 
 

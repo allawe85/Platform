@@ -36,9 +36,14 @@ namespace Platform.Api.Controllers
                 return BadRequest(new { errors });
             }
 
-            var token = _jwt.CreateToken(user);
+            // Assign default "User" role
+            await _userManager.AddToRoleAsync(user, "User");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _jwt.CreateToken(user, roles);
             return Ok(new AuthResponse(token, user.UserName ?? "", user.Email ?? ""));
         }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
@@ -61,9 +66,11 @@ namespace Platform.Api.Controllers
             if (!valid)
                 return Unauthorized();
 
-            var token = _jwt.CreateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _jwt.CreateToken(user, roles);
             return Ok(new AuthResponse(token, user.UserName ?? "", user.Email ?? ""));
         }
+
 
         [Authorize]
         [HttpGet("me")]

@@ -15,7 +15,7 @@ namespace Platform.Api.Services
             _config = config;
         }
 
-        public string CreateToken(ApplicationUser user)
+        public string CreateToken(ApplicationUser user, IList<string> roles)
         {
             var key = _config["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key not configured");
             var issuer = _config["Jwt:Issuer"] ?? "platform";
@@ -30,6 +30,11 @@ namespace Platform.Api.Services
                 new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty)
             };
 
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
             var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
@@ -40,5 +45,6 @@ namespace Platform.Api.Services
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
     }
 }

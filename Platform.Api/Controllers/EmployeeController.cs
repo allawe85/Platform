@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Platform.Data;
 using Platform.Data.DTOs;
+using Microsoft.AspNetCore.Identity;
+
 
 namespace Platform.Api.Controllers
 {
@@ -11,11 +13,14 @@ namespace Platform.Api.Controllers
     public class EmployeesController : ControllerBase
     {
         private readonly PlatformDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public EmployeesController(PlatformDbContext context)
+        public EmployeesController(PlatformDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
+
 
         [HttpGet]
         public async Task<IActionResult> GetAllEmployees()
@@ -70,7 +75,28 @@ namespace Platform.Api.Controllers
                     await _context.SaveChangesAsync();
                 }
 
+                // 3. Promote User Role if AspnetusersId is set
+                if (!string.IsNullOrEmpty(createdEmployee.AspnetusersId))
+                {
+                    var appUser = await _userManager.FindByIdAsync(createdEmployee.AspnetusersId);
+                    if (appUser != null)
+                    {
+                        var hasUserRole = await _userManager.IsInRoleAsync(appUser, "User");
+                        if (hasUserRole)
+                        {
+                            await _userManager.RemoveFromRoleAsync(appUser, "User");
+                        }
+
+                        var hasEmployeeRole = await _userManager.IsInRoleAsync(appUser, "Employee");
+                        if (!hasEmployeeRole)
+                        {
+                            await _userManager.AddToRoleAsync(appUser, "Employee");
+                        }
+                    }
+                }
+
                 await transaction.CommitAsync();
+
 
                 return CreatedAtAction(nameof(GetEmployeeById), new { id = createdEmployee.Id }, createdEmployee);
 
