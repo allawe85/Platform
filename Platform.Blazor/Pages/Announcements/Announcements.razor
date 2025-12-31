@@ -17,16 +17,24 @@
     </ToolBarContent>
     <HeaderContent>
         <MudTh>@Loc["AnnouncementTitle"]</MudTh>
+        <MudTh>@Loc["AnnouncementTitleAr"]</MudTh>
         <MudTh>@Loc["AnnouncementDescription"]</MudTh>
+        <MudTh>@Loc["AnnouncementDescriptionAr"]</MudTh>
         <MudTh>@Loc["ReceiveDate"]</MudTh>
         <MudTh>@Loc["Status"]</MudTh>
         <MudTh>@Loc["Actions"]</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="TitleAr">@context.TitleAr</MudTd>
         <MudTd DataLabel="Description">
             <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
-                @((context.Description ?? "").Length > 50 ? (context.Description ?? "").Substring(0, 50) + "..." : context.Description)
+                @((context.Description ?? "").Length > 30 ? (context.Description ?? "").Substring(0, 30) + "..." : context.Description)
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="DescriptionAr">
+             <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+                @((context.DescriptionAr ?? "").Length > 30 ? (context.DescriptionAr ?? "").Substring(0, 30) + "..." : context.DescriptionAr)
             </MudText>
         </MudTd>
         <MudTd DataLabel="Date">@context.CreatedDate.ToString("g")</MudTd>
@@ -127,7 +135,7 @@
 
             if (result == true)
             {
-                await AnnouncementsService.DeleteAnnouncementAsync(announcement.AnnouncementId);
+                await AnnouncementsService.DeleteAnnouncementAsync(announcement.Id);
                 Snackbar.Add(Loc["AnnouncementDeleted"], Severity.Success);
                 await _table.ReloadServerData();
             }

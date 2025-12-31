@@ -587,4 +587,6 @@
   <data name="BackToLogin" xml:space="preserve"><value>Back to Login</value></data>
   <data name="LoginTitle" xml:space="preserve"><value>Login</value></data>
   <data name="RegisterTitle" xml:space="preserve"><value>Register</value></data>
+  <data name="AnnouncementTitleAr" xml:space="preserve"><value>Title (Arabic)</value></data>
+  <data name="AnnouncementDescriptionAr" xml:space="preserve"><value>Description (Arabic)</value></data>
 </root>
