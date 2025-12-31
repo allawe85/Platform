@@ -101,11 +101,13 @@ namespace Platform.Data
 
         public async Task<Announcement?> UpdateAnnouncementAsync(Announcement entity)
         {
-            var existing = await Announcements.FindAsync(entity.AnnouncementId);
+            var existing = await Announcements.FindAsync(entity.Id);
             if (existing == null) return null;
 
             existing.Title = entity.Title;
+            existing.TitleAr = entity.TitleAr;
             existing.Description = entity.Description;
+            existing.DescriptionAr = entity.DescriptionAr;
             existing.IsActive = entity.IsActive;
             // CreatedDate usually isn't updated, or if it is, include it here. 
             // Based on user SQL, they did update it, so let's allow it or set it to now if needed.

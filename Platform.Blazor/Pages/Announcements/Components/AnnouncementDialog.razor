@@ -9,7 +9,9 @@
 <MudDialog>
     <DialogContent>
         <MudTextField T="string" Label="@Loc["AnnouncementTitle"]" @bind-Value="Announcement.Title" Required="true" RequiredError="@Loc["Required"]" />
-        <MudTextField T="string" Label="@Loc["AnnouncementDescription"]" @bind-Value="Announcement.Description" Lines="5" Required="true" RequiredError="@Loc["Required"]" />
+        <MudTextField T="string" Label="@Loc["AnnouncementTitleAr"]" @bind-Value="Announcement.TitleAr" Required="true" RequiredError="@Loc["Required"]" />
+        <MudTextField T="string" Label="@Loc["AnnouncementDescription"]" @bind-Value="Announcement.Description" Lines="3" Required="true" RequiredError="@Loc["Required"]" />
+        <MudTextField T="string" Label="@Loc["AnnouncementDescriptionAr"]" @bind-Value="Announcement.DescriptionAr" Lines="3" />
         <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="@Loc["IsActive"]" Color="Color.Primary" />
     </DialogContent>
     <DialogActions>
@@ -25,15 +27,14 @@
 
     private async Task Submit()
     {
-        if (string.IsNullOrWhiteSpace(Announcement.Title) || string.IsNullOrWhiteSpace(Announcement.Description))
+        if (string.IsNullOrWhiteSpace(Announcement.Title) || string.IsNullOrWhiteSpace(Announcement.TitleAr) || string.IsNullOrWhiteSpace(Announcement.Description))
         {
             Snackbar.Add(Loc["RequiredFieldsError"], Severity.Warning);
             return;
         }
-
         try
-        {
-            if (Announcement.AnnouncementId == 0)
+         {
+            if (Announcement.Id == 0)
             {
                 // Create
                 Announcement.CreatedDate = DateTime.Now;
@@ -43,7 +44,7 @@
             else
             {
                 // Update
-                await AnnouncementsService.UpdateAnnouncementAsync(Announcement.AnnouncementId, Announcement);
+                await AnnouncementsService.UpdateAnnouncementAsync(Announcement.Id, Announcement);
                 Snackbar.Add(Loc["AnnouncementUpdated"], Severity.Success);
             }
             DialogInstance?.Close(DialogResult.Ok(true));

@@ -46,7 +46,7 @@ namespace Platform.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAnnouncement(int id, Announcement announcement)
         {
-            if (id != announcement.AnnouncementId)
+            if (id != announcement.Id)
             {
                 return BadRequest();
             }

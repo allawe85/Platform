@@ -47,7 +47,10 @@
                     <MudList T="Announcement" Dense="true" Clickable="true">
                         @foreach (var item in _announcements.Take(3))
                         {
-                            <MudListItem Text="@item.Title" SecondaryText="@(item.Description?.Length > 50 ? item.Description.Substring(0, 50) + "..." : item.Description)" />
+                            var title = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.TitleAr) ? item.TitleAr : item.Title;
+                            var desc = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.DescriptionAr) ? item.DescriptionAr : item.Description;
+                            
+                            <MudListItem Text="@title" SecondaryText="@(desc?.Length > 50 ? desc.Substring(0, 50) + "..." : desc)" />
                         }
                     </MudList>
                 }
