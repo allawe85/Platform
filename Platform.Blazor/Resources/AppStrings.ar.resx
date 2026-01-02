@@ -488,6 +488,8 @@
   <data name="EditAnnouncement" xml:space="preserve"><value>تعديل إعلان</value></data>
   <data name="AnnouncementTitle" xml:space="preserve"><value>العنوان</value></data>
   <data name="AnnouncementDescription" xml:space="preserve"><value>الوصف</value></data>
+  <data name="AnnouncementDescriptionAr" xml:space="preserve"><value>الوصف (عربي)</value></data>
+  <data name="AppTitle" xml:space="preserve"><value>منصة وزارة الداخلية</value></data>
   <data name="IsActive" xml:space="preserve"><value>نشط</value></data>
   <data name="AnnouncementCreated" xml:space="preserve"><value>تم إنشاء الإعلان</value></data>
   <data name="AnnouncementUpdated" xml:space="preserve"><value>تم تحديث الإعلان</value></data>

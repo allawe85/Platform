@@ -39,9 +39,12 @@
             padding: 24px !important;
         }
     </style>
-    <MudAppBar Elevation="1" Style="height: 100px; background-color: #007FFF; padding-top: 20px;">
+    <MudAppBar Elevation="1" Color="Color.Primary" Style="height: 100px; padding-top: 20px;">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Size="Size.Large" />
-        <MudText Typo="Typo.h6" Class="ml-3" Style="font-size: 1.5rem; font-weight: 700;">Platform</MudText>
+        <div class="d-flex align-center gap-4">
+             <MudImage Src="images/logo-moi.svg" Alt="Logo" Height="80" />
+             <MudText Typo="Typo.h6">@Loc["AppTitle"]</MudText>
+        </div>
         <MudSpacer />
 
         <MudSpacer />
@@ -51,36 +54,43 @@
             <MudIconButton Icon="@(LayoutService.IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" Color="Color.Inherit" OnClick="ToggleDarkMode" Size="Size.Large" />
             <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" OnClick="ToggleLanguage" Size="Size.Large" />
         }
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End">
-            <MudMenuItem OnClick="Logout">@Loc["Logout"]</MudMenuItem>
-        </MudMenu>
+            <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" OnClick="@(() => Nav.NavigateTo("/employee-home"))" Size="Size.Large" Title="@Loc["Home"]" />
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" Size="Size.Large" Title="@Loc["Logout"]" />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
-            <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
-            <MudNavGroup Title="@Loc["HierarchiesManagement"]" Icon="@Icons.Material.Filled.AccountTree">
-                <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">@Loc["Levels"]</MudNavLink>
-                <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">@Loc["Hierarchies"]</MudNavLink>
-            </MudNavGroup>
+            <AuthorizeView Roles="Admin,HR">
+                <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
+                <MudNavGroup Title="@Loc["HierarchiesManagement"]" Icon="@Icons.Material.Filled.AccountTree">
+                    <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">@Loc["Levels"]</MudNavLink>
+                    <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">@Loc["Hierarchies"]</MudNavLink>
+                </MudNavGroup>
+            </AuthorizeView>
             <MudNavGroup Title="@Loc["Events"]" Icon="@Icons.Material.Filled.Event">
                 <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">@Loc["Calendar"]</MudNavLink>
                 <MudNavLink Href="/upcoming-events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Upcoming">@Loc["UpcomingEvents"]</MudNavLink>
-                <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">@Loc["EventTypes"]</MudNavLink>
+                <AuthorizeView Roles="Admin,HR">
+                    <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">@Loc["EventTypes"]</MudNavLink>
+                </AuthorizeView>
             </MudNavGroup>
 
-            <MudNavGroup Title="@Loc["HRManagement"]" Icon="@Icons.Material.Filled.People">
-                <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.Badge">@Loc["Employees"]</MudNavLink>
-                <MudNavLink Href="/assets" Icon="@Icons.Material.Filled.Devices">@Loc["Assets"]</MudNavLink>
-                <MudNavLink Href="/documents" Icon="@Icons.Material.Filled.Folder">@Loc["Documents"]</MudNavLink>
-                <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.ManageAccounts">@Loc["Accounts"]</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="@Loc["Configurations"]" Icon="@Icons.Material.Filled.Settings">
-                <MudNavLink Href="/asset-statuses" Icon="@Icons.Material.Filled.List">@Loc["AssetStatuses"]</MudNavLink>
-                <MudNavLink Href="/asset-types" Icon="@Icons.Material.Filled.Category">@Loc["AssetTypes"]</MudNavLink>
-                <MudNavLink Href="/document-types" Icon="@Icons.Material.Filled.Description">@Loc["DocumentTypes"]</MudNavLink>
-            </MudNavGroup>
+            <AuthorizeView Roles="Admin,HR">
+                <MudNavGroup Title="@Loc["HRManagement"]" Icon="@Icons.Material.Filled.People">
+                    <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.Badge">@Loc["Employees"]</MudNavLink>
+                    <MudNavLink Href="/assets" Icon="@Icons.Material.Filled.Devices">@Loc["Assets"]</MudNavLink>
+                    <MudNavLink Href="/documents" Icon="@Icons.Material.Filled.Folder">@Loc["Documents"]</MudNavLink>
+                    <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.ManageAccounts">@Loc["Accounts"]</MudNavLink>
+                </MudNavGroup>
+                <MudNavGroup Title="@Loc["Configurations"]" Icon="@Icons.Material.Filled.Settings">
+                    <MudNavLink Href="/asset-statuses" Icon="@Icons.Material.Filled.List">@Loc["AssetStatuses"]</MudNavLink>
+                    <MudNavLink Href="/asset-types" Icon="@Icons.Material.Filled.Category">@Loc["AssetTypes"]</MudNavLink>
+                    <MudNavLink Href="/document-types" Icon="@Icons.Material.Filled.Description">@Loc["DocumentTypes"]</MudNavLink>
+                </MudNavGroup>
+            </AuthorizeView>
             <MudNavGroup Title="@Loc["Polls"]" Icon="@Icons.Material.Filled.Poll">
-                <MudNavLink Href="/polls-management" Icon="@Icons.Material.Filled.List">@Loc["Management"]</MudNavLink>
+                <AuthorizeView Roles="Admin,HR">
+                    <MudNavLink Href="/polls-management" Icon="@Icons.Material.Filled.List">@Loc["Management"]</MudNavLink>
+                </AuthorizeView>
                 <MudNavLink Href="/poll-vote" Icon="@Icons.Material.Filled.HowToVote">@Loc["Vote"]</MudNavLink>
             </MudNavGroup>
             <MudNavGroup Title="@Loc["TimeAttendance"]" Icon="@Icons.Material.Filled.AccessTime">
@@ -89,8 +99,10 @@
                 </MudNavGroup>
             <MudNavGroup Title="@Loc["LeavesManagement"]" Icon="@Icons.Material.Filled.DateRange">
                 <MudNavLink Href="/my-leaves" Icon="@Icons.Material.Filled.EventNote">@Loc["MyLeaves"]</MudNavLink>
-                <MudNavLink Href="/leave-approvals" Icon="@Icons.Material.Filled.Approval">@Loc["LeaveApprovals"]</MudNavLink>
-                <MudNavLink Href="/leave-configuration" Icon="@Icons.Material.Filled.Settings">@Loc["LeaveConfiguration"]</MudNavLink>
+                <AuthorizeView Roles="Admin,HR">
+                    <MudNavLink Href="/leave-approvals" Icon="@Icons.Material.Filled.Approval">@Loc["LeaveApprovals"]</MudNavLink>
+                    <MudNavLink Href="/leave-configuration" Icon="@Icons.Material.Filled.Settings">@Loc["LeaveConfiguration"]</MudNavLink>
+                </AuthorizeView>
             </MudNavGroup>
             <MudNavLink Href="/announcements" Icon="@Icons.Material.Filled.Announcement">@Loc["Announcements"]</MudNavLink>
         </MudNavMenu>

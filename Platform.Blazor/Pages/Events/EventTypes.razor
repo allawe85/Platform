@@ -5,6 +5,9 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin,HR")]
+
 <PageTitle>@Loc["EventTypes"]</PageTitle>
 <MudText Typo="Typo.h5" Class="mb-4">@Loc["EventTypes"]</MudText>
 

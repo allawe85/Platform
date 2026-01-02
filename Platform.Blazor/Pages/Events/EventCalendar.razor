@@ -23,7 +23,9 @@
         <MudItem xs="12" md="4" Class="d-flex align-center">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadEvents" Class="mr-2">@Loc["Filter"]</MudButton>
              <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddEvent">@Loc["Add"]</MudButton>
+            <AuthorizeView Roles="Admin,HR">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddEvent">@Loc["Add"]</MudButton>
+            </AuthorizeView>
         </MudItem>
     </MudGrid>
 </MudPaper>
@@ -58,8 +60,10 @@ else
                                         <MudText Typo="Typo.caption">@location</MudText>
                                     </CardHeaderContent>
                                     <CardHeaderActions>
-                                          <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => EditEvent(evt))" />
-                                          <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteEvent(evt))" />
+                                          <AuthorizeView Roles="Admin,HR">
+                                              <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="@(() => EditEvent(evt))" />
+                                              <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteEvent(evt))" />
+                                          </AuthorizeView>
                                     </CardHeaderActions>
                                 </MudCardHeader>
                                 <MudCardContent>

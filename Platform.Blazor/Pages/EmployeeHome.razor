@@ -20,6 +20,7 @@
 @using Microsoft.Extensions.Localization
 @using Platform.Blazor.Resources
 @inject IStringLocalizer<AppStrings> Loc
+@using Platform.Blazor.Pages.Components
 @attribute [Authorize(Roles = "Employee,HR")]
 
 <MudText Typo="Typo.h4" Class="mb-4">@Loc["WelcomeBack"], @_currentEmployeeName</MudText>
@@ -27,104 +28,17 @@
 <MudGrid>
     <!-- Cell 1: Announcements -->
     <MudItem xs="12" md="6" lg="4">
-        <MudCard Style="height: 100%;">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">@Loc["ActiveAnnouncements"]</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                @if (_announcements == null)
-                {
-                    <MudProgressCircular Indeterminate="true" />
-                }
-                else if (!_announcements.Any())
-                {
-                    <MudText>@Loc["NoAnnouncements"]</MudText>
-                }
-                else
-                {
-                    <MudList T="Announcement" Dense="true" Clickable="true">
-                        @foreach (var item in _announcements.Take(3))
-                        {
-                            var title = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.TitleAr) ? item.TitleAr : item.Title;
-                            var desc = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.DescriptionAr) ? item.DescriptionAr : item.Description;
-                            
-                            <MudListItem Text="@title" SecondaryText="@(desc?.Length > 50 ? desc.Substring(0, 50) + "..." : desc)" />
-                        }
-                    </MudList>
-                }
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/announcements"))">@Loc["ViewAll"]</MudButton>
-            </MudCardActions>
-        </MudCard>
+        <AnnouncementsSlider Announcements="_announcements" />
     </MudItem>
 
     <!-- Cell 2: Upcoming Events -->
     <MudItem xs="12" md="6" lg="4">
-        <MudCard Style="height: 100%;">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">@Loc["UpcomingEvents"]</MudText>
-                </CardHeaderContent>
-                <CardHeaderActions>
-                     <MudIconButton Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Default" OnClick="@(() => Nav.NavigateTo("/events"))" />
-                </CardHeaderActions>
-            </MudCardHeader>
-            <MudCardContent>
-                 @if (_events == null)
-                {
-                    <MudProgressCircular Indeterminate="true" />
-                }
-                else if (!_events.Any())
-                {
-                    <MudText>@Loc["NoEvents"]</MudText>
-                }
-                else
-                {
-                     <MudList T="Event" Dense="true">
-                        @foreach (var item in _events.Take(3))
-                        {
-                            <MudListItem Icon="@Icons.Material.Filled.Event" Text="@item.Name" SecondaryText="@item.StartDate.ToString("g")" />
-                        }
-                    </MudList>
-                }
-            </MudCardContent>
-        </MudCard>
+        <UpcomingEventCard Events="_events" />
     </MudItem>
 
     <!-- Cell 3: Polls -->
     <MudItem xs="12" md="6" lg="4">
-        <MudCard Style="height: 100%;">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">@Loc["ActivePolls"]</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                @if (_polls == null)
-                {
-                    <MudProgressCircular Indeterminate="true" />
-                }
-                else if (!_polls.Any())
-                {
-                    <MudText>@Loc["NoActivePolls"]</MudText>
-                }
-                else
-                {
-                    <MudList T="Poll" Dense="true">
-                        @foreach (var item in _polls.Take(3))
-                        {
-                            <MudListItem Text="@item.Question" SecondaryText="@Loc["NeedsVoting"]" />
-                        }
-                    </MudList>
-                }
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/poll-vote"))">@Loc["VoteNow"]</MudButton>
-            </MudCardActions>
-        </MudCard>
+        <ActivePollsSlider Polls="_polls" />
     </MudItem>
 
     <!-- Cell 4: Leaves -->

@@ -589,4 +589,5 @@
   <data name="RegisterTitle" xml:space="preserve"><value>Register</value></data>
   <data name="AnnouncementTitleAr" xml:space="preserve"><value>Title (Arabic)</value></data>
   <data name="AnnouncementDescriptionAr" xml:space="preserve"><value>Description (Arabic)</value></data>
+  <data name="AppTitle" xml:space="preserve"><value>MOI Platform</value></data>
 </root>

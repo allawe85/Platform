@@ -13,8 +13,11 @@
 @inject IStringLocalizer<AppStrings> Loc
 
 <MudLayout>
-    <MudAppBar Elevation="1" Style="height: 80px; background-color: #007FFF;">
-        <MudText Typo="Typo.h5" Class="ml-3" Style="font-weight: 700;">Platform</MudText>
+    <MudAppBar Elevation="1" Color="Color.Primary" Style="height: 100px; padding-top: 10px;">
+        <div class="d-flex align-center gap-4 ml-3">
+             <MudImage Src="images/logo-moi.svg" Alt="Logo" Height="80" />
+             <MudText Typo="Typo.h5" Style="font-weight: 700;">@Loc["AppTitle"]</MudText>
+        </div>
         <MudSpacer />
         @if (!string.IsNullOrEmpty(_username))
         {
