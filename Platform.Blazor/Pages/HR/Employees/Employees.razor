@@ -35,10 +35,13 @@
         <MudTd DataLabel="@Loc["UserAccount"]">@context.UserName</MudTd>
         <MudTd DataLabel="@Loc["Email"]">@context.Email</MudTd>
         <MudTd DataLabel="@Loc["Phone"]">@context.PhoneNumber</MudTd>
-        <MudTd DataLabel="Actions">
+        <MudTd DataLabel="@Loc["Actions"]">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditDialog(context.Id))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteEmployee(context))" />
             <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Size="Size.Small" OnClick="@(() => ViewDetails(context.Id))" />
+            <MudTooltip Text="@Loc["ResetPassword"]">
+                 <MudIconButton Icon="@Icons.Material.Filled.LockReset" Color="Color.Warning" Size="Size.Small" OnClick="@(() => ResetPassword(context.Id))" Disabled="@(string.IsNullOrEmpty(context.UserName))" />
+            </MudTooltip>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -46,13 +49,10 @@
     </PagerContent>
 </MudTable>
 
-<EmployeeDialog @bind-Visible="_showDialog" EmployeeId="_selectedEmployeeId" OnClose="OnDialogClose" />
 
 @code {
     private List<EmployeeInfo> _employees = new();
     private string _searchString = "";
-    private bool _showDialog;
-    private int? _selectedEmployeeId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,21 +83,29 @@
         return false;
     }
 
-    private void OpenAddDialog()
+    private async Task OpenAddDialog()
     {
-        _selectedEmployeeId = null;
-        _showDialog = true;
+        var parameters = new DialogParameters { ["EmployeeId"] = (int?)null };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        
+        var dialog = await DialogService.ShowAsync<EmployeeDialog>(Loc["AddEmployee"], parameters, options);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
+        {
+            await LoadData();
+        }
     }
 
-    private void OpenEditDialog(int id)
+    private async Task OpenEditDialog(int id)
     {
-        _selectedEmployeeId = id;
-        _showDialog = true;
-    }
-
-    private async Task OnDialogClose(bool success)
-    {
-        if (success)
+        var parameters = new DialogParameters { ["EmployeeId"] = (int?)id };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        
+        var dialog = await DialogService.ShowAsync<EmployeeDialog>(Loc["EditEmployee"], parameters, options);
+        var result = await dialog.Result;
+        
+        if (!result.Canceled)
         {
             await LoadData();
         }
@@ -128,5 +136,26 @@
     private void ViewDetails(int id)
     {
         Nav.NavigateTo($"/employees/{id}");
+    }
+
+    private async Task ResetPassword(int id)
+    {
+        bool? result = await DialogService.ShowMessageBox(
+            Loc["Warning"],
+            Loc["ConfirmResetPassword"],
+            yesText: Loc["Reset"], cancelText: Loc["Cancel"]);
+
+        if (result == true)
+        {
+            var success = await EmployeesService.ResetPasswordAsync(id);
+            if (success)
+            {
+                Snackbar.Add(Loc["PasswordResetSuccess"], Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(Loc["PasswordResetError"], Severity.Error);
+            }
+        }
     }
 }

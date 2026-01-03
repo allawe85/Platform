@@ -18,6 +18,7 @@ using Platform.Blazor.Services;
 using Platform.Blazor.Services.Polls;
 using Platform.Blazor.Services.TimeAttendance;
 using Platform.Blazor.Services.Announcements;
+using Platform.Blazor.Services.Roles;
 
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -49,6 +50,7 @@ builder.Services.AddScoped<IPollsService, PollsService>();
 builder.Services.AddScoped<Platform.Blazor.Services.Leaves.LeaveService>();
 builder.Services.AddScoped<ITimeAttendanceService, TimeAttendanceService>();
 builder.Services.AddScoped<IAnnouncementsService, AnnouncementsService>();
+builder.Services.AddScoped<IRolesService, RolesService>();
 
 
 var host = builder.Build();

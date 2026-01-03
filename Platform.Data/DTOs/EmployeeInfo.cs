@@ -48,6 +48,9 @@ namespace Platform.Data.DTOs
 
         [Column("hierarchy_level_name_ar")]
         public string HierarchyLevelNameAr { get; set; }
-
+        
+        [NotMapped]
+        [System.Text.Json.Serialization.JsonPropertyName("Role")]
+        public string? Role { get; set; }
     }
 }

@@ -2,119 +2,159 @@
 @using Platform.Blazor.Services.Employees
 @using Platform.Blazor.Services.Hierarchies
 @using Platform.Blazor.Services.Auth
+@using Platform.Blazor.Services.Roles
 @using MudBlazor
 @inject IEmployeesService EmployeesService
 @inject IHierarchiesService HierarchiesService
 @inject IApplicationUsersService UsersService
+@inject IRolesService RolesService
 @inject ISnackbar Snackbar
 @inject Platform.Blazor.Services.Leaves.LeaveService LeaveService
 
-<MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
-    <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["EditEmployee"] : Loc["AddEmployee"])</MudText>
-        <MudForm @ref="_form" @bind-IsValid="_success">
-            <MudStack Spacing="3">
-                <MudTextField @bind-Value="_employee.FullName" Label="@Loc["FullName"]" Required="true" RequiredError="@Loc["FullNameRequired"]" />
-                <MudTextField @bind-Value="_employee.CivilId" Label="@Loc["CivilId"]" Required="true" RequiredError="@Loc["CivilIdRequired"]" />
-                <MudTextField @bind-Value="_employee.EmployeeId" Label="@Loc["EmployeeId"]" Required="true" RequiredError="@Loc["EmployeeIdRequired"]" />
-                
-                <MudSelect T="int" @bind-Value="_employee.HierarchyId" Label="@Loc["Hierarchy"]" Required="true" AnchorOrigin="Origin.BottomCenter">
-                    @foreach (var hierarchy in _hierarchies)
-                    {
-                        <MudSelectItem Value="@hierarchy.Id">@hierarchy.Name</MudSelectItem>
-                    }
-                </MudSelect>
-
-                <MudSelect T="string" @bind-Value="_employee.AspnetusersId" Label="@Loc["UserAccount"]" HelperText="Optional: Assign a login account" AnchorOrigin="Origin.BottomCenter" Clearable="true">
-                        @foreach (var user in _users)
-                    {
-                        <MudSelectItem Value="@user.Id">@user.UserName (@user.Email)</MudSelectItem>
-                    }
-                </MudSelect>
-
-
-                @if (!_isEdit)
-                {
-                    <MudText Typo="Typo.subtitle1" Class="mt-4">@Loc["InitialLeaveBalances"]</MudText>
-                    <MudDivider />
-                    <MudStack Spacing="2" Class="mt-2">
-                        @foreach (var item in _leaveBalanceModels)
+<MudDialog>
+    <DialogContent>
+        <MudPaper Elevation="0" Style="max-height:70vh; overflow-y:auto;" Class="pa-2">
+            <MudForm @ref="_form" @bind-IsValid="_success">
+                <MudStack Spacing="3">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">@Loc["EmployeeDetails"]</MudText>
+                    <MudTextField @bind-Value="_employee.FullName" Label="@Loc["FullName"]" Required="true" RequiredError="@Loc["FullNameRequired"]" />
+                    <MudTextField @bind-Value="_employee.CivilId" Label="@Loc["CivilId"]" Required="true" RequiredError="@Loc["CivilIdRequired"]" />
+                    <MudTextField @bind-Value="_employee.EmployeeId" Label="@Loc["EmployeeId"]" Required="true" RequiredError="@Loc["EmployeeIdRequired"]" />
+                    
+                    <MudSelect T="int" @bind-Value="_employee.HierarchyId" Label="@Loc["Hierarchy"]" Required="true" AnchorOrigin="Origin.BottomCenter" PopoverClass="role-select-popover">
+                        @foreach (var hierarchy in _hierarchies)
                         {
-                            var name = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? item.Type.NameAr : item.Type.Name;
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                                <MudCheckBox @bind-Value="item.IsSelected" Label="@name" Dense="true" Color="Color.Primary" />
-                                <MudNumericField @bind-Value="item.Balance" Label="@Loc["Balance"]" Disabled="@(!item.IsSelected)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width: 100px;" HideSpinButtons="true" />
-                            </MudStack>
+                            <MudSelectItem Value="@hierarchy.Id">@hierarchy.Name</MudSelectItem>
                         }
-                    </MudStack>
-                }
-            </MudStack>
-        </MudForm>
-        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? Loc["Update"] : Loc["Create"])</MudButton>
-        </MudStack>
-    </MudPaper>
-</MudOverlay>
+                    </MudSelect>
+
+                    <MudDivider Class="my-2"/>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">@Loc["UserAccount"]</MudText>
+                    
+                    @if (!_isEdit)
+                    {
+                        <MudCheckBox @bind-Value="_createUserAccount" Label="@Loc["CreateUserAccount"]" Color="Color.Primary" Dense="true"/>
+                    }
+                    
+                    @if (_createUserAccount || (_isEdit && _hasUserAccount))
+                    {
+                        <MudTextField @bind-Value="_userName" Label="@Loc["Username"]" Required="@(_createUserAccount)" Disabled="@_isEdit" />
+                        <MudTextField @bind-Value="_email" Label="@Loc["Email"]" Required="@(_createUserAccount)" InputType="InputType.Email" />
+                        <MudTextField @bind-Value="_phoneNumber" Label="@Loc["Phone"]" InputType="InputType.Telephone" />
+                        
+                        @if (!_isEdit)
+                        {
+                            <MudTextField @bind-Value="_password" Label="@Loc["Password"]" InputType="InputType.Password" Required="@(_createUserAccount)" />
+                        }
+
+                         <MudSelect T="string" @bind-Value="_role" Label="@Loc["Role"]" Required="@(_createUserAccount)" AnchorOrigin="Origin.BottomCenter" PopoverClass="role-select-popover">
+                            @foreach (var r in _roles)
+                            {
+                                <MudSelectItem Value="@r">@r</MudSelectItem>
+                            }
+                        </MudSelect>
+                    }
+                    else if (_isEdit && !_hasUserAccount)
+                    {
+                         <MudAlert Severity="Severity.Info" Dense="true">@Loc["NoUserAccountLinked"]</MudAlert>
+                    }
+
+
+                    @if (!_isEdit)
+                    {
+                        <MudDivider Class="my-2"/>
+                        <MudText Typo="Typo.subtitle1">@Loc["InitialLeaveBalances"]</MudText>
+                        <MudStack Spacing="2" Class="mt-2">
+                            @foreach (var item in _leaveBalanceModels)
+                            {
+                                var name = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? item.Type.NameAr : item.Type.Name;
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                    <MudCheckBox @bind-Value="item.IsSelected" Label="@name" Dense="true" Color="Color.Primary" />
+                                    <MudNumericField @bind-Value="item.Balance" Label="@Loc["Balance"]" Disabled="@(!item.IsSelected)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="ml-4" Style="width: 100px;" HideSpinButtons="true" />
+                                </MudStack>
+                            }
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@(_isEdit ? Loc["Update"] : Loc["Create"])</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .role-select-popover {
+        z-index: 10000 !important;
+    }
+</style>
 
 @code {
-    [Parameter] public bool Visible { get; set; }
-    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
-    [Parameter] public EventCallback<bool> OnClose { get; set; }
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
 
     [Parameter] public int? EmployeeId { get; set; }
 
     private EmployeeInfo _employee = new EmployeeInfo();
     private List<Hierarchy> _hierarchies = new();
+    private List<string> _roles = new();
 
-    private List<ApplicationUser> _users = new();
     private List<LeaveBalanceModel> _leaveBalanceModels = new();
     
+    // User fields
+    private bool _createUserAccount;
+    private bool _hasUserAccount;
+    private string _userName;
+    private string _email;
+    private string _phoneNumber;
+    private string _password; // Only for create
+    private string _role;
+
     private MudForm _form;
     private bool _success;
     private bool _isEdit => EmployeeId.HasValue;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        if (Visible)
-        {
-             // Reset or load data when dialog becomes visible
-             // However, OnInitializedAsync runs only once.
-             // We should check if we need to reload.
-             // For simplicity, we can load looks ups in OnInitialized, but Employee data in OnParametersSet if ID changed.
-             // Better: Move Load Data to a separate method and call it when Visible becomes true?
-             // Or simplier: The parent sets EmployeeId, then sets Visible=true.
-             // We can detect change in Visible or EmployeeId.
-             
-             if (EmployeeId.HasValue)
-             {
-                 var info = await EmployeesService.GetEmployeeInfoByIdAsync(EmployeeId.Value);
-                 if (info != null)
-                 {
-                     _employee = info;
-                 }
-             }
-             else
-             {
-                 _employee = new EmployeeInfo();
-             }
-        }
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        var hierarchyTask = HierarchiesService.GetHierarchiesAsync();
-        var usersTask = UsersService.GetAllUsersAsync();
+        // Load Hierarchies
+        _hierarchies = await HierarchiesService.GetHierarchiesAsync();
         
-        await Task.WhenAll(hierarchyTask, usersTask);
-        
-        _hierarchies = await hierarchyTask;
+        // Load and Filter Roles (frontend safety filter)
+        var rawRoles = await RolesService.GetRolesAsync();
+        _roles = rawRoles
+            .Where(r => !string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase))
+            .ToList();
 
-        _users = await usersTask;
-
-        // Load Leave Types for new employee
-        if (!_isEdit)
+        if (EmployeeId.HasValue)
         {
+            var info = await EmployeesService.GetEmployeeInfoByIdAsync(EmployeeId.Value);
+            if (info != null)
+            {
+                _employee = info;
+                
+                // Populate user fields
+                _hasUserAccount = !string.IsNullOrEmpty(info.AspnetusersId);
+                if (_hasUserAccount)
+                {
+                    _userName = info.UserName;
+                    _email = info.Email;
+                    _phoneNumber = info.PhoneNumber;
+                    _role = info.Role; 
+                }
+            }
+        }
+        else
+        {
+            _employee = new EmployeeInfo();
+            _createUserAccount = false;
+            _hasUserAccount = false;
+            _userName = "";
+            _email = "";
+            _phoneNumber = "";
+            _password = "";
+            _role = "User"; // Default
+            
             var leaveTypes = await LeaveService.GetLeaveTypes();
             _leaveBalanceModels = leaveTypes.Select(lt => new LeaveBalanceModel
             {
@@ -123,6 +163,8 @@
                 Balance = lt.TypeBalance
             }).ToList();
         }
+        
+        StateHasChanged();
     }
 
     private async Task Submit()
@@ -143,11 +185,19 @@
                     FullName = _employee.FullName
                 };
 
-                var result = await EmployeesService.UpdateEmployeeAsync(_employee.Id, employeeToUpdate);
+                var updateRequest = new UpdateEmployeeRequest 
+                {
+                    Employee = employeeToUpdate,
+                    Email = _email,
+                    PhoneNumber = _phoneNumber,
+                    Role = _role
+                };
+
+                var result = await EmployeesService.UpdateEmployeeAsync(_employee.Id, updateRequest);
                 if (result != null)
                 {
                     Snackbar.Add("Employee updated successfully", Severity.Success);
-                    await Close(true);
+                    MudDialog.Close(DialogResult.Ok(true));
                 }
                 else
                 {
@@ -158,33 +208,45 @@
             {
                 try
                 {
-                    // Ensure ID is 0
                     var employeeToCreate = new Employee
                     {
                         Id = 0,
                         CivilId = _employee.CivilId,
                         EmployeeId = _employee.EmployeeId,
                         HierarchyId = _employee.HierarchyId,
-                        AspnetusersId = _employee.AspnetusersId,
+                        AspnetusersId = null, // Will be set by server if user created
                         FullName = _employee.FullName
                     };
+
+                    RegisterRequest userRequest = null;
+                    if (_createUserAccount)
+                    {
+                        userRequest = new RegisterRequest
+                        {
+                            UserName = _userName,
+                            Email = _email,
+                            Password = _password
+                        };
+                    }
 
                     var request = new CreateEmployeeRequest
                     {
                         Employee = employeeToCreate,
+                        UserAccount = userRequest,
+                        Role = _role,
                         LeaveBalances = _leaveBalanceModels
                             .Where(x => x.IsSelected)
                             .Select(x => new LeaveBalance
                             {
                                 LeaveTypeId = x.Type.Id,
                                 Balance = x.Balance,
-                                EmployeeId = 0 // Will be set by server
+                                EmployeeId = 0 
                             }).ToList()
                     };
 
                     await EmployeesService.CreateEmployeeAsync(request);
                     Snackbar.Add("Employee created successfully", Severity.Success);
-                    await Close(true);
+                    MudDialog.Close(DialogResult.Ok(true));
                 }
                 catch (Exception ex)
                 {
@@ -194,14 +256,7 @@
         }
     }
 
-    private async Task Close(bool success = false)
-    {
-        Visible = false;
-        await VisibleChanged.InvokeAsync(false);
-        await OnClose.InvokeAsync(success);
-    }
-    
-    private async Task Cancel() => await Close(false);
+    private void Cancel() => MudDialog.Cancel();
 
     public class LeaveBalanceModel
     {
