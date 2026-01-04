@@ -44,7 +44,7 @@
         var token = await Auth.LoginAsync(Model);
         if (token != null)
         {
-            Nav.NavigateTo("/", forceLoad: true);
+            Nav.NavigateTo("/employee-home", forceLoad: true);
         }
         else
         {

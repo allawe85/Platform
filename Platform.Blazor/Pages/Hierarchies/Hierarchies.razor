@@ -7,7 +7,12 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
+@inject IJSRuntime JSRuntime
 @inject LayoutService LayoutService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@using System.Security.Claims
+@using Microsoft.AspNetCore.WebUtilities
 
 <MudText Typo="Typo.h5" Class="mb-4">@Loc["Hierarchies"]</MudText>
 <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4">@_debugMsg</MudAlert>
@@ -26,13 +31,16 @@
                 <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">@Loc["Reset"]</MudButton>
             }
             <MudIconButton Icon="@Icons.Material.Filled.Print" OnClick="Print" Color="Color.Default" Variant="Variant.Outlined" Title="Print" Class="ml-2"/>
-
-            <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
-                           OnClick="OpenInNewWindow"
-                           Color="Color.Default"
-                           Variant="Variant.Outlined"
-                           Title="@Loc["OpenInNewWindow"]"
-                           Class="ml-2" />
+            
+            @if (!_isReadOnly) 
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                               OnClick="OpenInNewWindow"
+                               Color="Color.Default"
+                               Variant="Variant.Outlined"
+                               Title="@Loc["OpenInNewWindow"]"
+                               Class="ml-2" />
+            }
         </div>
         <MudSpacer />
         
@@ -54,11 +62,14 @@
                       OnKeyUp="HandleSearchKeyUp"
                       Style="max-width: 300px; font-size: 1.1rem; font-weight: 700;" />
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ExecuteSearch" Class="mr-2">@Loc["Search"]</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">@Loc["AddRoot"]</MudButton>
-         @if (!_isChartView) {
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">@Loc["AddChild"]</MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="EditSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Edit"]" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Delete"]" />
+
+         @if (CanEdit) {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">@Loc["AddRoot"]</MudButton>
+            @if (!_isChartView) {
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">@Loc["AddChild"]</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="EditSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Edit"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Delete"]" />
+             }
          }
     </MudToolBar>
 
@@ -142,6 +153,9 @@
     private HashSet<TreeItemData<Hierarchy>> TreeItems = new();
     private List<HierarchyLevel> Levels = new();
     private bool _loading = true;
+    private bool _isReadOnly = false;
+    private bool _isAdminOrHR = false;
+    private bool CanEdit => _isAdminOrHR && !_isReadOnly;
 
     // View State
     private bool _isChartView = true;
@@ -222,6 +236,22 @@
     protected override async Task OnInitializedAsync()
     {
         LayoutService.OnMajorUpdate += StateHasChanged;
+        
+        // Parse Query String
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("readonly", out var ro))
+        {
+             bool.TryParse(ro, out _isReadOnly);
+        }
+
+        // Check Roles
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+             _isAdminOrHR = user.IsInRole("Admin") || user.IsInRole("HR");
+        }
+
         await LoadLevels();
         await LoadHierarchies();
     }
@@ -602,15 +632,18 @@
                     <div class="node-subtitle">@(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(node.HierarchyLevel?.NameAr) ? node.HierarchyLevel.NameAr : node.HierarchyLevel?.Name ?? "")</div>
                     
                     <div class="node-actions">
-                         <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
-                                        Variant="Variant.Text" Color="Color.Primary" 
-                                        OnClick="@(() => AddChildToNode(node))" Title="@Loc["AddChild"]" />
-                         <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
-                                        Variant="Variant.Text" Color="Color.Default" 
-                                        OnClick="@(() => EditHierarchy(node))" Title="@Loc["Edit"]" />
-                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
-                                        Variant="Variant.Text" Color="Color.Error" 
-                                        OnClick="@(() => DeleteHierarchy(node))" Title="@Loc["Delete"]" />
+                         @if (CanEdit) 
+                         {
+                             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
+                                            Variant="Variant.Text" Color="Color.Primary" 
+                                            OnClick="@(() => AddChildToNode(node))" Title="@Loc["AddChild"]" />
+                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                            Variant="Variant.Text" Color="Color.Default" 
+                                            OnClick="@(() => EditHierarchy(node))" Title="@Loc["Edit"]" />
+                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
+                                            Variant="Variant.Text" Color="Color.Error" 
+                                            OnClick="@(() => DeleteHierarchy(node))" Title="@Loc["Delete"]" />
+                         }
                     </div>
                 </div>
                 @if (node.Children != null && node.Children.Count > 0)

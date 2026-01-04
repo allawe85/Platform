@@ -593,4 +593,8 @@
   <data name="AnnouncementTitleAr" xml:space="preserve"><value>Title (Arabic)</value></data>
   <data name="AnnouncementDescriptionAr" xml:space="preserve"><value>Description (Arabic)</value></data>
   <data name="AppTitle" xml:space="preserve"><value>MOI Platform</value></data>
+  <data name="ManageSystem" xml:space="preserve"><value>Manage System</value></data>
+  <data name="SystemManagement" xml:space="preserve"><value>System Management</value></data>
+  <data name="LeavesReportsAndApprovals" xml:space="preserve"><value>Leaves (Reports and Approvals)</value></data>
+  <data name="AttendanceReports" xml:space="preserve"><value>Attendance Reports</value></data>
 </root>

@@ -71,7 +71,7 @@
     <value>الموظفين</value>
   </data>
   <data name="Assets" xml:space="preserve">
-    <value>الأصول</value>
+    <value>العهد</value>
   </data>
   <data name="Documents" xml:space="preserve">
     <value>المستندات</value>
@@ -83,10 +83,10 @@
     <value>الأصول</value>
   </data>
   <data name="AssetStatuses" xml:space="preserve">
-    <value>حالات الأصول</value>
+    <value>حالات العهد</value>
   </data>
   <data name="AssetTypes" xml:space="preserve">
-    <value>أنواع الأصول</value>
+    <value>أنواع العهد</value>
   </data>
   <data name="DocumentTypes" xml:space="preserve">
     <value>أنواع المستندات</value>
@@ -568,4 +568,8 @@
   <data name="Success" xml:space="preserve"><value>نجاح</value></data>
   <data name="Error" xml:space="preserve"><value>خطأ</value></data>
   <data name="NameEn" xml:space="preserve"><value>الاسم (إنجليزي)</value></data>
+  <data name="ManageSystem" xml:space="preserve"><value>إدارة النظام</value></data>
+  <data name="SystemManagement" xml:space="preserve"><value>إدارة النظام</value></data>
+  <data name="LeavesReportsAndApprovals" xml:space="preserve"><value>الإجازات (التقارير والموافقات)</value></data>
+  <data name="AttendanceReports" xml:space="preserve"><value>تقارير الحضور</value></data>
 </root>

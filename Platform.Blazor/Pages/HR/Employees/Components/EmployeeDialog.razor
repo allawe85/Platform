@@ -120,12 +120,6 @@
         // Load Hierarchies
         _hierarchies = await HierarchiesService.GetHierarchiesAsync();
         
-        // Load and Filter Roles (frontend safety filter)
-        var rawRoles = await RolesService.GetRolesAsync();
-        _roles = rawRoles
-            .Where(r => !string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
         if (EmployeeId.HasValue)
         {
             var info = await EmployeesService.GetEmployeeInfoByIdAsync(EmployeeId.Value);
@@ -163,7 +157,13 @@
                 Balance = lt.TypeBalance
             }).ToList();
         }
-        
+
+        // Load and Filter Roles (frontend safety filter)
+        var rawRoles = await RolesService.GetRolesAsync();
+        _roles = rawRoles
+            .Where(r => !string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase) || string.Equals(_role, "Admin", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+            
         StateHasChanged();
     }
 

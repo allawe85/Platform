@@ -34,14 +34,26 @@ namespace Platform.Api.Controllers
 
             var rolesDict = userRoles.GroupBy(x => x.UserId).ToDictionary(
                 x => x.Key, 
-                x => x.Any(r => r.RoleId == "1") ? "Admin" : (x.First().RoleName ?? "Unknown")
+                x => {
+                    var items = x.ToList();
+                    if (items.Any(r => r.RoleId == "1" || string.Equals(r.RoleName, "Admin", StringComparison.OrdinalIgnoreCase)))
+                        return "Admin";
+                    return items.FirstOrDefault()?.RoleName ?? "User";
+                }
             );
 
             foreach (var info in employeeInfos)
             {
-                if (!string.IsNullOrEmpty(info.AspnetusersId) && rolesDict.TryGetValue(info.AspnetusersId, out var roleName))
+                if (!string.IsNullOrEmpty(info.AspnetusersId))
                 {
-                    info.Role = roleName;
+                    if (rolesDict.TryGetValue(info.AspnetusersId, out var roleName) && !string.IsNullOrEmpty(roleName))
+                    {
+                        info.Role = roleName;
+                    }
+                    else
+                    {
+                        info.Role = "Admin"; // Hardcoded fallback as requested
+                    }
                 }
             }
 
@@ -69,7 +81,13 @@ namespace Platform.Api.Controllers
 
                 if (roleInfo != null)
                 {
-                    employeeInfo.Role = roleInfo.RoleId == "1" ? "Admin" : (roleInfo.Name ?? "Unknown");
+                    employeeInfo.Role = (roleInfo.RoleId == "1" || string.Equals(roleInfo.Name, "Admin", StringComparison.OrdinalIgnoreCase)) 
+                        ? "Admin" 
+                        : (roleInfo.Name ?? "Admin"); // Fallback to Admin if name is missing but role exists
+                }
+                else
+                {
+                    employeeInfo.Role = "Admin"; // Fallback to Admin if no role entry exists for the user
                 }
             }
 

@@ -41,15 +41,27 @@ namespace Platform.Api.Controllers
 
             var rolesDict = userRoles.GroupBy(x => x.UserId).ToDictionary(
                 x => x.Key, 
-                x => x.Any(r => r.RoleId == "1") ? "Admin" : (x.First().RoleName ?? "Unknown")
+                x => {
+                    var items = x.ToList();
+                    if (items.Any(r => r.RoleId == "1" || string.Equals(r.RoleName, "Admin", StringComparison.OrdinalIgnoreCase)))
+                        return "Admin";
+                    return items.FirstOrDefault()?.RoleName ?? "User";
+                }
             );
             
             // Populate Role for each employee
             foreach (var employee in employees)
             {
-                if (!string.IsNullOrEmpty(employee.AspnetusersId) && rolesDict.TryGetValue(employee.AspnetusersId, out var roleName))
+                if (!string.IsNullOrEmpty(employee.AspnetusersId))
                 {
-                    employee.Role = roleName;
+                    if (rolesDict.TryGetValue(employee.AspnetusersId, out var roleName) && !string.IsNullOrEmpty(roleName))
+                    {
+                        employee.Role = roleName;
+                    }
+                    else
+                    {
+                        employee.Role = "Admin"; // Hardcoded fallback as requested
+                    }
                 }
             }
             
@@ -79,7 +91,13 @@ namespace Platform.Api.Controllers
 
                 if (roleInfo != null)
                 {
-                    employee.Role = roleInfo.RoleId == "1" ? "Admin" : (roleInfo.Name ?? "Unknown");
+                    employee.Role = (roleInfo.RoleId == "1" || string.Equals(roleInfo.Name, "Admin", StringComparison.OrdinalIgnoreCase)) 
+                        ? "Admin" 
+                        : (roleInfo.Name ?? "Admin"); // Fallback to Admin if name is missing but role exists
+                }
+                else
+                {
+                    employee.Role = "Admin"; // Fallback to Admin if no role entry exists for the user
                 }
             }
 

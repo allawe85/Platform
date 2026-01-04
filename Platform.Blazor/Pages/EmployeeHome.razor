@@ -17,13 +17,21 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
 @using Microsoft.Extensions.Localization
 @using Platform.Blazor.Resources
 @inject IStringLocalizer<AppStrings> Loc
 @using Platform.Blazor.Pages.Components
-@attribute [Authorize(Roles = "Employee,HR")]
-
-<MudText Typo="Typo.h4" Class="mb-4">@Loc["WelcomeBack"], @_currentEmployeeName</MudText>
+@attribute [Authorize(Roles = "Employee")]
+ 
+ <div class="d-flex justify-space-between align-center mb-4">
+    <MudText Typo="Typo.h4">@Loc["WelcomeBack"], @_currentEmployeeName</MudText>
+    <AuthorizeView Roles="Admin,HR">
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Settings" OnClick="@(() => Nav.NavigateTo("/dashboard"))">
+            @Loc["ManageSystem"]
+        </MudButton>
+    </AuthorizeView>
+ </div>
 
 <MudGrid>
     <!-- Cell 1: Announcements -->
@@ -89,18 +97,18 @@
      <!-- Cell 6: Team -->
     <MudItem xs="12" md="6" lg="4">
         <MudCard Style="height: 100%;">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">@Loc["MyTeam"]</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                <MudText>@Loc["TeamFeatureComingSoon"]</MudText>
-            </MudCardContent>
-            <MudCardActions>
-                 <MudButton Variant="Variant.Text" OnClick="@(() => Nav.NavigateTo("/hierarchies"))">@Loc["ViewOrgChart"]</MudButton>
-            </MudCardActions>
-        </MudCard>
+             <MudCardHeader>
+                 <CardHeaderContent>
+                     <MudText Typo="Typo.h6">@Loc["MyTeam"]</MudText>
+                 </CardHeaderContent>
+             </MudCardHeader>
+             <MudCardContent>
+                 <MudText>@Loc["TeamFeatureComingSoon"]</MudText>
+             </MudCardContent>
+             <MudCardActions>
+                  <MudButton Variant="Variant.Text" OnClick="@OpenOrgChartReadOnly">@Loc["ViewOrgChart"]</MudButton>
+             </MudCardActions>
+         </MudCard>
     </MudItem>
 
 </MudGrid>
@@ -226,5 +234,10 @@
     private void CheckOut()
     {
         Nav.NavigateTo("/attendance/checkin"); 
+    }
+
+    private async Task OpenOrgChartReadOnly()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "/hierarchies?readonly=true", "_blank");
     }
 }
