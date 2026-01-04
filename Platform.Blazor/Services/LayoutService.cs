@@ -8,12 +8,13 @@ namespace Platform.Blazor.Services
         {
             PaletteLight = new PaletteLight()
             {
-                Primary = "#0D1E4C",
+                Primary = "#007FFF",
                 AppbarBackground = "#0D1E4C"
             },
             PaletteDark = new PaletteDark()
             {
-                Primary = "#0D1E4C"
+                Primary = "#007FFF",
+                AppbarBackground = "#0D1E4C"
             }
         };
         public bool IsDarkMode { get; private set; }

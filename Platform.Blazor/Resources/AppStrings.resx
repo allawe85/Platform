@@ -597,4 +597,15 @@
   <data name="SystemManagement" xml:space="preserve"><value>System Management</value></data>
   <data name="LeavesReportsAndApprovals" xml:space="preserve"><value>Leaves (Reports and Approvals)</value></data>
   <data name="AttendanceReports" xml:space="preserve"><value>Attendance Reports</value></data>
+  <data name="PendingLeaves" xml:space="preserve"><value>Pending Leaves</value></data>
+  <data name="QuickActions" xml:space="preserve"><value>Quick Actions</value></data>
+  <data name="PendingLeaveRequests" xml:space="preserve"><value>Pending Leave Requests</value></data>
+  <data name="NoPendingLeaves" xml:space="preserve"><value>No Pending Leaves</value></data>
+  <data name="CreatePoll" xml:space="preserve"><value>Create Poll</value></data>
+  <data name="NewEvent" xml:space="preserve"><value>New Event</value></data>
+  <data name="NewAnnouncement" xml:space="preserve"><value>New Announcement</value></data>
+  <data name="Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="WelcomeBack" xml:space="preserve"><value>Welcome Back</value></data>
+  <data name="Balances" xml:space="preserve"><value>Balances</value></data>
+  <data name="ViewCalendar" xml:space="preserve"><value>View Calendar</value></data>
 </root>

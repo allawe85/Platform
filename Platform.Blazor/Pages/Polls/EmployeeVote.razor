@@ -32,8 +32,7 @@ else
                 <MudCard Elevation="2" Class="mb-4">
                     <MudCardHeader>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6">@poll.Question</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@poll.QuestionAr</MudText>
+                            <MudText Typo="Typo.h6">@GetText(poll.Question, poll.QuestionAr)</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent>
@@ -47,7 +46,7 @@ else
                                 @foreach (var option in poll.Options)
                                 {
                                     <MudRadio Value="@option.Id" Color="Color.Primary" Class="d-block mb-2">
-                                        @option.OptionText <span class="mud-text-secondary ms-2">@option.OptionTextAr</span>
+                                        @GetText(option.OptionText, option.OptionTextAr)
                                     </MudRadio>
                                 }
                             </MudRadioGroup>
@@ -187,5 +186,10 @@ else
         {
             _processingVote = null;
         }
+    }
+    private string GetText(string en, string ar)
+    {
+        var isArabic = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+        return isArabic && !string.IsNullOrEmpty(ar) ? ar : en;
     }
 }

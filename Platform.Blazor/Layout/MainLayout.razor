@@ -30,17 +30,20 @@
             color: @(LayoutService.IsDarkMode ? "#E0E0E0" : "inherit") !important;
         }
         .mud-nav-link.active .mud-nav-link-text {
-            color: #007FFF !important;
+            color: var(--mud-palette-primary) !important;
         }
         .mud-nav-link .mud-nav-link-icon-default {
-            color: #007FFF !important;
+            color: var(--mud-palette-primary) !important;
         }
         .mud-nav-menu {
             padding: 24px !important;
         }
     </style>
-    <MudAppBar Elevation="1" Color="Color.Primary" Style="height: 100px; padding-top: 20px;">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Size="Size.Large" />
+    <MudAppBar Elevation="1" Style="height: 100px; padding-top: 20px; background-color: var(--mud-palette-appbar-background); color: white;">
+   @if (!_isEmployee)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Size="Size.Large" />
+        }
         <div class="d-flex align-center gap-4">
              <MudImage Src="images/logo-moi.svg" Alt="Logo" Height="80" />
              <MudText Typo="Typo.h6">@Loc["AppTitle"]</MudText>
@@ -57,7 +60,9 @@
             <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" OnClick="@(() => Nav.NavigateTo("/employee-home"))" Size="Size.Large" Title="@Loc["Home"]" />
             <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" Size="Size.Large" Title="@Loc["Logout"]" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    @if (!_isEmployee)
+    {
+        <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
              <AuthorizeView Roles="Admin,HR">
                  <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
@@ -92,6 +97,7 @@
 
         </MudNavMenu>
     </MudDrawer>
+    }
     <MudMainContent>
         <img src="images/MOISkyline.jpg" style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 70%; height: 70%; object-fit: contain; opacity: 0.3; z-index: -1; pointer-events: none; mix-blend-mode: @(LayoutService.IsDarkMode ? "multiply" : "normal");" />
         <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
@@ -107,6 +113,7 @@
 
 @code {
     bool _drawerOpen = true;
+    bool _isEmployee = false;
     string? _username;
     MudThemeProvider _mudThemeProvider;
 
@@ -114,7 +121,14 @@
     {
         LayoutService.OnMajorUpdate += StateHasChanged;
         var state = await AuthStateProvider.GetAuthenticationStateAsync();
-        _username = state.User.Identity?.Name;
+        var user = state.User;
+        _username = user.Identity?.Name;
+
+        if (user.IsInRole("Employee") && !user.IsInRole("Admin") && !user.IsInRole("HR"))
+        {
+            _isEmployee = true;
+            _drawerOpen = false;
+        }
     }
 
     void DrawerToggle()

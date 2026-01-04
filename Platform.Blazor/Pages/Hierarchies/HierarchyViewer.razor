@@ -6,12 +6,15 @@
 @inject IHierarchiesService HierarchiesService
 @inject ISnackbar Snackbar
 @inject LayoutService LayoutService
+@inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
 @implements IDisposable
 
 <HierarchyChart Roots="_trees" 
                 LevelColors="_levelColors" 
                 @bind-ZoomLevel="_zoomLevel"
                 IsDarkMode="@LayoutService.IsDarkMode"
+                ReadOnly="@(!_isHr)"
                 OnNodeSelect="OnNodeSelect" 
                 OnAddChild="OnAddChild"
                 OnEdit="OnEdit"
@@ -31,6 +34,7 @@
     private Dictionary<int, string> _levelColors = new();
     private double _zoomLevel = 1.0;
     private bool _loading = true;
+    private bool _isHr = false;
 
     // Palette copied from Hierarchies.razor to match
     private List<string> _palette = new() 
@@ -47,6 +51,14 @@
     protected override async Task OnInitializedAsync()
     {
         LayoutService.OnMajorUpdate += StateHasChanged;
+        
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+             _isHr = user.IsInRole("HR");
+        }
+
         await LoadData();
     }
 

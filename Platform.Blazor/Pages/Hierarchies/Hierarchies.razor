@@ -87,6 +87,7 @@
                             @ref="_chartComponent"
                             SelectedNodeId="_selectedHierarchy?.Id"
                             IsDarkMode="@LayoutService.IsDarkMode"
+                            ReadOnly="@(!CanEdit)"
                             OnNodeSelect="OnSelectNode" 
                             OnAddChild="AddChildToNode"
                             OnEdit="EditHierarchy"

@@ -59,7 +59,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Dashboard" xml:space="preserve">
-    <value>الأنظمة</value>
+    <value>لوحة التحكم</value>
+  </data>
+  <data name="Attendance" xml:space="preserve">
+    <value>سجل الحضور</value>
   </data>
   <data name="Hierarchies" xml:space="preserve">
     <value>التسلسل الهرمي</value>
@@ -572,4 +575,29 @@
   <data name="SystemManagement" xml:space="preserve"><value>إدارة النظام</value></data>
   <data name="LeavesReportsAndApprovals" xml:space="preserve"><value>الإجازات (التقارير والموافقات)</value></data>
   <data name="AttendanceReports" xml:space="preserve"><value>تقارير الحضور</value></data>
+  <data name="PendingLeaves" xml:space="preserve"><value>الاجازات المعلقة</value></data>
+  <data name="ActivePolls" xml:space="preserve"><value>الاستطلاعات النشطة</value></data>
+  <data name="QuickActions" xml:space="preserve"><value>إجراءات سريعة</value></data>
+  <data name="PendingLeaveRequests" xml:space="preserve"><value>طلبات الإجازة المعلقة</value></data>
+  <data name="NoPendingLeaves" xml:space="preserve"><value>لا توجد إجازات معلقة</value></data>
+  <data name="CreatePoll" xml:space="preserve"><value>إنشاء استطلاع</value></data>
+  <data name="NewEvent" xml:space="preserve"><value>فعالية جديدة</value></data>
+  <data name="NewAnnouncement" xml:space="preserve"><value>إعلان جديد</value></data>
+  <data name="ViewAll" xml:space="preserve"><value>عرض الكل</value></data>
+  <data name="Pending" xml:space="preserve"><value>قيد الانتظار</value></data>
+  <data name="WelcomeBack" xml:space="preserve"><value>مرحباً بعودتك</value></data>
+  <data name="ManageSystem" xml:space="preserve"><value>إدارة النظام</value></data>
+  <data name="RequestLeave" xml:space="preserve"><value>طلب إجازة</value></data>
+  <data name="QuickRequest" xml:space="preserve"><value>طلب سريع</value></data>
+  <data name="NewRequest" xml:space="preserve"><value>طلب جديد</value></data>
+  <data name="ViewReport" xml:space="preserve"><value>عرض التقرير</value></data>
+  <data name="MyTeam" xml:space="preserve"><value>فريقي</value></data>
+  <data name="TeamFeatureComingSoon" xml:space="preserve"><value>ميزة الفريق قادمة قريباً</value></data>
+  <data name="ViewOrgChart" xml:space="preserve"><value>عرض الهيكل التنظيمي</value></data>
+  <data name="ActiveAnnouncements" xml:space="preserve"><value>الإعلانات النشطة</value></data>
+  <data name="NoAnnouncements" xml:space="preserve"><value>لا توجد إعلانات نشطة</value></data>
+  <data name="ViewCalendar" xml:space="preserve"><value>عرض التقويم</value></data>
+  <data name="VoteNow" xml:space="preserve"><value>صوت الآن</value></data>
+  <data name="NeedsVoting" xml:space="preserve"><value>بانتظار التصويت</value></data>
+  <data name="Balances" xml:space="preserve"><value>الأرصدة</value></data>
 </root>

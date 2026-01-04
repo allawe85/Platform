@@ -72,69 +72,73 @@
             <MudItem xs="12">
                 <MudGrid>
                     <!-- Quick Actions -->
-                    <MudItem xs="12">
-                        <MudCard Elevation="4">
-                            <MudCardHeader>
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.h6">@Loc["QuickActions"]</MudText>
-                                </CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent>
-                                <div class="d-flex gap-4 flex-wrap">
-                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/hr/employees/add"))">
-                                        @Loc["AddEmployee"]
-                                    </MudButton>
-                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Announcement" Color="Color.Secondary" OnClick="@(() => Nav.NavigateTo("/announcements/create"))">
-                                        @Loc["NewAnnouncement"]
-                                    </MudButton>
-                                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Event" Color="Color.Info" OnClick="@(() => Nav.NavigateTo("/events/create"))">
-                                        @Loc["NewEvent"]
-                                    </MudButton>
-                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Poll" Color="Color.Success" OnClick="@(() => Nav.NavigateTo("/polls/create"))">
-                                        @Loc["CreatePoll"]
-                                    </MudButton>
-                                </div>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
+                    <AuthorizeView Roles="HR" Context="authContext">
+                        <MudItem xs="12">
+                            <MudCard Elevation="4">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">@Loc["QuickActions"]</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <div class="d-flex gap-4 flex-wrap">
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/hr/employees/add"))">
+                                            @Loc["AddEmployee"]
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Announcement" Color="Color.Secondary" OnClick="@(() => Nav.NavigateTo("/announcements/create"))">
+                                            @Loc["NewAnnouncement"]
+                                        </MudButton>
+                                         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Event" Color="Color.Info" OnClick="@(() => Nav.NavigateTo("/events/create"))">
+                                            @Loc["NewEvent"]
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Poll" Color="Color.Success" OnClick="@(() => Nav.NavigateTo("/polls/create"))">
+                                            @Loc["CreatePoll"]
+                                        </MudButton>
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </AuthorizeView>
 
                     <!-- Pending Leave Requests Preview -->
-                    <MudItem xs="12">
-                        <MudCard Elevation="4">
-                            <MudCardHeader>
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.h6">@Loc["PendingLeaveRequests"]</MudText>
-                                </CardHeaderContent>
-                                <CardHeaderActions>
-                                    <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/leaves/requests"))">@Loc["ViewAll"]</MudButton>
-                                </CardHeaderActions>
-                            </MudCardHeader>
-                            <MudCardContent>
-                                @if (_pendingLeaves == null || !_pendingLeaves.Any())
-                                {
-                                    <MudText>@Loc["NoPendingLeaves"]</MudText>
-                                }
-                                else
-                                {
-                                    <MudList T="Leave" Dense="true">
-                                        @foreach (var leave in _pendingLeaves.Take(5))
-                                        {
-                                            <MudListItem Icon="@Icons.Material.Filled.DateRange">
-                                                <div class="d-flex justify-space-between align-center width-100">
-                                                    <div>
-                                                        <MudText Typo="Typo.subtitle2">@($"{leave.EmployeeId} - {leave.LeaveTypeId}")</MudText>
-                                                        <MudText Typo="Typo.caption">@($"{leave.StartDate:d} - {leave.EndDate:d}")</MudText>
+                    <AuthorizeView Roles="HR" Context="authContext">
+                        <MudItem xs="12">
+                            <MudCard Elevation="4">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">@Loc["PendingLeaveRequests"]</MudText>
+                                    </CardHeaderContent>
+                                    <CardHeaderActions>
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/leaves/requests"))">@Loc["ViewAll"]</MudButton>
+                                    </CardHeaderActions>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    @if (_pendingLeaves == null || !_pendingLeaves.Any())
+                                    {
+                                        <MudText>@Loc["NoPendingLeaves"]</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudList T="Leave" Dense="true">
+                                            @foreach (var leave in _pendingLeaves.Take(5))
+                                            {
+                                                <MudListItem Icon="@Icons.Material.Filled.DateRange">
+                                                    <div class="d-flex justify-space-between align-center width-100">
+                                                        <div>
+                                                            <MudText Typo="Typo.subtitle2">@($"{leave.EmployeeId} - {leave.LeaveTypeId}")</MudText>
+                                                            <MudText Typo="Typo.caption">@($"{leave.StartDate:d} - {leave.EndDate:d}")</MudText>
+                                                        </div>
+                                                        <MudChip T="string" Color="Color.Warning" Size="Size.Small">@Loc["Pending"]</MudChip>
                                                     </div>
-                                                    <MudChip T="string" Color="Color.Warning" Size="Size.Small">@Loc["Pending"]</MudChip>
-                                                </div>
-                                            </MudListItem>
-                                            <MudDivider />
-                                        }
-                                    </MudList>
-                                }
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
+                                                </MudListItem>
+                                                <MudDivider />
+                                            }
+                                        </MudList>
+                                    }
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </AuthorizeView>
                 </MudGrid>
             </MudItem>
         </MudGrid>

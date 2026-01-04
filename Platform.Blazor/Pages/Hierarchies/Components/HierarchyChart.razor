@@ -22,6 +22,7 @@
     [Parameter] public Dictionary<int, string> LevelColors { get; set; } = new();
     [Parameter] public bool IsDarkMode { get; set; }
     [Parameter] public int? SelectedNodeId { get; set; }
+    [Parameter] public bool ReadOnly { get; set; } = false;
     
     [Parameter] public EventCallback<Hierarchy> OnNodeSelect { get; set; }
     [Parameter] public EventCallback<Hierarchy> OnAddChild { get; set; }
@@ -126,6 +127,8 @@
                         </div>
                     </div>
                     
+                    @if (!ReadOnly)
+                    {
                     <div class="node-actions">
                          <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
                                         Variant="Variant.Filled" Color="Color.Surface" 
@@ -137,6 +140,7 @@
                                         Variant="Variant.Filled" Color="Color.Error" 
                                         OnClick="@(() => OnDelete.InvokeAsync(node))" Title="Delete" />
                     </div>
+                    }
                 </div>
                 @if (node.Children != null && node.Children.Count > 0)
                 {

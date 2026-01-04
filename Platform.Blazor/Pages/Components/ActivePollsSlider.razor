@@ -41,8 +41,8 @@
             </MudCarousel>
         }
     </MudCardContent>
-    <MudCardActions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/poll-vote"))">@Loc["VoteNow"]</MudButton>
+    <MudCardActions Class="justify-end">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/poll-vote"))">@Loc["VoteNow"]</MudButton>
     </MudCardActions>
 </MudCard>
 
