@@ -24,33 +24,33 @@
         }
         else
         {
-             <MudStack Spacing="2">
-                 <MudSelect T="LeaveBalance" Value="_selectedBalance" ValueChanged="OnBalanceSelected" Variant="Variant.Outlined" Dense="true" AnchorOrigin="Origin.BottomCenter">
-                     @foreach(var b in Balances)
-                    {
-                        var name = GetLeaveTypeName(b);
-                         <MudSelectItem Value="@b">@name</MudSelectItem>
-                    }
-                 </MudSelect>
-
-                 @if (_selectedBalance != null)
-                 {
-                     <div class="d-flex justify-center align-center flex-column mt-2">
-                        <MudChart ChartType="ChartType.Pie" InputData="@GetChartData()" InputLabels="@GetChartLabels()" Width="160px" Height="160px" />
-                        
-                        <MudText Typo="Typo.subtitle1" Class="mt-2" Align="Align.Center">
-                            <b>@_selectedBalance.Balance</b> @Loc["DaysRemaining"] / @GetTotalDays(_selectedBalance) @Loc["Total"]
-                        </MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">
-                            @GetTakenDays(_selectedBalance) @Loc["DaysTaken"]
-                        </MudText>
-                     </div>
-                 }
-             </MudStack>
+            <div class="d-flex justify-center align-center flex-column mt-2" style="height: 100%;">
+                @if (_selectedBalance != null)
+                {
+                    <MudChart ChartType="ChartType.Pie" InputData="@GetChartData()" InputLabels="@GetChartLabels()" Width="160px" Height="160px" />
+                    
+                    <MudText Typo="Typo.subtitle1" Class="mt-2" Align="Align.Center">
+                        <b>@_selectedBalance.Balance</b> @Loc["DaysRemaining"] / @GetTotalDays(_selectedBalance) @Loc["Total"]
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">
+                        @GetTakenDays(_selectedBalance) @Loc["DaysTaken"]
+                    </MudText>
+                }
+            </div>
         }
     </MudCardContent>
-    <MudCardActions Class="justify-end">
-        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="NavigateToRequest">
+    <MudCardActions Class="d-flex justify-space-between align-center px-4">
+        @if (Balances != null && Balances.Any())
+        {
+             <MudSelect T="LeaveBalance" Value="_selectedBalance" ValueChanged="OnBalanceSelected" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Style="width: 160px;" AnchorOrigin="Origin.TopCenter" Class="mb-0">
+                 @foreach(var b in Balances)
+                {
+                    var name = GetLeaveTypeName(b);
+                     <MudSelectItem Value="@b">@name</MudSelectItem>
+                }
+             </MudSelect>
+        }
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="NavigateToRequest" Size="Size.Small">
             @Loc["NewRequest"]
         </MudButton>
     </MudCardActions>

@@ -20,5 +20,14 @@ namespace Platform.Data.DTOs
         [Column("transaction_type")]
         [StringLength(5)]
         public string TransactionType { get; set; } // "IN" or "OUT"
+
+        [NotMapped]
+        public string? EmployeeName { get; set; }
+
+        [NotMapped]
+        public string? HierarchyName { get; set; }
+
+        [NotMapped]
+        public string? HierarchyNameAr { get; set; }
     }
 }

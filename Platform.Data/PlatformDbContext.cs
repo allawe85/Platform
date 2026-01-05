@@ -846,18 +846,31 @@ namespace Platform.Data
 
         public async Task<List<TimeAttendance>> GetTimeAttendanceReportAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
         {
-            var query = TimeAttendances
-                .AsNoTracking()
-                .Where(ta => ta.TransactionTime >= startDate && ta.TransactionTime <= endDate);
+            var query = from ta in TimeAttendances.AsNoTracking()
+                        join emp in Employees.AsNoTracking() on ta.EmployeeId equals emp.Id
+                        join h in Hierarchies.AsNoTracking() on emp.HierarchyId equals h.Id
+                        where ta.TransactionTime >= startDate && ta.TransactionTime <= endDate
+                        select new { ta, emp, h };
 
             if (employeeId.HasValue)
             {
-                query = query.Where(ta => ta.EmployeeId == employeeId.Value);
+                query = query.Where(x => x.ta.EmployeeId == employeeId.Value);
             }
 
-            return await query
-                .OrderBy(ta => ta.TransactionTime)
+            var result = await query
+                .OrderBy(x => x.ta.TransactionTime)
                 .ToListAsync();
+
+            return result.Select(x => new TimeAttendance
+            {
+                Id = x.ta.Id,
+                EmployeeId = x.ta.EmployeeId,
+                TransactionTime = x.ta.TransactionTime,
+                TransactionType = x.ta.TransactionType,
+                EmployeeName = x.emp.FullName,
+                HierarchyName = x.h.Name,
+                HierarchyNameAr = x.h.NameAr
+            }).ToList();
         }
         public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
         {

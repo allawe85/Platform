@@ -1,0 +1,151 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.TimeAttendance
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@using System.Globalization
+@inject ITimeAttendanceService AttendanceService
+@inject IStringLocalizer<AppStrings> Loc
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<MudCard Style="height: 100%;">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">@Loc["Attendance"]</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent Class="d-flex flex-column justify-center align-center">
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            <div style="height: 250px; overflow-y: auto;" class="d-flex flex-column justify-center">
+                @if (todayAttendance == null)
+                {
+                    <MudText Align="Align.Center" Class="mb-4">@Loc["YouDidNotCheckInToday"]</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large" FullWidth="true" OnClick="CheckIn">@Loc["CheckIn"]</MudButton>
+                }
+                else if (todayAttendance.TransactionType == "IN")
+                {
+                    <MudText Align="Align.Center" Class="mb-1">@string.Format(Loc["YouCheckedInAt"], todayAttendance.TransactionTime.ToString("t"))</MudText>
+                    <MudText Align="Align.Center" Class="mb-4" Color="Color.Warning">@Loc["YouDidNotCheckOutToday"]</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large" FullWidth="true" OnClick="CheckOut">@Loc["CheckOut"]</MudButton>
+                }
+                else if (todayAttendance.TransactionType == "OUT")
+                {
+                    <MudText Align="Align.Center" Class="mb-4">@string.Format(Loc["TodayYouSpentAtWork"], duration)</MudText>
+                }
+            </div>
+        }
+    </MudCardContent>
+    <MudCardActions Class="justify-end">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/attendance/report"))">@Loc["ViewReport"]</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public int EmployeeId { get; set; }
+
+    private TimeAttendance todayAttendance; // The latest relevant record for today
+    private string duration = "";
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EmployeeId > 0)
+        {
+            await LoadAttendance();
+        }
+        else
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadAttendance()
+    {
+        isLoading = true;
+        try
+        {
+            var history = await AttendanceService.GetByEmployeeAsync(EmployeeId);
+            var today = DateTime.Today;
+            
+            // Get today's records sorted by time
+            var todaysRecords = history.Where(x => x.TransactionTime.Date == today)
+                                    .OrderBy(x => x.TransactionTime)
+                                    .ToList();
+
+            if (!todaysRecords.Any())
+            {
+                todayAttendance = null;
+            }
+            else
+            {
+                // Check if we have an OUT
+                var lastOut = todaysRecords.LastOrDefault(x => x.TransactionType == "OUT");
+                var firstIn = todaysRecords.FirstOrDefault(x => x.TransactionType == "IN");
+
+                if (lastOut != null && firstIn != null)
+                {
+                   todayAttendance = lastOut;
+                   var diff = lastOut.TransactionTime - firstIn.TransactionTime;
+                   duration = $"{diff.Hours}h {diff.Minutes}m";
+                }
+                else if (firstIn != null)
+                {
+                    todayAttendance = firstIn;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading attendance: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CheckIn()
+    {
+        try 
+        {
+            var newRecord = new TimeAttendance 
+            { 
+                EmployeeId = EmployeeId, 
+                TransactionTime = DateTime.Now,
+                TransactionType = "IN" 
+            };
+            await AttendanceService.CheckInAsync(newRecord);
+            Snackbar.Add(Loc["CheckInSuccess"], Severity.Success);
+            await LoadAttendance();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task CheckOut()
+    {
+        try 
+        {
+            var newRecord = new TimeAttendance 
+            { 
+                EmployeeId = EmployeeId, 
+                TransactionTime = DateTime.Now,
+                TransactionType = "OUT" 
+            };
+            await AttendanceService.CheckOutAsync(newRecord);
+            Snackbar.Add(Loc["CheckOutSuccess"], Severity.Success);
+            await LoadAttendance();
+        }
+        catch (Exception ex)
+        {
+             Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
+        }
+    }
+}

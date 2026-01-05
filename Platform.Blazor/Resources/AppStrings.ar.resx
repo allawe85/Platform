@@ -197,7 +197,7 @@
     <value>الرقم المدني</value>
   </data>
   <data name="EmployeeId" xml:space="preserve">
-    <value>رقم الموظف</value>
+    <value>الرقم الوظيفي</value>
   </data>
   <data name="Hierarchy" xml:space="preserve">
     <value>التسلسل الهرمي</value>
@@ -475,9 +475,7 @@
   <data name="GenerateReport" xml:space="preserve">
     <value>إنشاء التقرير</value>
   </data>
-  <data name="EmployeeID" xml:space="preserve">
-    <value>رقم الموظف</value>
-  </data>
+
   <data name="PleaseSelectDateRange" xml:space="preserve">
     <value>يرجى اختيار نطاق تاريخ</value>
   </data>
@@ -613,5 +611,26 @@
   <data name="CreateUserAccount" xml:space="preserve"><value>إنشاء حساب مستخدم</value></data>
   <data name="PleaseSelect" xml:space="preserve">
     <value>الرجاء الاختيار</value>
+  </data>
+  <data name="ID" xml:space="preserve">
+    <value>المعرف</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>التاريخ</value>
+  </data>
+  <data name="YouDidNotCheckInToday" xml:space="preserve">
+    <value>لم تقم بتسجيل الحضور اليوم</value>
+  </data>
+  <data name="YouCheckedInAt" xml:space="preserve">
+    <value>لقد سجلت الحضور في {0}</value>
+  </data>
+  <data name="YouDidNotCheckOutToday" xml:space="preserve">
+    <value>لم تقم بتسجيل الإنصراف اليوم</value>
+  </data>
+  <data name="TodayYouSpentAtWork" xml:space="preserve">
+    <value>قضيت اليوم {0} في العمل</value>
+  </data>
+  <data name="NoTeamMembersFound" xml:space="preserve">
+    <value>لم يتم العثور على أعضاء آخرين في الفريق.</value>
   </data>
 </root>

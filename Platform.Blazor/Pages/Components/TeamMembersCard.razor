@@ -1,0 +1,74 @@
+@using Platform.Data.DTOs
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+
+@inject IJSRuntime JSRuntime
+
+<MudCard Style="height: 100%;">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">@Loc["MyTeam"]</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent Class="pa-0">
+        <div style="height: 250px; overflow-y: auto;">
+            @if (_teamMembers != null && _teamMembers.Any())
+            {
+                <MudList T="EmployeeInfo" ReadOnly="true">
+                    @foreach (var member in _teamMembers)
+                    {
+                        <MudListItem>
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudAvatar Color="Color.Primary" Size="Size.Medium">
+                                    @(string.IsNullOrEmpty(member.FullName) ? "?" : member.FullName.Substring(0, 1).ToUpper())
+                                </MudAvatar>
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.body1">@member.FullName</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@member.Email</MudText>
+                                    @if (!string.IsNullOrEmpty(member.PhoneNumber))
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@member.PhoneNumber</MudText>
+                                    }
+                                </MudStack>
+                            </MudStack>
+                        </MudListItem>
+                        <MudDivider />
+                    }
+                </MudList>
+            }
+            else
+            {
+                 <div class="d-flex justify-center align-center h-100 pa-4">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@Loc["NoTeamMembersFound"]</MudText>
+                </div>
+            }
+        </div>
+    </MudCardContent>
+    <MudCardActions Class="justify-end">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@OpenOrgChartReadOnly">@Loc["ViewOrgChart"]</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public int HierarchyId { get; set; }
+    [Parameter] public int CurrentEmployeeId { get; set; }
+    [Parameter] public List<EmployeeInfo> Employees { get; set; } = new();
+
+    private List<EmployeeInfo> _teamMembers = new();
+
+    protected override void OnParametersSet()
+    {
+        if (Employees != null)
+        {
+            _teamMembers = Employees
+                .Where(e => e.HierarchyId == HierarchyId && e.Id != CurrentEmployeeId && e.HierarchyId != 0)
+                .ToList();
+        }
+    }
+
+    private async Task OpenOrgChartReadOnly()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "/hierarchy-viewer", "_blank");
+    }
+}

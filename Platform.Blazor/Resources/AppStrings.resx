@@ -194,7 +194,7 @@
     <value>Civil ID</value>
   </data>
   <data name="EmployeeId" xml:space="preserve">
-    <value>Employee ID</value>
+    <value>Employee Number</value>
   </data>
   <data name="Hierarchy" xml:space="preserve">
     <value>Hierarchy</value>
@@ -472,9 +472,7 @@
   <data name="GenerateReport" xml:space="preserve">
     <value>Generate Report</value>
   </data>
-  <data name="EmployeeID" xml:space="preserve">
-    <value>Employee ID</value>
-  </data>
+
   <data name="PleaseSelectDateRange" xml:space="preserve">
     <value>Please select a date range</value>
   </data>
@@ -621,5 +619,26 @@
   <data name="CreateUserAccount" xml:space="preserve"><value>Create User Account</value></data>
   <data name="PleaseSelect" xml:space="preserve">
     <value>Please Select</value>
+  </data>
+  <data name="ID" xml:space="preserve">
+    <value>ID</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="YouDidNotCheckInToday" xml:space="preserve">
+    <value>You did not check in today</value>
+  </data>
+  <data name="YouCheckedInAt" xml:space="preserve">
+    <value>You checked in at {0}</value>
+  </data>
+  <data name="YouDidNotCheckOutToday" xml:space="preserve">
+    <value>You did not check out today</value>
+  </data>
+  <data name="TodayYouSpentAtWork" xml:space="preserve">
+    <value>Today you spent {0} at work</value>
+  </data>
+  <data name="NoTeamMembersFound" xml:space="preserve">
+    <value>No other team members found.</value>
   </data>
 </root>

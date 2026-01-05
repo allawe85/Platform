@@ -49,37 +49,12 @@
 
     <!-- Cell 5: Attendance -->
     <MudItem xs="12" md="6" lg="4">
-        <MudCard Style="height: 100%;">
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">@Loc["Attendance"]</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent Class="d-flex flex-column justify-center align-center gap-4">
-                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Large" FullWidth="true" OnClick="CheckIn">@Loc["CheckIn"]</MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Large" FullWidth="true" OnClick="CheckOut">@Loc["CheckOut"]</MudButton>
-            </MudCardContent>
-            <MudCardActions Class="justify-end">
-                 <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/attendance/report"))">@Loc["ViewReport"]</MudButton>
-            </MudCardActions>
-        </MudCard>
+        <AttendanceCard EmployeeId="_employeeId" />
     </MudItem>
 
      <!-- Cell 6: Team -->
     <MudItem xs="12" md="6" lg="4">
-        <MudCard Style="height: 100%;">
-             <MudCardHeader>
-                 <CardHeaderContent>
-                     <MudText Typo="Typo.h6">@Loc["MyTeam"]</MudText>
-                 </CardHeaderContent>
-             </MudCardHeader>
-             <MudCardContent>
-                 <MudText>@Loc["TeamFeatureComingSoon"]</MudText>
-             </MudCardContent>
-             <MudCardActions Class="justify-end">
-                  <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@OpenOrgChartReadOnly">@Loc["ViewOrgChart"]</MudButton>
-             </MudCardActions>
-         </MudCard>
+        <TeamMembersCard HierarchyId="_hierarchyId" CurrentEmployeeId="_employeeId" Employees="_employees" />
     </MudItem>
 
 </MudGrid>
@@ -87,11 +62,13 @@
 @code {
     private string _currentEmployeeName = "";
     private int _employeeId = 0;
+    private int _hierarchyId = 0;
     private List<Announcement> _announcements;
     private List<Event> _events;
     private List<Poll> _polls;
     private List<LeaveBalance> _balances;
     private List<LeaveType> _leaveTypes;
+    private List<EmployeeInfo> _employees;
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,17 +96,18 @@
         {
             try {
                 // Wrap in try-catch as GetAllEmployeesAsync might fail if API is down
-                var employees = await EmployeesService.GetAllEmployeesAsync();
+                _employees = await EmployeesService.GetAllEmployeesAsync();
                 
                 // Debugging: Log the user ID we are looking for
                 Console.WriteLine($"[EmployeeHome] Looking for AspnetusersId: {userId}");
                 
-                var emp = employees.FirstOrDefault(e => string.Equals(e.AspnetusersId, userId, StringComparison.OrdinalIgnoreCase));
+                var emp = _employees.FirstOrDefault(e => string.Equals(e.AspnetusersId, userId, StringComparison.OrdinalIgnoreCase));
                 
                 if (emp != null)
                 {
                     _employeeId = emp.Id;
                     _currentEmployeeName = emp.FullName;
+                    _hierarchyId = emp.HierarchyId;
                 }
                 else
                 {
@@ -137,6 +115,12 @@
                     // Fallback to Employee 1 to ensure data visibility during testing/demo, similar to MyLeaves.
                     _employeeId = 1; 
                     _currentEmployeeName = "Admin/Test User";
+                    // Try to finding fallback employee to set hierarchy ID for testing
+                    var fallbackEmp = _employees.FirstOrDefault(e => e.Id == 1);
+                     if (fallbackEmp != null)
+                    {
+                        _hierarchyId = fallbackEmp.HierarchyId;
+                    }
                 }
             } catch (Exception ex) {
                 Console.WriteLine($"[EmployeeHome] Error loading user: {ex.Message}");
@@ -214,15 +198,7 @@
         return type?.Name ?? $"Type {b.LeaveTypeId}";
     }
 
-    private void CheckIn()
-    {
-        Nav.NavigateTo("/attendance/checkin");
-    }
 
-    private void CheckOut()
-    {
-        Nav.NavigateTo("/attendance/checkin"); 
-    }
 
     private async Task OpenOrgChartReadOnly()
     {
