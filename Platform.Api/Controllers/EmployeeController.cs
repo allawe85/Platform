@@ -266,14 +266,70 @@ namespace Platform.Api.Controllers
         [Route("{id:int}")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
-            // Optional: Check if we should delete the user too. 
-            // For now, implementing standard Employee delete.
-            var deleted = await _context.DeleteEmployeeAsync(id);
+            var employee = await _context.Employees.FindAsync(id);
+            if (employee == null) return NotFound("Employee not found");
 
-            if (!deleted)
-                return NotFound();
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // 1. Delete Leaves and Balances
+                var leaves = _context.Leaves.Where(x => x.EmployeeId == id);
+                _context.Leaves.RemoveRange(leaves);
 
-             return NoContent();
+                var balances = _context.LeaveBalances.Where(x => x.EmployeeId == id);
+                _context.LeaveBalances.RemoveRange(balances);
+
+                // 2. Delete Assets
+                var assets = _context.Assets.Where(x => x.EmployeeId == id);
+                _context.Assets.RemoveRange(assets);
+
+                // 3. Delete Documents
+                var documents = _context.Documents.Where(x => x.EmployeeId == id);
+                _context.Documents.RemoveRange(documents);
+
+                // 4. Delete Poll Votes
+                var votes = _context.PollVotes.Where(x => x.EmployeeId == id);
+                _context.PollVotes.RemoveRange(votes);
+
+                // 5. Delete Time Attendance
+                var attendance = _context.TimeAttendances.Where(x => x.EmployeeId == id);
+                _context.TimeAttendances.RemoveRange(attendance);
+
+                await _context.SaveChangesAsync();
+
+                
+                // Fetch User Account before deleting Employee (so we don't lose the ID refs if needed, though variable 'employee' holds it)
+                ApplicationUser? userToDelete = null;
+                if (!string.IsNullOrEmpty(employee.AspnetusersId))
+                {
+                    userToDelete = await _userManager.FindByIdAsync(employee.AspnetusersId);
+                }
+
+                // 6. Delete Employee (Must be deleted BEFORE User because of FK)
+                _context.Employees.Remove(employee);
+                await _context.SaveChangesAsync();
+
+                // 7. Delete User Account
+                if (userToDelete != null)
+                {
+                    var result = await _userManager.DeleteAsync(userToDelete);
+                    if (!result.Succeeded)
+                    {
+                        // Since we already deleted the employee, failing to delete the user leaves an orphaned user.
+                        // But we are in a transaction, so rolling back should restore the employee.
+                        await transaction.RollbackAsync();
+                        return BadRequest($"Failed to delete user account: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                    }
+                }
+
+                await transaction.CommitAsync();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpPost]

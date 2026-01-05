@@ -11,6 +11,7 @@
 @inject LayoutService LayoutService
 @implements IDisposable
 @inject IStringLocalizer<AppStrings> Loc
+@inject Platform.Blazor.Services.Employees.IEmployeesService EmployeesService
 
 <MudLayout>
     <style>
@@ -20,10 +21,7 @@
         .mud-drawer.mud-drawer-fixed {
             top: 100px !important;
         }
-        /* Boost Popover Z-Index to be above Dialogs (1400) */
-        :root {
-            --mud-zindex-popover: 2000 !important;
-        }
+
         .mud-nav-link-text {
             font-weight: 700 !important;
             font-size: 1.1rem !important;
@@ -53,7 +51,13 @@
         <MudSpacer />
         @if (!string.IsNullOrEmpty(_username))
         {
-            <MudText Class="mr-4" Style="font-size: 1.2rem; font-weight: 700;">@Loc["Welcome"], @_username</MudText>
+            <MudStack Spacing="0" Class="mr-4" AlignItems="AlignItems.End">
+                <MudText Style="font-size: 1.2rem; font-weight: 700;">@Loc["Welcome"], @_username</MudText>
+                @if (!string.IsNullOrEmpty(_userRole))
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Text" Class="ma-0">@_userRole</MudChip>
+                }
+            </MudStack>
             <MudIconButton Icon="@(LayoutService.IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" Color="Color.Inherit" OnClick="ToggleDarkMode" Size="Size.Large" />
             <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" OnClick="ToggleLanguage" Size="Size.Large" />
         }
@@ -115,19 +119,71 @@
     bool _drawerOpen = true;
     bool _isEmployee = false;
     string? _username;
+    string? _userRole;
     MudThemeProvider _mudThemeProvider;
 
-    protected override async Task OnInitializedAsync()
+     protected override async Task OnInitializedAsync()
     {
         LayoutService.OnMajorUpdate += StateHasChanged;
         var state = await AuthStateProvider.GetAuthenticationStateAsync();
         var user = state.User;
         _username = user.Identity?.Name;
+        
+        // Try to get employee name
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            try
+            {
+                var employeeIdClaim = user.FindFirst(c => c.Type == "EmployeeId")?.Value;
+                if (!string.IsNullOrEmpty(employeeIdClaim) && int.TryParse(employeeIdClaim, out var empId))
+                {
+                    var emp = await EmployeesService.GetEmployeeInfoByIdAsync(empId);
+                    if (emp != null)
+                    {
+                        _username = emp.FullName;
+                        if (!string.IsNullOrEmpty(emp.Role))
+                        {
+                            _userRole = emp.Role;
+                        }
+                        return; // Found and set
+                    }
+                }
+
+                // Fallback using User ID (sub)
+                var userId = user.FindFirst(c => c.Type == "sub")?.Value 
+                             ?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                             
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var allEmployees = await EmployeesService.GetAllEmployeesAsync();
+                    var linkedEmployee = allEmployees.FirstOrDefault(e => e.AspnetusersId == userId);
+                    if (linkedEmployee != null)
+                    {
+                        _username = linkedEmployee.FullName;
+                        if (!string.IsNullOrEmpty(linkedEmployee.Role))
+                        {
+                            _userRole = linkedEmployee.Role;
+                        }
+                    }
+                }
+            }
+            catch {}
+        }
 
         if (user.IsInRole("Employee") && !user.IsInRole("Admin") && !user.IsInRole("HR"))
         {
             _isEmployee = true;
             _drawerOpen = false;
+        }
+
+        // Get Role from claims if not found via employee
+        if (string.IsNullOrEmpty(_userRole))
+        {
+             var roleClaim = user.FindFirst(ClaimTypes.Role) ?? user.FindFirst("role");
+             if (roleClaim != null)
+             {
+                 _userRole = roleClaim.Value;
+             }
         }
     }
 

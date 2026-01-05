@@ -1,10 +1,13 @@
 @page "/my-leaves"
-@layout HomeLayout
+@layout MainLayout
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.Leaves
+@using System.Security.Claims
+@using MudBlazor
 @inject LeaveService LeaveService
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
 <MudText Typo="Typo.h5" GutterBottom="true">@Loc["MyLeaves"]</MudText>
 
@@ -83,19 +86,41 @@
     private List<Leave> MyLeavesList;
     private List<LeaveType> LeaveTypes = new();
     
-    // Hardcoded for now
-    private int CurrentEmployeeId = 1; 
+    private int CurrentEmployeeId; 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
-        LeaveTypes = await LeaveService.GetLeaveTypes();
+        var authState = await AuthState;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var employeeIdClaim = user.FindFirst("EmployeeId");
+            if (employeeIdClaim != null && int.TryParse(employeeIdClaim.Value, out int empId))
+            {
+                CurrentEmployeeId = empId;
+                await LoadData();
+                LeaveTypes = await LeaveService.GetLeaveTypes();
+            }
+            else
+            {
+                // Handle case where user is logged in but has no linked employee
+                // Handle case where user is logged in but has no linked employee
+                // It is possible the token is stale (from before the fix), so suggest relogin.
+                Snackbar.Add("Account not linked to employee record. Please Log Out and Log In again.", Severity.Warning);
+            }
+        }
     }
 
     private async Task LoadData()
     {
-        Balances = await LeaveService.GetMyBalances(CurrentEmployeeId);
-        MyLeavesList = await LeaveService.GetMyLeavesAndRequests(CurrentEmployeeId);
+        if(CurrentEmployeeId > 0)
+        {
+             Balances = await LeaveService.GetMyBalances(CurrentEmployeeId);
+             MyLeavesList = await LeaveService.GetMyLeavesAndRequests(CurrentEmployeeId);
+        }
     }
 
     private async Task OpenRequestDialog()

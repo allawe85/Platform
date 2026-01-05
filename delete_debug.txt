@@ -1,0 +1,20 @@
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 127.0.0.1:5228...
+* Connected to 127.0.0.1 (127.0.0.1) port 5228
+> DELETE /api/employees/19 HTTP/1.1
+> Host: 127.0.0.1:5228
+> User-Agent: curl/8.7.1
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 500 Internal Server Error
+< Content-Type: text/plain; charset=utf-8
+< Date: Mon, 05 Jan 2026 10:11:12 GMT
+< Server: Kestrel
+< Transfer-Encoding: chunked
+< 
+{ [308 bytes data]
+100   301    0   301    0     0    405      0 --:--:-- --:--:-- --:--:--   405100   301    0   301    0     0    404      0 --:--:-- --:--:-- --:--:--   404
+* Connection #0 to host 127.0.0.1 left intact
+Internal server error: An error occurred while saving the entity changes. See the inner exception for details. Inner: The DELETE statement conflicted with the REFERENCE constraint "FK_employee_AspNetUsers". The conflict occurred in database "PlatformDB", table "dbo.employee", column 'aspnetusers_id'.

@@ -14,13 +14,13 @@ namespace Platform.Data.DTOs
         public int? EmployeeId { get; set; }
 
         [ForeignKey(nameof(EmployeeId))]
-        public Employee Employee { get; set; }
+        public Employee? Employee { get; set; }
 
         [Column("leave_type_id")]
         public int? LeaveTypeId { get; set; }
 
         [ForeignKey(nameof(LeaveTypeId))]
-        public LeaveType LeaveType { get; set; }
+        public LeaveType? LeaveType { get; set; }
 
         [Column("balance")]
         public int? Balance { get; set; }

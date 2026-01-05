@@ -21,10 +21,10 @@
                     <MudTextField @bind-Value="_employee.CivilId" Label="@Loc["CivilId"]" Required="true" RequiredError="@Loc["CivilIdRequired"]" />
                     <MudTextField @bind-Value="_employee.EmployeeId" Label="@Loc["EmployeeId"]" Required="true" RequiredError="@Loc["EmployeeIdRequired"]" />
                     
-                    <MudSelect T="int" @bind-Value="_employee.HierarchyId" Label="@Loc["Hierarchy"]" Required="true" AnchorOrigin="Origin.BottomCenter" PopoverClass="role-select-popover">
+                    <MudSelect T="int?" Value="@(_employee.HierarchyId == 0 ? (int?)null : _employee.HierarchyId)" ValueChanged="@(val => _employee.HierarchyId = val ?? 0)" Label="@Loc["Hierarchy"]" Required="true" AnchorOrigin="Origin.BottomCenter" Placeholder="@Loc["PleaseSelect"]">
                         @foreach (var hierarchy in _hierarchies)
                         {
-                            <MudSelectItem Value="@hierarchy.Id">@hierarchy.Name</MudSelectItem>
+                            <MudSelectItem T="int?" Value="@((int?)hierarchy.Id)">@hierarchy.Name</MudSelectItem>
                         }
                     </MudSelect>
 
@@ -47,16 +47,37 @@
                             <MudTextField @bind-Value="_password" Label="@Loc["Password"]" InputType="InputType.Password" Required="@(_createUserAccount)" />
                         }
 
-                         <MudSelect T="string" @bind-Value="_role" Label="@Loc["Role"]" Required="@(_createUserAccount)" AnchorOrigin="Origin.BottomCenter" PopoverClass="role-select-popover">
+                         <MudSelect T="string" @bind-Value="_role" Label="@Loc["Role"]" Required="@(_createUserAccount)" AnchorOrigin="Origin.BottomCenter" Placeholder="@Loc["PleaseSelect"]">
                             @foreach (var r in _roles)
                             {
                                 <MudSelectItem Value="@r">@r</MudSelectItem>
                             }
                         </MudSelect>
+                        
+                         @if (_isEdit)
+                         {
+                             <MudDivider Class="my-2"/>
+                             <MudCheckBox @bind-Value="_linkExistingAccount" Label="@Loc["ChangeLinkedUser"]" Color="Color.Secondary" Dense="true" />
+                         }
                     }
-                    else if (_isEdit && !_hasUserAccount)
+                    
+                    @if (_isEdit && (!_hasUserAccount || _linkExistingAccount))
                     {
-                         <MudAlert Severity="Severity.Info" Dense="true">@Loc["NoUserAccountLinked"]</MudAlert>
+                         @if (!_hasUserAccount && !_linkExistingAccount)
+                         {
+                              <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">@Loc["NoUserAccountLinked"]</MudAlert>
+                              <MudCheckBox @bind-Value="_linkExistingAccount" Label="@Loc["LinkExistingAccount"]" Color="Color.Primary" Dense="true" />
+                         }
+                         
+                         @if (_linkExistingAccount)
+                         {
+                             <MudAutocomplete T="ApplicationUser" Label="@Loc["SelectUser"]" @bind-Value="_selectedUser"
+                                              SearchFunc="@SearchUsers" ToStringFunc="@(u => u==null ? null : $"{u.Email} ({u.UserName})")"
+                                              ResetValueOnEmptyText="true"
+                                              CoerceText="true" CoerceValue="true"
+                                              Required="true" RequiredError="@Loc["UserRequired"]"
+                                              AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Primary" />
+                         }
                     }
 
 
@@ -85,11 +106,7 @@
     </DialogActions>
 </MudDialog>
 
-<style>
-    .role-select-popover {
-        z-index: 10000 !important;
-    }
-</style>
+
 
 @code {
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
@@ -104,6 +121,8 @@
     
     // User fields
     private bool _createUserAccount;
+    private bool _linkExistingAccount;
+    private List<ApplicationUser> _allUsers = new();
     private bool _hasUserAccount;
     private string _userName;
     private string _email;
@@ -164,8 +183,38 @@
             .Where(r => !string.Equals(r, "Admin", StringComparison.OrdinalIgnoreCase) || string.Equals(_role, "Admin", StringComparison.OrdinalIgnoreCase))
             .ToList();
             
+        // Load all users for linking consideration
+        if (_isEdit)
+        {
+            _allUsers = await UsersService.GetAllUsersAsync();
+        }
+
         StateHasChanged();
     }
+
+    private async Task<IEnumerable<ApplicationUser>> SearchUsers(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return _allUsers;
+        return _allUsers.Where(x => x.Email.Contains(value, StringComparison.InvariantCultureIgnoreCase) || x.UserName.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+    
+    private ApplicationUser _selectedUser
+    {
+        get => __selectedUser;
+        set
+        {
+            __selectedUser = value;
+            if (value != null)
+            {
+                _employee.AspnetusersId = value.Id;
+                _userName = value.UserName;
+                _email = value.Email;
+                _phoneNumber = value.PhoneNumber;
+            }
+        }
+    }
+    private ApplicationUser __selectedUser;
 
     private async Task Submit()
     {

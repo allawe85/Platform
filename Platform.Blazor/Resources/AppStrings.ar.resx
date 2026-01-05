@@ -83,7 +83,7 @@
     <value>الحسابات</value>
   </data>
   <data name="Configurations" xml:space="preserve">
-    <value>الأصول</value>
+    <value>العهد</value>
   </data>
   <data name="AssetStatuses" xml:space="preserve">
     <value>حالات العهد</value>
@@ -236,22 +236,22 @@
     <value>غير معين</value>
   </data>
   <data name="AssetStatusesTitle" xml:space="preserve">
-    <value>حالات الأصول</value>
+    <value>حالات العهد</value>
   </data>
   <data name="AssetsManagementTitle" xml:space="preserve">
-    <value>إدارة الأصول</value>
+    <value>إدارة العهد</value>
   </data>
   <data name="EmployeesManagementTitle" xml:space="preserve">
     <value>إدارة الموظفين</value>
   </data>
   <data name="AllAssets" xml:space="preserve">
-    <value>جميع الأصول</value>
+    <value>جميع العهد</value>
   </data>
   <data name="Statuses" xml:space="preserve">
     <value>الحالات</value>
   </data>
   <data name="AssetTypesTitle" xml:space="preserve">
-    <value>أنواع الأصول</value>
+    <value>أنواع العهد</value>
   </data>
   <data name="DocumentTypesTitle" xml:space="preserve">
     <value>أنواع المستندات</value>
@@ -507,13 +507,13 @@
   <data name="CivilIdRequired" xml:space="preserve"><value>الرقم المدني مطلوب!</value></data>
   <data name="EmployeeIdRequired" xml:space="preserve"><value>رقم الموظف مطلوب!</value></data>
   <data name="InitialLeaveBalances" xml:space="preserve"><value>أرصدة الإجازات الأولية</value></data>
-  <data name="AddAsset" xml:space="preserve"><value>إضافة أصل</value></data>
-  <data name="EditAsset" xml:space="preserve"><value>تعديل أصل</value></data>
-  <data name="AssetType" xml:space="preserve"><value>نوع الأصل</value></data>
+  <data name="AddAsset" xml:space="preserve"><value>إضافة عهدة</value></data>
+  <data name="EditAsset" xml:space="preserve"><value>تعديل عهدة</value></data>
+  <data name="AssetType" xml:space="preserve"><value>نوع العهدة</value></data>
   <data name="AssignedEmployee" xml:space="preserve"><value>الموظف المعين</value></data>
-  <data name="AssetCreated" xml:space="preserve"><value>تم إنشاء الأصل بنجاح</value></data>
-  <data name="AssetUpdated" xml:space="preserve"><value>تم تحديث الأصل بنجاح</value></data>
-  <data name="AssetDeleted" xml:space="preserve"><value>تم حذف الأصل</value></data>
+  <data name="AssetCreated" xml:space="preserve"><value>تم إنشاء العهدة بنجاح</value></data>
+  <data name="AssetUpdated" xml:space="preserve"><value>تم تحديث العهدة بنجاح</value></data>
+  <data name="AssetDeleted" xml:space="preserve"><value>تم حذف العهدة</value></data>
   <data name="AddDocument" xml:space="preserve"><value>إضافة مستند</value></data>
   <data name="EditDocument" xml:space="preserve"><value>تعديل مستند</value></data>
   <data name="DocumentType" xml:space="preserve"><value>نوع المستند</value></data>
@@ -600,4 +600,18 @@
   <data name="VoteNow" xml:space="preserve"><value>صوت الآن</value></data>
   <data name="NeedsVoting" xml:space="preserve"><value>بانتظار التصويت</value></data>
   <data name="Balances" xml:space="preserve"><value>الأرصدة</value></data>
+  <data name="LeaveOverview" xml:space="preserve"><value>ملخص الإجازات</value></data>
+  <data name="Taken" xml:space="preserve"><value>المستخدم</value></data>
+  <data name="DaysRemaining" xml:space="preserve"><value>أيام متبقية</value></data>
+  <data name="DaysTaken" xml:space="preserve"><value>أيام مستخدمة</value></data>
+  <data name="Total" xml:space="preserve"><value>الإجمالي</value></data>
+  <data name="ChangeLinkedUser" xml:space="preserve"><value>تغيير المستخدم المرتبط</value></data>
+  <data name="LinkExistingAccount" xml:space="preserve"><value>ربط حساب موجود</value></data>
+  <data name="SelectUser" xml:space="preserve"><value>اختر المستخدم</value></data>
+  <data name="UserRequired" xml:space="preserve"><value>المستخدم مطلوب</value></data>
+  <data name="NoUserAccountLinked" xml:space="preserve"><value>لا يوجد حساب مستخدم مرتبط</value></data>
+  <data name="CreateUserAccount" xml:space="preserve"><value>إنشاء حساب مستخدم</value></data>
+  <data name="PleaseSelect" xml:space="preserve">
+    <value>الرجاء الاختيار</value>
+  </data>
 </root>

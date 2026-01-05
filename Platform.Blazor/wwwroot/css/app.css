@@ -252,3 +252,8 @@ code {
         display: none;
     }
 }
+
+/* Fix for MudBlazor popovers appearing behind dialogs */
+.mud-popover {
+    z-index: 20000 !important;
+}

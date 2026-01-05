@@ -608,4 +608,18 @@
   <data name="WelcomeBack" xml:space="preserve"><value>Welcome Back</value></data>
   <data name="Balances" xml:space="preserve"><value>Balances</value></data>
   <data name="ViewCalendar" xml:space="preserve"><value>View Calendar</value></data>
+  <data name="LeaveOverview" xml:space="preserve"><value>Leave Overview</value></data>
+  <data name="Taken" xml:space="preserve"><value>Taken</value></data>
+  <data name="DaysRemaining" xml:space="preserve"><value>Days Remaining</value></data>
+  <data name="DaysTaken" xml:space="preserve"><value>Days Taken</value></data>
+  <data name="Total" xml:space="preserve"><value>Total</value></data>
+  <data name="ChangeLinkedUser" xml:space="preserve"><value>Change Linked User</value></data>
+  <data name="LinkExistingAccount" xml:space="preserve"><value>Link Existing Account</value></data>
+  <data name="SelectUser" xml:space="preserve"><value>Select User</value></data>
+  <data name="UserRequired" xml:space="preserve"><value>User is required</value></data>
+  <data name="NoUserAccountLinked" xml:space="preserve"><value>No user account linked</value></data>
+  <data name="CreateUserAccount" xml:space="preserve"><value>Create User Account</value></data>
+  <data name="PleaseSelect" xml:space="preserve">
+    <value>Please Select</value>
+  </data>
 </root>

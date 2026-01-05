@@ -2,6 +2,7 @@
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.Assets
 @using Platform.Blazor.Pages.HR.Assets.Components
+@using System.Globalization
 @inject IAssetsService AssetsService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -27,8 +28,8 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="@Loc["Details"]">@context.Details</MudTd>
-        <MudTd DataLabel="@Loc["Type"]">@context.AssetType?.Name</MudTd>
-        <MudTd DataLabel="@Loc["Status"]">@context.Status?.Name</MudTd>
+        <MudTd DataLabel="@Loc["Type"]">@((CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(context.AssetType?.NameAr)) ? context.AssetType?.NameAr : context.AssetType?.Name)</MudTd>
+        <MudTd DataLabel="@Loc["Status"]">@((CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(context.Status?.NameAr)) ? context.Status?.NameAr : context.Status?.Name)</MudTd>
         <MudTd DataLabel="@Loc["AssignedTo"]">@(@context.Employee != null ? $"{context.Employee.CivilId} - {context.Employee.EmployeeId}" : Loc["Unassigned"])</MudTd>
         <MudTd DataLabel="@Loc["ReceiveDate"]">@context.ReceiveDate.ToShortDateString()</MudTd>
         <MudTd DataLabel="@Loc["ReturnDate"]">@(context.ReturnDate?.ToShortDateString())</MudTd>

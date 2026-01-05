@@ -2,6 +2,7 @@
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.Documents
 @using Platform.Blazor.Pages.HR.Documents.Components
+@using System.Globalization
 @inject IDocumentsService DocumentsService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -26,7 +27,7 @@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="@Loc["Title"]">@context.Title</MudTd>
-        <MudTd DataLabel="@Loc["Type"]">@context.DocumentType?.Name</MudTd>
+        <MudTd DataLabel="@Loc["Type"]">@((CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(context.DocumentType?.NameAr)) ? context.DocumentType?.NameAr : context.DocumentType?.Name)</MudTd>
         <MudTd DataLabel="@Loc["AssignedTo"]">@(@context.Employee != null ? $"{context.Employee.CivilId} - {context.Employee.EmployeeId}" : Loc["Unassigned"])</MudTd>
         <MudTd DataLabel="@Loc["ExpiryDate"]">
             @if (context.ExpiryDate < DateTime.Today.AddDays(30))

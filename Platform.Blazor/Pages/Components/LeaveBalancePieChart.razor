@@ -1,0 +1,136 @@
+@using Platform.Data.DTOs
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@inject NavigationManager Nav
+
+<MudCard Style="height: 100%;">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">@Loc["LeaveOverview"]</MudText>
+        </CardHeaderContent>
+         <CardHeaderActions>
+             <!-- Button moved to bottom -->
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Balances == null)
+        {
+             <MudProgressCircular Indeterminate="true" Class="mx-auto my-4" />
+        }
+        else if (!Balances.Any())
+        {
+             <MudText Align="Align.Center" Class="ma-4">@Loc["NoBalancesFound"]</MudText>
+        }
+        else
+        {
+             <MudStack Spacing="2">
+                 <MudSelect T="LeaveBalance" Value="_selectedBalance" ValueChanged="OnBalanceSelected" Variant="Variant.Outlined" Dense="true" AnchorOrigin="Origin.BottomCenter">
+                     @foreach(var b in Balances)
+                    {
+                        var name = GetLeaveTypeName(b);
+                         <MudSelectItem Value="@b">@name</MudSelectItem>
+                    }
+                 </MudSelect>
+
+                 @if (_selectedBalance != null)
+                 {
+                     <div class="d-flex justify-center align-center flex-column mt-2">
+                        <MudChart ChartType="ChartType.Pie" InputData="@GetChartData()" InputLabels="@GetChartLabels()" Width="160px" Height="160px" />
+                        
+                        <MudText Typo="Typo.subtitle1" Class="mt-2" Align="Align.Center">
+                            <b>@_selectedBalance.Balance</b> @Loc["DaysRemaining"] / @GetTotalDays(_selectedBalance) @Loc["Total"]
+                        </MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">
+                            @GetTakenDays(_selectedBalance) @Loc["DaysTaken"]
+                        </MudText>
+                     </div>
+                 }
+             </MudStack>
+        }
+    </MudCardContent>
+    <MudCardActions Class="justify-end">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="NavigateToRequest">
+            @Loc["NewRequest"]
+        </MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public List<LeaveBalance> Balances { get; set; }
+    [Parameter] public List<LeaveType> LeaveTypes { get; set; }
+
+    private LeaveBalance _selectedBalance;
+
+    protected override void OnParametersSet()
+    {
+        if (Balances != null && Balances.Any())
+        {
+            // Default to selection if not set, or if selection no longer exists
+            if (_selectedBalance == null || !Balances.Contains(_selectedBalance))
+            {
+                // Try to find Annual Leave first, else take first
+                _selectedBalance = Balances.FirstOrDefault(b => GetLeaveTypeName(b).Contains("Annual", StringComparison.OrdinalIgnoreCase)) ?? Balances.First();
+            }
+        }
+    }
+
+    private void OnBalanceSelected(LeaveBalance balance)
+    {
+        _selectedBalance = balance;
+        StateHasChanged();
+    }
+
+    private string GetLeaveTypeName(LeaveBalance b)
+    {
+        if (b.LeaveType != null) return System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(b.LeaveType.NameAr) ? b.LeaveType.NameAr : b.LeaveType.Name;
+        
+        var type = LeaveTypes?.FirstOrDefault(t => t.Id == b.LeaveTypeId);
+        if (type != null)
+        {
+             return System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(type.NameAr) ? type.NameAr : type.Name;
+        }
+        
+        return $"Type {b.LeaveTypeId}";
+    }
+
+    private int GetTotalDays(LeaveBalance b)
+    {
+        if (b.LeaveType != null) {
+            return b.LeaveType.TypeBalance ?? 0;
+        }
+        var type = LeaveTypes?.FirstOrDefault(t => t.Id == b.LeaveTypeId);
+        return type?.TypeBalance ?? 0;
+    }
+
+    private int GetTakenDays(LeaveBalance b)
+    {
+        var total = GetTotalDays(b);
+        var bal = b.Balance ?? 0;
+        return Math.Max(0, total - bal);
+    }
+
+    private double[] GetChartData()
+    {
+        if (_selectedBalance == null) return new double[] { };
+
+        // [Taken, Remaining]
+        double remaining = (double)(_selectedBalance.Balance ?? 0);
+        double taken = (double)GetTakenDays(_selectedBalance);
+        
+        // Handle edge case where total is 0
+        if (remaining + taken == 0) return new double[] { 1 }; // Empty grey circle? or just empty
+
+        return new double[] { taken, remaining };
+    }
+
+    private string[] GetChartLabels()
+    {
+        return new string[] { Loc["Taken"], Loc["Balance"] };
+    }
+    
+    private void NavigateToRequest()
+    {
+        Nav.NavigateTo("/my-leaves");
+    }
+}

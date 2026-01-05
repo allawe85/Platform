@@ -1,4 +1,5 @@
 @using Platform.Data.DTOs
+@using System.Globalization
 @using Platform.Blazor.Services.Documents
 @using Platform.Blazor.Services.Lookups
 @using Platform.Blazor.Services.Employees
@@ -16,17 +17,17 @@
                 <MudTextField @bind-Value="_document.Title" Label="@Loc["Title"]" Required="true" />
                 <MudTextField @bind-Value="_document.Details" Label="@Loc["Details"]" Lines="3" />
                 
-                <MudSelect T="int" @bind-Value="_document.DocumentTypeId" Label="@Loc["DocumentType"]" Required="true" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect T="int?" Value="@(_document.DocumentTypeId == 0 ? (int?)null : _document.DocumentTypeId)" ValueChanged="@(val => _document.DocumentTypeId = val ?? 0)" Label="@Loc["DocumentType"]" Required="true" AnchorOrigin="Origin.BottomCenter" Placeholder="@Loc["PleaseSelect"]">
                     @foreach (var type in _documentTypes)
                     {
-                        <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)type.Id)">@(CultureInfo.CurrentCulture.Name.StartsWith("ar") ? type.NameAr : type.Name)</MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudSelect T="int" @bind-Value="_document.EmployeeId" Label="@Loc["AssignedEmployee"]" Required="true" AnchorOrigin="Origin.BottomCenter" Disabled="@(_fixedEmployee)">
+                <MudSelect T="int?" Value="@(_document.EmployeeId == 0 ? (int?)null : _document.EmployeeId)" ValueChanged="@(val => _document.EmployeeId = val ?? 0)" Label="@Loc["AssignedEmployee"]" Required="true" AnchorOrigin="Origin.BottomCenter" Disabled="@(_fixedEmployee)" Placeholder="@Loc["PleaseSelect"]">
                     @foreach (var emp in _employees)
                     {
-                        <MudSelectItem Value="@emp.Id">@emp.CivilId - @emp.EmployeeId</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)emp.Id)">@emp.FullName</MudSelectItem>
                     }
                 </MudSelect>
 
@@ -63,6 +64,11 @@
     {
         if (Visible)
         {
+            if (!_documentTypes.Any() || !_employees.Any())
+            {
+               await LoadLookups();
+            }
+
             if (DocumentId.HasValue)
             {
                 var doc = await DocumentsService.GetDocumentByIdAsync(DocumentId.Value);
@@ -85,7 +91,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task LoadLookups()
     {
         var typesTask = LookupsService.GetDocumentTypesAsync();
         var employeesTask = EmployeesService.GetAllEmployeesAsync();
@@ -94,6 +100,11 @@
 
         _documentTypes = await typesTask;
         _employees = await employeesTask;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookups();
     }
 
     private async Task Submit()

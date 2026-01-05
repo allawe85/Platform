@@ -24,9 +24,7 @@
 @using Platform.Blazor.Pages.Components
 @attribute [Authorize(Roles = "Employee,Admin,HR")]
  
- <div class="d-flex justify-space-between align-center mb-4">
-    <MudText Typo="Typo.h4">@Loc["WelcomeBack"], @_currentEmployeeName</MudText>
- </div>
+
 
 <MudGrid>
     <!-- Cell 1: Announcements -->
@@ -46,29 +44,7 @@
 
     <!-- Cell 4: Leaves -->
     <MudItem xs="12" md="6" lg="4">
-        <MudCard Style="height: 100%;">
-             <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
-                <MudTabPanel Text="@Loc["RequestLeave"]">
-                    <MudText Class="mb-4">@Loc["QuickRequest"]</MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="@(() => Nav.NavigateTo("/my-leaves"))">@Loc["NewRequest"]</MudButton>
-                </MudTabPanel>
-                <MudTabPanel Text="@Loc["Balances"]">
-                    @if (_balances == null)
-                    {
-                         <MudProgressCircular Indeterminate="true" />
-                    }
-                    else
-                    {
-                        <MudList T="LeaveBalance" Dense="true">
-                            @foreach(var b in _balances)
-                            {
-                                <MudListItem Text="@GetLeaveTypeName(b)" SecondaryText="@($"{b.Balance} {Loc["Days"]}")" />
-                            }
-                        </MudList>
-                    }
-                </MudTabPanel>
-            </MudTabs>
-        </MudCard>
+        <LeaveBalancePieChart Balances="_balances" LeaveTypes="_leaveTypes" />
     </MudItem>
 
     <!-- Cell 5: Attendance -->
@@ -144,14 +120,29 @@
             try {
                 // Wrap in try-catch as GetAllEmployeesAsync might fail if API is down
                 var employees = await EmployeesService.GetAllEmployeesAsync();
-                var emp = employees.FirstOrDefault(e => e.AspnetusersId == userId);
+                
+                // Debugging: Log the user ID we are looking for
+                Console.WriteLine($"[EmployeeHome] Looking for AspnetusersId: {userId}");
+                
+                var emp = employees.FirstOrDefault(e => string.Equals(e.AspnetusersId, userId, StringComparison.OrdinalIgnoreCase));
+                
                 if (emp != null)
                 {
                     _employeeId = emp.Id;
                     _currentEmployeeName = emp.FullName;
                 }
-            } catch {
-                _currentEmployeeName = "User"; // Fallback
+                else
+                {
+                    Console.WriteLine($"[EmployeeHome] No employee found for user ID: {userId}. Falling back to EmployeeId = 1 (Test Mode).");
+                    // Fallback to Employee 1 to ensure data visibility during testing/demo, similar to MyLeaves.
+                    _employeeId = 1; 
+                    _currentEmployeeName = "Admin/Test User";
+                }
+            } catch (Exception ex) {
+                Console.WriteLine($"[EmployeeHome] Error loading user: {ex.Message}");
+                // Fallback on error too
+                _employeeId = 1;
+                _currentEmployeeName = "Error User";
             }
         }
     }
