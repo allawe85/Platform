@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Platform.Data.DTOs;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +16,24 @@ namespace Platform.Data
         // No Singltone implementation because we will use DI (Dependency Injection)
         public PlatformDbContext(DbContextOptions options) : base(options)
         {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // Seed Roles
+            builder.Entity<IdentityRole>().HasData(
+                new IdentityRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN" },
+                new IdentityRole { Id = "2", Name = "HR", NormalizedName = "HR" },
+                new IdentityRole { Id = "3", Name = "Employee", NormalizedName = "EMPLOYEE" },
+                new IdentityRole { Id = "4", Name = "User", NormalizedName = "USER" }
+            );
+
+            // Configure View
+            builder.Entity<EmployeeInfo>()
+                .HasNoKey()
+                .ToView("view_employee_info");
         }
 
 
@@ -81,11 +101,13 @@ namespace Platform.Data
 
         public async Task<Announcement?> UpdateAnnouncementAsync(Announcement entity)
         {
-            var existing = await Announcements.FindAsync(entity.AnnouncementId);
+            var existing = await Announcements.FindAsync(entity.Id);
             if (existing == null) return null;
 
             existing.Title = entity.Title;
+            existing.TitleAr = entity.TitleAr;
             existing.Description = entity.Description;
+            existing.DescriptionAr = entity.DescriptionAr;
             existing.IsActive = entity.IsActive;
             // CreatedDate usually isn't updated, or if it is, include it here. 
             // Based on user SQL, they did update it, so let's allow it or set it to now if needed.
@@ -824,18 +846,31 @@ namespace Platform.Data
 
         public async Task<List<TimeAttendance>> GetTimeAttendanceReportAsync(DateTime startDate, DateTime endDate, int? employeeId = null)
         {
-            var query = TimeAttendances
-                .AsNoTracking()
-                .Where(ta => ta.TransactionTime >= startDate && ta.TransactionTime <= endDate);
+            var query = from ta in TimeAttendances.AsNoTracking()
+                        join emp in Employees.AsNoTracking() on ta.EmployeeId equals emp.Id
+                        join h in Hierarchies.AsNoTracking() on emp.HierarchyId equals h.Id
+                        where ta.TransactionTime >= startDate && ta.TransactionTime <= endDate
+                        select new { ta, emp, h };
 
             if (employeeId.HasValue)
             {
-                query = query.Where(ta => ta.EmployeeId == employeeId.Value);
+                query = query.Where(x => x.ta.EmployeeId == employeeId.Value);
             }
 
-            return await query
-                .OrderBy(ta => ta.TransactionTime)
+            var result = await query
+                .OrderBy(x => x.ta.TransactionTime)
                 .ToListAsync();
+
+            return result.Select(x => new TimeAttendance
+            {
+                Id = x.ta.Id,
+                EmployeeId = x.ta.EmployeeId,
+                TransactionTime = x.ta.TransactionTime,
+                TransactionType = x.ta.TransactionType,
+                EmployeeName = x.emp.FullName,
+                HierarchyName = x.h.Name,
+                HierarchyNameAr = x.h.NameAr
+            }).ToList();
         }
         public async Task<TimeAttendance> AddTimeAttendanceAsync(TimeAttendance entity)
         {

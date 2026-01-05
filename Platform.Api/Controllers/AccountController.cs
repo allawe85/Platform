@@ -12,11 +12,13 @@ namespace Platform.Api.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IJwtTokenService _jwt;
+        private readonly Platform.Data.PlatformDbContext _context;
 
-        public AccountController(UserManager<ApplicationUser> userManager, IJwtTokenService jwt)
+        public AccountController(UserManager<ApplicationUser> userManager, IJwtTokenService jwt, Platform.Data.PlatformDbContext context)
         {
             _userManager = userManager;
             _jwt = jwt;
+            _context = context;
         }
 
         [HttpPost("register")]
@@ -36,9 +38,15 @@ namespace Platform.Api.Controllers
                 return BadRequest(new { errors });
             }
 
-            var token = _jwt.CreateToken(user);
+            // Assign default "User" role
+            await _userManager.AddToRoleAsync(user, "User");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var employee = _context.Employees.FirstOrDefault(e => e.AspnetusersId == user.Id);
+            var token = _jwt.CreateToken(user, roles, employee?.Id);
             return Ok(new AuthResponse(token, user.UserName ?? "", user.Email ?? ""));
         }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest model)
@@ -61,9 +69,12 @@ namespace Platform.Api.Controllers
             if (!valid)
                 return Unauthorized();
 
-            var token = _jwt.CreateToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var employee = _context.Employees.FirstOrDefault(e => e.AspnetusersId == user.Id);
+            var token = _jwt.CreateToken(user, roles, employee?.Id);
             return Ok(new AuthResponse(token, user.UserName ?? "", user.Email ?? ""));
         }
+
 
         [Authorize]
         [HttpGet("me")]

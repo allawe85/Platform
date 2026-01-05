@@ -23,7 +23,7 @@ namespace Platform.Data.DTOs
         public int HierarchyId { get; set; }
 
         [Column("aspnetusers_id")]
-        public string AspnetusersId { get; set; }
+        public string? AspnetusersId { get; set; }
 
         [Column("full_name")]
         public string FullName { get; set; }

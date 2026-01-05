@@ -1,14 +1,18 @@
 @page "/my-leaves"
+@layout MainLayout
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.Leaves
+@using System.Security.Claims
+@using MudBlazor
 @inject LeaveService LeaveService
 @inject AuthenticationStateProvider AuthStateProvider
-@* Removed DialogService injection *@
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h5" GutterBottom="true">My Leaves</MudText>
+<MudText Typo="Typo.h5" GutterBottom="true">@Loc["MyLeaves"]</MudText>
 
 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenRequestDialog" Class="mb-4">
-    New Leave Request
+    @Loc["NewLeaveRequest"]
 </MudButton>
 
 <MudGrid>
@@ -16,7 +20,7 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">My Balances</MudText>
+                    <MudText Typo="Typo.h6">@Loc["MyBalances"]</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
@@ -28,8 +32,8 @@
                 {
                     <MudTable Items="Balances" Dense="true" Hover="true" Striped="true" Elevation="0">
                         <HeaderContent>
-                            <MudTh>Type</MudTh>
-                            <MudTh>Balance (Days)</MudTh>
+                            <MudTh>@Loc["Type"]</MudTh>
+                            <MudTh>@Loc["Balance"]</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>
@@ -45,7 +49,7 @@
         <MudCard>
             <MudCardHeader>
                 <CardHeaderContent>
-                    <MudText Typo="Typo.h6">Leave History</MudText>
+                    <MudText Typo="Typo.h6">@Loc["LeaveHistory"]</MudText>
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
@@ -57,11 +61,11 @@
                 {
                      <MudTable Items="MyLeavesList" Dense="true" Hover="true" Striped="true" Elevation="0">
                         <HeaderContent>
-                            <MudTh>Type</MudTh>
-                            <MudTh>Start Date</MudTh>
-                            <MudTh>End Date</MudTh>
-                            <MudTh>Status</MudTh>
-                            <MudTh>Details</MudTh>
+                            <MudTh>@Loc["Type"]</MudTh>
+                            <MudTh>@Loc["StartDate"]</MudTh>
+                            <MudTh>@Loc["EndDate"]</MudTh>
+                            <MudTh>@Loc["Status"]</MudTh>
+                            <MudTh>@Loc["Details"]</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Type">@context.LeaveType?.NameAr</MudTd>
@@ -77,38 +81,61 @@
     </MudItem>
 </MudGrid>
 
-<LeaveRequestDialog @bind-Visible="_showDialog" LeaveTypes="LeaveTypes" EmployeeId="CurrentEmployeeId" OnClose="OnDialogClose" />
-
 @code {
     private List<LeaveBalance> Balances;
     private List<Leave> MyLeavesList;
     private List<LeaveType> LeaveTypes = new();
     
-    // Hardcoded for now
-    private int CurrentEmployeeId = 1; 
-
-    private bool _showDialog;
+    private int CurrentEmployeeId; 
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
-        LeaveTypes = await LeaveService.GetLeaveTypes();
+        var authState = await AuthState;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            var employeeIdClaim = user.FindFirst("EmployeeId");
+            if (employeeIdClaim != null && int.TryParse(employeeIdClaim.Value, out int empId))
+            {
+                CurrentEmployeeId = empId;
+                await LoadData();
+                LeaveTypes = await LeaveService.GetLeaveTypes();
+            }
+            else
+            {
+                // Handle case where user is logged in but has no linked employee
+                // Handle case where user is logged in but has no linked employee
+                // It is possible the token is stale (from before the fix), so suggest relogin.
+                Snackbar.Add("Account not linked to employee record. Please Log Out and Log In again.", Severity.Warning);
+            }
+        }
     }
 
     private async Task LoadData()
     {
-        Balances = await LeaveService.GetMyBalances(CurrentEmployeeId);
-        MyLeavesList = await LeaveService.GetMyLeavesAndRequests(CurrentEmployeeId);
+        if(CurrentEmployeeId > 0)
+        {
+             Balances = await LeaveService.GetMyBalances(CurrentEmployeeId);
+             MyLeavesList = await LeaveService.GetMyLeavesAndRequests(CurrentEmployeeId);
+        }
     }
 
-    private void OpenRequestDialog()
+    private async Task OpenRequestDialog()
     {
-        _showDialog = true;
-    }
+        var parameters = new DialogParameters
+        {
+            { nameof(LeaveRequestDialog.LeaveTypes), LeaveTypes },
+            { nameof(LeaveRequestDialog.EmployeeId), CurrentEmployeeId }
+        };
 
-    private async Task OnDialogClose(bool result)
-    {
-        if (result)
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<LeaveRequestDialog>(Loc["NewLeaveRequest"], parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is bool success && success)
         {
             await LoadData();
         }

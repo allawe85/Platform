@@ -47,6 +47,32 @@ namespace Platform.Data.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            Name = "HR",
+                            NormalizedName = "HR"
+                        },
+                        new
+                        {
+                            Id = "3",
+                            Name = "Employee",
+                            NormalizedName = "EMPLOYEE"
+                        },
+                        new
+                        {
+                            Id = "4",
+                            Name = "User",
+                            NormalizedName = "USER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -153,6 +179,34 @@ namespace Platform.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.Announcement", b =>
+                {
+                    b.Property<int>("AnnouncementId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AnnouncementId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("AnnouncementId");
+
+                    b.ToTable("Announcements");
                 });
 
             modelBuilder.Entity("Platform.Data.DTOs.ApplicationUser", b =>
@@ -394,10 +448,14 @@ namespace Platform.Data.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("civil_id");
 
-                    b.Property<string>("EmployeeId")
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employee_id");
+
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("employee_id");
+                        .HasColumnName("full_name");
 
                     b.Property<int>("HierarchyId")
                         .HasColumnType("int")
@@ -410,13 +468,6 @@ namespace Platform.Data.Migrations
 
             modelBuilder.Entity("Platform.Data.DTOs.EmployeeInfo", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<string>("AspnetusersId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
@@ -432,10 +483,14 @@ namespace Platform.Data.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("Email");
 
-                    b.Property<string>("EmployeeId")
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employee_id");
+
+                    b.Property<string>("FullName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("employee_id");
+                        .HasColumnName("full_name");
 
                     b.Property<int>("HierarchyId")
                         .HasColumnType("int")
@@ -461,8 +516,11 @@ namespace Platform.Data.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("hierarchy_name_ar");
 
+                    b.Property<int>("Id")
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("PhoneNumber");
 
@@ -471,9 +529,91 @@ namespace Platform.Data.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("UserName");
 
+                    b.ToTable("view_employee_info");
+
+                    b.ToView("view_employee_info", (string)null);
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.Event", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("DescriptionAr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description_ar");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("end_date");
+
+                    b.Property<int>("EventTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("event_type_id");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("location");
+
+                    b.Property<string>("LocationAr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("location_ar");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("start_date");
+
                     b.HasKey("Id");
 
-                    b.ToTable("view_employee_info");
+                    b.HasIndex("EventTypeId");
+
+                    b.ToTable("event");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.EventType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name_ar");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("event_type");
                 });
 
             modelBuilder.Entity("Platform.Data.DTOs.Hierarchy", b =>
@@ -498,6 +638,10 @@ namespace Platform.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name_ar");
+
+                    b.Property<int>("ParentId")
+                        .HasColumnType("int")
+                        .HasColumnName("parent_id");
 
                     b.HasKey("Id");
 
@@ -528,6 +672,263 @@ namespace Platform.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("hierarchy_level");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.Leave", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("details");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("end_date");
+
+                    b.Property<int?>("LeaveStatusId")
+                        .HasColumnType("int")
+                        .HasColumnName("leave_status_id");
+
+                    b.Property<int?>("LeaveTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("leave_type_id");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("start_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("LeaveStatusId");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.ToTable("Leave");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.LeaveBalance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("Balance")
+                        .HasColumnType("int")
+                        .HasColumnName("balance");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employee_id");
+
+                    b.Property<int?>("LeaveTypeId")
+                        .HasColumnType("int")
+                        .HasColumnName("leave_type_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.ToTable("leave_balance");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.LeaveStatus", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("name_ar");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Leave_Status");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.LeaveType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<int?>("TypeBalance")
+                        .HasColumnType("int")
+                        .HasColumnName("type_balance");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Leave_Type");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.Poll", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("question");
+
+                    b.Property<string>("QuestionAr")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("question_ar");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("poll");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.PollOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("OptionText")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("option_text");
+
+                    b.Property<string>("OptionTextAr")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("option_text_ar");
+
+                    b.Property<int>("PollId")
+                        .HasColumnType("int")
+                        .HasColumnName("poll_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PollId");
+
+                    b.ToTable("poll_option");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.PollVote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employee_id");
+
+                    b.Property<int>("PollId")
+                        .HasColumnType("int")
+                        .HasColumnName("poll_id");
+
+                    b.Property<int>("PollOptionId")
+                        .HasColumnType("int")
+                        .HasColumnName("poll_option_id");
+
+                    b.Property<DateTime>("VotedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("voted_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("PollId");
+
+                    b.HasIndex("PollOptionId");
+
+                    b.ToTable("poll_vote");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.TimeAttendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime>("TransactionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("transaction_time");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)")
+                        .HasColumnName("transaction_type");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("time_attendance");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -625,6 +1026,17 @@ namespace Platform.Data.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("Platform.Data.DTOs.Event", b =>
+                {
+                    b.HasOne("Platform.Data.DTOs.EventType", "EventType")
+                        .WithMany()
+                        .HasForeignKey("EventTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EventType");
+                });
+
             modelBuilder.Entity("Platform.Data.DTOs.Hierarchy", b =>
                 {
                     b.HasOne("Platform.Data.DTOs.HierarchyLevel", "HierarchyLevel")
@@ -634,6 +1046,80 @@ namespace Platform.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("HierarchyLevel");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.Leave", b =>
+                {
+                    b.HasOne("Platform.Data.DTOs.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId");
+
+                    b.HasOne("Platform.Data.DTOs.LeaveStatus", "LeaveStatus")
+                        .WithMany()
+                        .HasForeignKey("LeaveStatusId");
+
+                    b.HasOne("Platform.Data.DTOs.LeaveType", "LeaveType")
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("LeaveStatus");
+
+                    b.Navigation("LeaveType");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.LeaveBalance", b =>
+                {
+                    b.HasOne("Platform.Data.DTOs.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId");
+
+                    b.HasOne("Platform.Data.DTOs.LeaveType", "LeaveType")
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("LeaveType");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.PollOption", b =>
+                {
+                    b.HasOne("Platform.Data.DTOs.Poll", "Poll")
+                        .WithMany("Options")
+                        .HasForeignKey("PollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Poll");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.PollVote", b =>
+                {
+                    b.HasOne("Platform.Data.DTOs.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Platform.Data.DTOs.Poll", "Poll")
+                        .WithMany()
+                        .HasForeignKey("PollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Platform.Data.DTOs.PollOption", "PollOption")
+                        .WithMany()
+                        .HasForeignKey("PollOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Poll");
+
+                    b.Navigation("PollOption");
                 });
 
             modelBuilder.Entity("Platform.Data.DTOs.AssetStatus", b =>
@@ -649,6 +1135,11 @@ namespace Platform.Data.Migrations
             modelBuilder.Entity("Platform.Data.DTOs.DocumentType", b =>
                 {
                     b.Navigation("Documents");
+                });
+
+            modelBuilder.Entity("Platform.Data.DTOs.Poll", b =>
+                {
+                    b.Navigation("Options");
                 });
 #pragma warning restore 612, 618
         }

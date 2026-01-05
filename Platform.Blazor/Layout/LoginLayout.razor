@@ -1,7 +1,25 @@
 @inherits LayoutComponentBase
+@inject LayoutService LayoutService
 
 <MudLayout>
     <MudMainContent Class="d-flex justify-center align-center mud-width-full mud-height-full">
         @Body
     </MudMainContent>
+    <MudThemeProvider @ref="@_mudThemeProvider" Theme="@LayoutService.CurrentTheme" IsDarkMode="@LayoutService.IsDarkMode" />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
 </MudLayout>
+
+@code {
+    MudThemeProvider _mudThemeProvider;
+
+    protected override void OnInitialized()
+    {
+        LayoutService.OnMajorUpdate += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        LayoutService.OnMajorUpdate -= StateHasChanged;
+    }
+}

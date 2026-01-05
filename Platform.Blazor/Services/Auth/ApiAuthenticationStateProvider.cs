@@ -25,7 +25,7 @@ namespace Platform.Blazor.Services.Auth
                     return new AuthenticationState(_anonymous);
                 }
 
-                var user = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
+                var user = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt", ClaimTypes.Name, ClaimTypes.Role));
                 return new AuthenticationState(user);
             }
             catch
@@ -36,7 +36,7 @@ namespace Platform.Blazor.Services.Auth
 
         public void MarkUserAuthenticated(string token)
         {
-            var user = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt"));
+            var user = new ClaimsPrincipal(new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt", ClaimTypes.Name, ClaimTypes.Role));
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
         }
 
@@ -56,12 +56,27 @@ namespace Platform.Blazor.Services.Auth
             {
                 foreach (var kvp in keyValuePairs)
                 {
-                    claims.Add(new Claim(kvp.Key, kvp.Value.ToString() ?? ""));
+                    var key = kvp.Key;
+                    // Map standard role claim if it comes as "role"
+                    if (key == "role" || key == "roles") key = ClaimTypes.Role;
+
+                    if (kvp.Value is JsonElement element && element.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in element.EnumerateArray())
+                        {
+                            claims.Add(new Claim(key, item.ToString()));
+                        }
+                    }
+                    else
+                    {
+                        claims.Add(new Claim(key, kvp.Value.ToString() ?? ""));
+                    }
                 }
             }
 
             return claims;
         }
+
 
         private byte[] ParseBase64WithoutPadding(string base64)
         {

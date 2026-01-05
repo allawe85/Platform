@@ -25,6 +25,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<PlatformDbContext>()
     .AddDefaultTokenProviders();
 
+
 // JWT configuration
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key missing");
 var issuer = builder.Configuration["Jwt:Issuer"] ?? "platform";
@@ -91,5 +92,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+
+
 
 app.Run();

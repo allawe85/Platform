@@ -1,0 +1,207 @@
+@page "/employee-home"
+@layout MainLayout
+@using Platform.Blazor.Services.Announcements
+@using Platform.Blazor.Services.Events
+@using Platform.Blazor.Services.Polls
+@using Platform.Blazor.Services.Leaves
+@using Platform.Blazor.Services.TimeAttendance
+@using Platform.Blazor.Services.Employees
+@using Platform.Data.DTOs
+@using System.Security.Claims
+@inject IAnnouncementsService AnnouncementsService
+@inject IEventsService EventsService
+@inject IPollsService PollsService
+@inject LeaveService LeavesService
+@inject ITimeAttendanceService AttendanceService
+@inject IEmployeesService EmployeesService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@using Platform.Blazor.Pages.Components
+@attribute [Authorize(Roles = "Employee,Admin,HR")]
+ 
+
+
+<MudGrid>
+    <!-- Cell 1: Announcements -->
+    <MudItem xs="12" md="6" lg="4">
+        <AnnouncementsSlider Announcements="_announcements" />
+    </MudItem>
+
+    <!-- Cell 2: Upcoming Events -->
+    <MudItem xs="12" md="6" lg="4">
+        <UpcomingEventCard Events="_events" />
+    </MudItem>
+
+    <!-- Cell 3: Polls -->
+    <MudItem xs="12" md="6" lg="4">
+        <ActivePollsSlider Polls="_polls" />
+    </MudItem>
+
+    <!-- Cell 4: Leaves -->
+    <MudItem xs="12" md="6" lg="4">
+        <LeaveBalancePieChart Balances="_balances" LeaveTypes="_leaveTypes" />
+    </MudItem>
+
+    <!-- Cell 5: Attendance -->
+    <MudItem xs="12" md="6" lg="4">
+        <AttendanceCard EmployeeId="_employeeId" />
+    </MudItem>
+
+     <!-- Cell 6: Team -->
+    <MudItem xs="12" md="6" lg="4">
+        <TeamMembersCard HierarchyId="_hierarchyId" CurrentEmployeeId="_employeeId" Employees="_employees" />
+    </MudItem>
+
+</MudGrid>
+
+@code {
+    private string _currentEmployeeName = "";
+    private int _employeeId = 0;
+    private int _hierarchyId = 0;
+    private List<Announcement> _announcements;
+    private List<Event> _events;
+    private List<Poll> _polls;
+    private List<LeaveBalance> _balances;
+    private List<LeaveType> _leaveTypes;
+    private List<EmployeeInfo> _employees;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserAsync();
+        
+        var t1 = LoadAnnouncements();
+        var t2 = LoadEvents();
+        var t3 = LoadPolls();
+        var t4 = LoadLeaves();
+
+        await Task.WhenAll(t1, t2, t3, t4);
+    }
+
+
+
+    private async Task LoadUserAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                     ?? user.FindFirst("sub")?.Value 
+                     ?? user.FindFirst("id")?.Value;
+
+        if (user.Identity?.IsAuthenticated == true && userId != null)
+        {
+            try {
+                // Wrap in try-catch as GetAllEmployeesAsync might fail if API is down
+                _employees = await EmployeesService.GetAllEmployeesAsync();
+                
+                // Debugging: Log the user ID we are looking for
+                Console.WriteLine($"[EmployeeHome] Looking for AspnetusersId: {userId}");
+                
+                var emp = _employees.FirstOrDefault(e => string.Equals(e.AspnetusersId, userId, StringComparison.OrdinalIgnoreCase));
+                
+                if (emp != null)
+                {
+                    _employeeId = emp.Id;
+                    _currentEmployeeName = emp.FullName;
+                    _hierarchyId = emp.HierarchyId;
+                }
+                else
+                {
+                    Console.WriteLine($"[EmployeeHome] No employee found for user ID: {userId}. Falling back to EmployeeId = 1 (Test Mode).");
+                    // Fallback to Employee 1 to ensure data visibility during testing/demo, similar to MyLeaves.
+                    _employeeId = 1; 
+                    _currentEmployeeName = "Admin/Test User";
+                    // Try to finding fallback employee to set hierarchy ID for testing
+                    var fallbackEmp = _employees.FirstOrDefault(e => e.Id == 1);
+                     if (fallbackEmp != null)
+                    {
+                        _hierarchyId = fallbackEmp.HierarchyId;
+                    }
+                }
+            } catch (Exception ex) {
+                Console.WriteLine($"[EmployeeHome] Error loading user: {ex.Message}");
+                // Fallback on error too
+                _employeeId = 1;
+                _currentEmployeeName = "Error User";
+            }
+        }
+    }
+
+    private async Task LoadAnnouncements()
+    {
+        try
+        {
+            _announcements = await AnnouncementsService.GetAnnouncementsAsync();
+             _announcements = _announcements.OrderByDescending(a => a.CreatedDate).ToList();
+        }
+        catch
+        {
+            _announcements = new List<Announcement>();
+        }
+    }
+
+    private async Task LoadEvents()
+    {
+        try
+        {
+            _events = await EventsService.GetEventsAsync(); 
+            _events = _events.Where(e => e.StartDate >= DateTime.Now).OrderBy(e => e.StartDate).ToList();
+        }
+        catch
+        {
+            _events = new List<Event>();
+        }
+    }
+
+    private async Task LoadPolls()
+    {
+        try
+        {
+            _polls = await PollsService.GetActivePollsAsync();
+        }
+        catch
+        {
+            _polls = new List<Poll>();
+        }
+    }
+
+    private async Task LoadLeaves()
+    {
+        try 
+        {
+             _leaveTypes = await LeavesService.GetLeaveTypes();
+
+            if (_employeeId > 0)
+            {
+                _balances = await LeavesService.GetMyBalances(_employeeId);
+            }
+            else
+            {
+                _balances = new List<LeaveBalance>();
+            }
+        }
+        catch
+        {
+            _balances = new List<LeaveBalance>();
+            _leaveTypes = new List<LeaveType>();
+        }
+    }
+    
+    private string GetLeaveTypeName(LeaveBalance b)
+    {
+        if (b.LeaveType != null) return b.LeaveType.Name ?? "My Leave";
+        var type = _leaveTypes?.FirstOrDefault(t => t.Id == b.LeaveTypeId);
+        return type?.Name ?? $"Type {b.LeaveTypeId}";
+    }
+
+
+
+    private async Task OpenOrgChartReadOnly()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "/hierarchy-viewer", "_blank");
+    }
+}

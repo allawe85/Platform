@@ -5,6 +5,9 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "Admin,HR")]
+
 <PageTitle>@Loc["EventTypes"]</PageTitle>
 <MudText Typo="Typo.h5" Class="mb-4">@Loc["EventTypes"]</MudText>
 
@@ -126,7 +129,7 @@
         Task.Run(async () => {
              bool? result = await DialogService.ShowMessageBox(
                 Loc["Warning"], 
-                string.Format(Loc["ConfirmDelete"].ToString(), type.Name), 
+                string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? type.NameAr : type.Name)})"), 
                 yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
              if (result == true)

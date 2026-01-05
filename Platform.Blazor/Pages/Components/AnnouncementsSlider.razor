@@ -1,0 +1,53 @@
+@using Platform.Data.DTOs
+@using Platform.Blazor.Services.Announcements
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@inject NavigationManager Nav
+
+<MudCard Style="height: 100%;">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">@Loc["ActiveAnnouncements"]</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Announcements == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (!Announcements.Any())
+        {
+            <MudText>@Loc["NoAnnouncements"]</MudText>
+        }
+        else
+        {
+            <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" ShowBullets="true" AutoCycle="true" TData="object">
+                @foreach (var item in Announcements.Take(5))
+                {
+                    <MudCarouselItem Transition="Transition.Slide">
+                        <div class="d-flex flex-column justify-center align-center px-12 py-4" style="height:100%">
+                            @if (System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.TitleAr))
+                            {
+                                <MudText Typo="Typo.h6" Align="Align.Center">@item.TitleAr</MudText>
+                                <MudText Typo="Typo.body2" Align="Align.Center">@(item.DescriptionAr?.Length > 100 ? item.DescriptionAr.Substring(0, 100) + "..." : item.DescriptionAr)</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.h6" Align="Align.Center">@item.Title</MudText>
+                                <MudText Typo="Typo.body2" Align="Align.Center">@(item.Description?.Length > 100 ? item.Description.Substring(0, 100) + "..." : item.Description)</MudText>
+                            }
+                        </div>
+                    </MudCarouselItem>
+                }
+            </MudCarousel>
+        }
+    </MudCardContent>
+    <MudCardActions Class="justify-end">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/announcements"))">@Loc["ViewAll"]</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public List<Announcement> Announcements { get; set; }
+}

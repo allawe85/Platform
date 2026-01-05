@@ -40,13 +40,13 @@ namespace Platform.Api.Controllers
         public async Task<ActionResult<Announcement>> PostAnnouncement(Announcement announcement)
         {
             var created = await _context.AddAnnouncementAsync(announcement);
-            return CreatedAtAction("GetAnnouncement", new { id = created.AnnouncementId }, created);
+            return Ok(created);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAnnouncement(int id, Announcement announcement)
         {
-            if (id != announcement.AnnouncementId)
+            if (id != announcement.Id)
             {
                 return BadRequest();
             }

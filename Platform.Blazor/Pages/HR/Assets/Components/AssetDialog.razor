@@ -18,24 +18,24 @@
             <MudStack Spacing="3">
                 <MudTextField @bind-Value="_asset.Details" Label="@Loc["Details"]" Required="true" Lines="3" />
                 
-                <MudSelect T="int" @bind-Value="_asset.AssetTypeId" Label="@Loc["AssetType"]" Required="true" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect T="int?" Value="@(_asset.AssetTypeId == 0 ? (int?)null : _asset.AssetTypeId)" ValueChanged="@(val => _asset.AssetTypeId = val ?? 0)" Label="@Loc["AssetType"]" Required="true" AnchorOrigin="Origin.BottomCenter" Placeholder="@Loc["PleaseSelect"]">
                     @foreach (var type in _assetTypes)
                     {
-                        <MudSelectItem Value="@type.Id">@type.Name</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)type.Id)">@type.Name</MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudSelect T="int" @bind-Value="_asset.StatusId" Label="@Loc["Status"]" Required="true" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect T="int?" Value="@(_asset.StatusId == 0 ? (int?)null : _asset.StatusId)" ValueChanged="@(val => _asset.StatusId = val ?? 0)" Label="@Loc["Status"]" Required="true" AnchorOrigin="Origin.BottomCenter" Placeholder="@Loc["PleaseSelect"]">
                     @foreach (var status in _assetStatuses)
                     {
-                        <MudSelectItem Value="@status.Id">@status.Name</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)status.Id)">@status.Name</MudSelectItem>
                     }
                 </MudSelect>
 
-                <MudSelect T="int?" @bind-Value="_asset.EmployeeId" Label="@Loc["AssignedEmployee"]" Clearable="true" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect T="int?" @bind-Value="_asset.EmployeeId" Label="@Loc["AssignedEmployee"]" Clearable="true" AnchorOrigin="Origin.BottomCenter" Placeholder="@Loc["PleaseSelect"]">
                     @foreach (var emp in _employees)
                     {
-                        <MudSelectItem Value="@((int?)emp.Id)">@emp.CivilId - @emp.EmployeeId</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)emp.Id)">@emp.FullName</MudSelectItem>
                     }
                 </MudSelect>
 
@@ -74,6 +74,11 @@
     {
         if (Visible)
         {
+            if (!_assetTypes.Any() || !_assetStatuses.Any() || !_employees.Any())
+            {
+               await LoadLookups();
+            }
+
             if (AssetId.HasValue)
             {
                 var asset = await AssetsService.GetAssetByIdAsync(AssetId.Value);
@@ -98,7 +103,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task LoadLookups()
     {
         var typesTask = LookupsService.GetAssetTypesAsync();
         var statusesTask = LookupsService.GetAssetStatusesAsync();
@@ -109,6 +114,11 @@
         _assetTypes = await typesTask;
         _assetStatuses = await statusesTask;
         _employees = await employeesTask;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookups();
     }
 
     private async Task Submit()
@@ -126,12 +136,12 @@
                 var result = await AssetsService.UpdateAssetAsync(_asset.Id, _asset);
                 if (result != null)
                 {
-                    Snackbar.Add("Asset updated successfully", Severity.Success);
+                    Snackbar.Add(Loc["AssetUpdated"], Severity.Success);
                     await Close(true);
                 }
                 else
                 {
-                    Snackbar.Add("Failed to update asset", Severity.Error);
+                    Snackbar.Add(Loc["Error"], Severity.Error);
                 }
             }
             else
@@ -140,12 +150,12 @@
                 {
                     _asset.Id = 0;
                     await AssetsService.CreateAssetAsync(_asset);
-                    Snackbar.Add("Asset created successfully", Severity.Success);
+                    Snackbar.Add(Loc["AssetCreated"], Severity.Success);
                     await Close(true);
                 }
                 catch (Exception ex)
                 {
-                    Snackbar.Add($"Failed to create asset: {ex.Message}", Severity.Error);
+                    Snackbar.Add($"{Loc["Error"]}: {ex.Message}", Severity.Error);
                 }
             }
         }

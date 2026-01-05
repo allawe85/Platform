@@ -1,7 +1,11 @@
 @page "/attendance/report"
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.TimeAttendance
+@using Platform.Blazor.Services.Employees
+@using System.Security.Claims
 @inject ITimeAttendanceService AttendanceService
+@inject IEmployeesService EmployeesService
+@inject AuthenticationStateProvider AuthStateProvider
 @inject ISnackbar Snackbar
 
 @inject IStringLocalizer<AppStrings> Loc
@@ -22,9 +26,12 @@
             <MudItem xs="12" sm="4">
                 <MudDatePicker Label="@Loc["ToDate"]" @bind-Date="dateTo" />
             </MudItem>
-            <MudItem xs="12" sm="4">
-                <MudTextField @bind-Value="filterEmployeeId" Label="@Loc["EmployeeIdOptional"]" Variant="Variant.Outlined" />
-            </MudItem>
+            @if (canViewEmployeeFilter)
+            {
+                <MudItem xs="12" sm="4">
+                    <MudTextField @bind-Value="filterEmployeeId" Label="@Loc["EmployeeIdOptional"]" Variant="Variant.Outlined" />
+                </MudItem>
+            }
             <MudItem xs="12" class="d-flex justify-end">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateReport" Disabled="isLoading">@Loc["GenerateReport"]</MudButton>
             </MudItem>
@@ -39,14 +46,20 @@
     <MudTable Items="@reportData" Hover="true" Striped="true" Filter="new Func<TimeAttendance,bool>(FilterFunc)">
         <HeaderContent>
             <MudTh>@Loc["ID"]</MudTh>
-            <MudTh>@Loc["EmployeeID"]</MudTh>
+            <MudTh>@Loc["EmployeeId"]</MudTh>
+            <MudTh>@Loc["FullName"]</MudTh>
+            <MudTh>@Loc["Hierarchy"]</MudTh>
             <MudTh>@Loc["Date"]</MudTh>
             <MudTh>@Loc["Time"]</MudTh>
             <MudTh>@Loc["Type"]</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="@Loc["ID"]">@context.Id</MudTd>
-            <MudTd DataLabel="@Loc["EmployeeID"]">@context.EmployeeId</MudTd>
+            <MudTd DataLabel="@Loc["EmployeeId"]">@context.EmployeeId</MudTd>
+            <MudTd DataLabel="@Loc["FullName"]">@context.EmployeeName</MudTd>
+            <MudTd DataLabel="@Loc["Hierarchy"]">
+                @(CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) ? context.HierarchyNameAr : context.HierarchyName)
+            </MudTd>
             <MudTd DataLabel="@Loc["Date"]">@context.TransactionTime.ToString("d", CultureInfo.CurrentCulture)</MudTd>
             <MudTd DataLabel="@Loc["Time"]">@context.TransactionTime.ToString("T", CultureInfo.CurrentCulture)</MudTd>
             <MudTd DataLabel="@Loc["Type"]">
@@ -64,7 +77,42 @@
     private DateTime? dateTo = DateTime.Today;
     private int? filterEmployeeId;
     private bool isLoading = false;
+    private bool canViewEmployeeFilter = false;
     private List<TimeAttendance> reportData = new List<TimeAttendance>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+
+        // "as HR they can see employee number"
+        // "as employee and admin... employee number box should not be visible"
+        canViewEmployeeFilter = user.IsInRole("HR");
+
+        if (!canViewEmployeeFilter)
+        {
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                         ?? user.FindFirst("sub")?.Value 
+                         ?? user.FindFirst("id")?.Value;
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                try
+                {
+                    var employees = await EmployeesService.GetAllEmployeesAsync();
+                    var emp = employees.FirstOrDefault(e => string.Equals(e.AspnetusersId, userId, StringComparison.OrdinalIgnoreCase));
+                    if (emp != null)
+                    {
+                        filterEmployeeId = emp.Id;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error fetching employee info: {ex.Message}");
+                }
+            }
+        }
+    }
 
     private async Task GenerateReport()
     {

@@ -6,13 +6,13 @@
 
 <MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-4" Style="width: 500px; max-width: 90vw; max-height: 90vh; overflow-y: auto;">
-        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? "Edit Poll" : "Add New Poll")</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isEdit ? Loc["EditPoll"] : Loc["AddNewPoll"])</MudText>
         <MudForm Model="@_poll" @ref="_form">
-            <MudTextField Label="Question" @bind-Value="_poll.Question" Required="true" RequiredError="Question is required" />
-            <MudTextField Label="Question (Arabic)" @bind-Value="_poll.QuestionAr" Required="true" RequiredError="Question (Arabic) is required" />
-            <MudCheckBox T="bool" @bind-Value="_poll.IsActive" Label="Active" Color="Color.Primary" For="@(() => _poll.IsActive)"></MudCheckBox>
+            <MudTextField Label="@Loc["Question"]" @bind-Value="_poll.Question" Required="true" RequiredError="Question is required" />
+            <MudTextField Label="@Loc["QuestionAr"]" @bind-Value="_poll.QuestionAr" Required="true" RequiredError="Question (Arabic) is required" />
+            <MudCheckBox T="bool" @bind-Value="_poll.IsActive" Label="@Loc["IsActive"]" Color="Color.Primary" For="@(() => _poll.IsActive)"></MudCheckBox>
 
-            <MudText Typo="Typo.h6" Class="mt-4">Options</MudText>
+            <MudText Typo="Typo.h6" Class="mt-4">@Loc["Options"]</MudText>
             @if (_poll.Options != null)
             {
                  <MudList T="string">
@@ -20,20 +20,20 @@
                     {
                         <MudListItem>
                             <MudStack Row="true" AlignItems="AlignItems.Center"> 
-                                <MudTextField Label="Option" @bind-Value="option.OptionText" Required="true" RequiredError="Option text is required" />
-                                <MudTextField Label="Option (Arabic)" @bind-Value="option.OptionTextAr" Required="true" RequiredError="Option text (Arabic) is required" />
+                                <MudTextField Label="@Loc["Option"]" @bind-Value="option.OptionText" Required="true" RequiredError="Option text is required" />
+                                <MudTextField Label="@Loc["OptionAr"]" @bind-Value="option.OptionTextAr" Required="true" RequiredError="Option text (Arabic) is required" />
                                 <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => RemoveOption(option))" Color="Color.Error" />
                             </MudStack>
                         </MudListItem>
                     }
                 </MudList>
             }
-            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOption" Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-2">Add Option</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Add" OnClick="AddOption" Variant="Variant.Outlined" Color="Color.Secondary" Class="mt-2">@Loc["AddOption"]</MudButton>
         </MudForm>
 
         <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-            <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+            <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@Loc["Save"]</MudButton>
         </MudStack>
     </MudPaper>
 </MudOverlay>
@@ -109,7 +109,7 @@
 
         if (_poll.Options == null || _poll.Options.Count < 2)
         {
-            Snackbar.Add("Poll must have at least 2 options.", Severity.Warning);
+            Snackbar.Add(Loc["PollMinOptions"], Severity.Warning);
             return;
         }
 
@@ -118,18 +118,18 @@
             if (_isEdit)
             {
                 await PollsService.UpdatePollAsync(_poll.Id, _poll);
-                Snackbar.Add("Poll updated successfully", Severity.Success);
+                Snackbar.Add(Loc["PollUpdated"], Severity.Success);
             }
             else
             {
                 await PollsService.AddPollAsync(_poll);
-                Snackbar.Add("Poll added successfully", Severity.Success);
+                Snackbar.Add(Loc["PollAdded"], Severity.Success);
             }
             await Close(true);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error saving poll: {ex.Message}", Severity.Error);
+            Snackbar.Add($"{Loc["ErrorSavingPoll"]}: {ex.Message}", Severity.Error);
         }
     }
 

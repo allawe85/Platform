@@ -1,0 +1,27 @@
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Host localhost:5228 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:5228...
+* Connected to localhost (::1) port 5228
+> POST /api/employees HTTP/1.1
+> Host: localhost:5228
+> User-Agent: curl/8.7.1
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 497
+> 
+} [497 bytes data]
+* upload completely sent off: 497 bytes
+< HTTP/1.1 500 Internal Server Error
+< Content-Type: text/plain; charset=utf-8
+< Date: Mon, 05 Jan 2026 09:52:42 GMT
+< Server: Kestrel
+< Transfer-Encoding: chunked
+< 
+{ [121 bytes data]
+100   607    0   110  100   497   1330   6009 --:--:-- --:--:-- --:--:--  7313100   607    0   110  100   497   1327   5997 --:--:-- --:--:-- --:--:--  7313
+* Connection #0 to host localhost left intact
+Internal server error: An error occurred while saving the entity changes. See the inner exception for details.

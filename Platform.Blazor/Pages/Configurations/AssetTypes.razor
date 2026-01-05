@@ -80,7 +80,7 @@
     private void AddType()
     {
         _currentType = new AssetType();
-        _dialogTitle = "Add Type";
+        _dialogTitle = Loc["AddType"];
         _isEdit = false;
         _showDialog = true;
     }
@@ -88,7 +88,7 @@
     private void EditType(AssetType type)
     {
         _currentType = new AssetType { Id = type.Id, Name = type.Name, NameAr = type.NameAr };
-        _dialogTitle = "Edit Type";
+        _dialogTitle = Loc["EditType"];
         _isEdit = true;
         _showDialog = true;
     }
@@ -130,7 +130,7 @@
     {
         bool? result = await DialogService.ShowMessageBox(
             Loc["Warning"], 
-            string.Format(Loc["ConfirmDelete"].ToString(), type.Name), 
+            string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? type.NameAr : type.Name)})"), 
             yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
@@ -138,7 +138,7 @@
             try
             {
                 await LookupsService.DeleteAssetTypeAsync(type.Id);
-                Snackbar.Add("Type deleted", Severity.Success);
+                Snackbar.Add(Loc["TypeDeleted"], Severity.Success);
                 await LoadTypes();
             }
             catch (Exception ex)

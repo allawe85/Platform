@@ -2,9 +2,9 @@
 @using Platform.Blazor.Pages.Hierarchies.Components
 @inject IJSRuntime JSRuntime
 
-<div class="chart-container-scroll" @ref="_chartContainer">
+<div class="@($"chart-container-scroll {(IsDarkMode ? "dark-theme" : "light-theme")}")" @ref="_chartContainer">
     <div class="chart-pan-wrapper" @ref="_panContainer">
-        <div class="chart-scale-wrapper" style="transform: scale(@ZoomLevel); transform-origin: top center;">
+        <div class="chart-scale-wrapper" style="transform: scale(@ZoomLevel.ToString(System.Globalization.CultureInfo.InvariantCulture)); transform-origin: top center;">
             <div class="org-tree">
                 <ul>
                     @if (Roots != null)
@@ -20,6 +20,9 @@
 @code {
     [Parameter] public List<Hierarchy> Roots { get; set; } = new();
     [Parameter] public Dictionary<int, string> LevelColors { get; set; } = new();
+    [Parameter] public bool IsDarkMode { get; set; }
+    [Parameter] public int? SelectedNodeId { get; set; }
+    [Parameter] public bool ReadOnly { get; set; } = false;
     
     [Parameter] public EventCallback<Hierarchy> OnNodeSelect { get; set; }
     [Parameter] public EventCallback<Hierarchy> OnAddChild { get; set; }
@@ -60,6 +63,17 @@
              if (_dotNetHelper == null) _dotNetHelper = DotNetObjectReference.Create(this);
              await _chartModule.InvokeVoidAsync("initChartEvents", _chartContainer, _panContainer, _dotNetHelper);
              _eventsActive = true;
+             await Task.Delay(150);
+             await CenterView();
+        }
+    }
+
+    public async Task CenterView(int? nodeId = null)
+    {
+        if (_chartModule != null)
+        {
+            string? selector = nodeId.HasValue ? $"#node-{nodeId.Value}" : null;
+            await _chartModule.InvokeVoidAsync("centerElement", _chartContainer, _panContainer, selector);
         }
     }
 
@@ -68,7 +82,7 @@
     {
         double newZoom = ZoomLevel;
         if (delta > 0) newZoom = Math.Min(ZoomLevel + 0.1, 2.0);
-        else newZoom = Math.Max(ZoomLevel - 0.1, 0.4);
+        else newZoom = Math.Max(ZoomLevel - 0.1, 0.2);
         
         if (newZoom != ZoomLevel)
         {
@@ -97,15 +111,24 @@
         foreach (var node in nodes)
         {
             <li>
-                <div class="@GetNodeClass(node)" 
-                     style="background: @GetLevelColorImpl(node.HierarchyLevelId)"
+                <div id="@($"node-{node.Id}")" 
+                     class="@GetNodeClass(node)" 
+                     style="@($"--level-color: {GetLevelColorImpl(node.HierarchyLevelId)};")"
                      @onclick="() => OnNodeSelect.InvokeAsync(node)"
                      @onclick:stopPropagation="true">
                     
-                    <div class="node-title">@node.Name</div>
-                    <div class="node-title">@node.NameAr</div>
-                    <div class="node-subtitle">@(node.HierarchyLevel?.Name ?? "")</div>
+                    <div class="accent-bar"></div>
+                    <div class="node-content">
+                        <div class="node-title">
+                            @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(node.NameAr) ? node.NameAr : node.Name)
+                        </div>
+                        <div class="node-subtitle">
+                             @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(node.HierarchyLevel?.NameAr) ? node.HierarchyLevel.NameAr : node.HierarchyLevel?.Name ?? "")
+                        </div>
+                    </div>
                     
+                    @if (!ReadOnly)
+                    {
                     <div class="node-actions">
                          <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
                                         Variant="Variant.Filled" Color="Color.Surface" 
@@ -117,6 +140,7 @@
                                         Variant="Variant.Filled" Color="Color.Error" 
                                         OnClick="@(() => OnDelete.InvokeAsync(node))" Title="Delete" />
                     </div>
+                    }
                 </div>
                 @if (node.Children != null && node.Children.Count > 0)
                 {
@@ -130,10 +154,8 @@
 
     private string GetNodeClass(Hierarchy node)
     {
-        // Selection logic needs to be aware of currently selected node.
-        // For simplicity, passing "Is Selected" state might be complex if we don't pass the whole state.
-        // We can just omit selection styling inside the re-usable component OR pass SelectedId.
-        return "node-card"; // Simplified for now, or add [Parameter] SelectedHierarchyId
+        string selectedClass = (SelectedNodeId == node.Id) ? "selected" : "";
+        return $"node-card {(IsDarkMode ? "dark-theme" : "light-theme")} {selectedClass}"; 
     }
 
     private string GetLevelColorImpl(int levelId) 

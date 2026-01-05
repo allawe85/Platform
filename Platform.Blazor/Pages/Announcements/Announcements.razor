@@ -5,110 +5,227 @@
 @inject IAnnouncementsService AnnouncementsService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@inject AuthenticationStateProvider AuthStateProvider
+@using System.Security.Claims
 
-<MudText Typo="Typo.h5" Class="mb-4">Announcements</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">@Loc["Announcements"]</MudText>
 
-<MudTable T="Announcement" ServerData="ServerReload"
-          Dense="true" Hover="true" @ref="_table">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Manage Announcements</MudText>
-        <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAnnouncement" StartIcon="@Icons.Material.Filled.Add">Add Announcement</MudButton>
-    </ToolBarContent>
-    <HeaderContent>
-        <MudTh>Title</MudTh>
-        <MudTh>Description</MudTh>
-        <MudTh>Date</MudTh>
-        <MudTh>Status</MudTh>
-        <MudTh>Actions</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Title">@context.Title</MudTd>
-        <MudTd DataLabel="Description">
-            <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
-                @(context.Description.Length > 50 ? context.Description.Substring(0, 50) + "..." : context.Description)
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Date">@context.CreatedDate.ToString("g")</MudTd>
-        <MudTd DataLabel="Status">
-            @if (context.IsActive)
-            {
-                <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
-            }
-            else
-            {
-                <MudChip T="string" Color="Color.Error" Size="Size.Small">Inactive</MudChip>
-            }
-        </MudTd>
-        <MudTd DataLabel="Actions">
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => EditAnnouncement(context))" Size="Size.Small" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteAnnouncement(context))" Size="Size.Small" />
-        </MudTd>
-    </RowTemplate>
-    <NoRecordsContent>
-        <MudText>No announcements found.</MudText>
-    </NoRecordsContent>
-    <LoadingContent>
-        <MudText>Loading...</MudText>
-    </LoadingContent>
-    <PagerContent>
-        <MudTablePager />
-    </PagerContent>
-</MudTable>
+<AuthorizeView Roles="Admin,HR" Context="authContext">
+    <Authorized>
+        <MudTable T="Announcement" ServerData="ServerReload"
+                  Dense="true" Hover="true" @ref="_table">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@Loc["ManageAnnouncements"]</MudText>
+                <MudSpacer />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAnnouncement" StartIcon="@Icons.Material.Filled.Add">@Loc["AddAnnouncement"]</MudButton>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>@Loc["AnnouncementTitle"]</MudTh>
+                <MudTh>@Loc["AnnouncementTitleAr"]</MudTh>
+                <MudTh>@Loc["AnnouncementDescription"]</MudTh>
+                <MudTh>@Loc["AnnouncementDescriptionAr"]</MudTh>
+                <MudTh>@Loc["ReceiveDate"]</MudTh>
+                <MudTh>@Loc["Status"]</MudTh>
+                <MudTh>@Loc["Actions"]</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Title">@context.Title</MudTd>
+                <MudTd DataLabel="TitleAr">@context.TitleAr</MudTd>
+                <MudTd DataLabel="Description">
+                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+                        @((context.Description ?? "").Length > 30 ? (context.Description ?? "").Substring(0, 30) + "..." : context.Description)
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="DescriptionAr">
+                     <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">
+                        @((context.DescriptionAr ?? "").Length > 30 ? (context.DescriptionAr ?? "").Substring(0, 30) + "..." : context.DescriptionAr)
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Date">@context.CreatedDate.ToString("g")</MudTd>
+                <MudTd DataLabel="Status">
+                    @if (context.IsActive)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small">@Loc["Active"]</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small">@Loc["Inactive"]</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@(() => EditAnnouncement(context))" Size="Size.Small" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteAnnouncement(context))" Size="Size.Small" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>@Loc["NoRecordsFound"]</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>Loading...</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="Employee" Context="authContext">
+    <Authorized>
+        @if (_employeeAnnouncements == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (!_employeeAnnouncements.Any())
+        {
+            <MudText>@Loc["NoAnnouncements"]</MudText>
+        }
+        else
+        {
+            <MudGrid>
+                @foreach (var item in _employeeAnnouncements)
+                {
+                    <MudItem xs="12">
+                        <MudCard>
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    @if (System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.TitleAr))
+                                    {
+                                        <MudText Typo="Typo.h6">@item.TitleAr</MudText>
+                                    }
+                                    else
+                                    {
+                                        <MudText Typo="Typo.h6">@item.Title</MudText>
+                                    }
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@item.CreatedDate.ToString("g")</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                @if (System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.DescriptionAr))
+                                {
+                                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@item.DescriptionAr</MudText>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@item.Description</MudText>
+                                }
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </Authorized>
+</AuthorizeView>
 
 @code {
     private MudTable<Announcement> _table;
+    private List<Announcement> _employeeAnnouncements;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // If user is Employee and NOT Admin/HR, load the list
+        if (user.IsInRole("Employee") && !user.IsInRole("Admin") && !user.IsInRole("HR"))
+        {
+             await LoadEmployeeAnnouncements();
+        }
+    }
+
+    private async Task LoadEmployeeAnnouncements()
+    {
+        try
+        {
+            _employeeAnnouncements = await AnnouncementsService.GetAnnouncementsAsync();
+            _employeeAnnouncements = _employeeAnnouncements.OrderByDescending(a => a.CreatedDate).ToList();
+        }
+        catch
+        {
+            _employeeAnnouncements = new List<Announcement>();
+        }
+    }
 
     private async Task<TableData<Announcement>> ServerReload(TableState state, CancellationToken token)
     {
-        var data = await AnnouncementsService.GetAnnouncementsAsync();
-        return new TableData<Announcement>() { TotalItems = data.Count, Items = data };
+        try
+        {
+            var data = await AnnouncementsService.GetAnnouncementsAsync();
+            if (data == null)
+            {
+                 return new TableData<Announcement>() { TotalItems = 0, Items = new List<Announcement>() };
+            }
+            return new TableData<Announcement>() { TotalItems = data.Count, Items = data };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading data: {ex.Message}", Severity.Error);
+            return new TableData<Announcement>() { TotalItems = 0, Items = new List<Announcement>() };
+        }
     }
 
     private async Task AddAnnouncement()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = DialogService.Show<AnnouncementDialog>("Add Announcement", options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
+        try
         {
-            await _table.ReloadServerData();
+            var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            var dialog = DialogService.Show<AnnouncementDialog>(Loc["AddAnnouncement"], options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled)
+            {
+                await _table.ReloadServerData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding announcement: {ex.Message}", Severity.Error);
         }
     }
 
     private async Task EditAnnouncement(Announcement announcement)
     {
-        var parameters = new DialogParameters { ["Announcement"] = announcement };
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = DialogService.Show<AnnouncementDialog>("Edit Announcement", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
+        try
         {
-            await _table.ReloadServerData();
+            var parameters = new DialogParameters { ["Announcement"] = announcement };
+            var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+            var dialog = DialogService.Show<AnnouncementDialog>(Loc["EditAnnouncement"], parameters, options);
+            var result = await dialog.Result;
+
+            if (!result.Canceled)
+            {
+                await _table.ReloadServerData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error editing announcement: {ex.Message}", Severity.Error);
         }
     }
 
     private async Task DeleteAnnouncement(Announcement announcement)
     {
-        bool? result = await DialogService.ShowMessageBox(
-            "Warning",
-            "Deleting can not be undone!",
-            yesText: "Delete!", cancelText: "Cancel");
-
-        if (result == true)
+        try
         {
-            try
+            bool? result = await DialogService.ShowMessageBox(
+                Loc["Warning"], 
+                string.Format(Loc["ConfirmDelete"], $"({announcement.Title})"), 
+                yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
+
+            if (result == true)
             {
-                await AnnouncementsService.DeleteAnnouncementAsync(announcement.AnnouncementId);
-                Snackbar.Add("Deleted", Severity.Success);
+                await AnnouncementsService.DeleteAnnouncementAsync(announcement.Id);
+                Snackbar.Add(Loc["AnnouncementDeleted"], Severity.Success);
                 await _table.ReloadServerData();
             }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting announcement: {ex.Message}", Severity.Error);
         }
     }
 }

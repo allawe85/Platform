@@ -1,49 +1,53 @@
 @using Platform.Data.DTOs
 @using Platform.Blazor.Services.Announcements
+@using Platform.Blazor.Resources
+@using Microsoft.Extensions.Localization
 @inject IAnnouncementsService AnnouncementsService
 @inject ISnackbar Snackbar
+@inject IStringLocalizer<AppStrings> Loc
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="Announcement.Title" Label="Title" Required="true" RequiredError="Title is required" />
-        <MudTextField @bind-Value="Announcement.Description" Label="Description" Lines="5" Required="true" RequiredError="Description is required" />
-        <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="Is Active" Color="Color.Primary" />
+        <MudTextField T="string" Label="@Loc["AnnouncementTitle"]" @bind-Value="Announcement.Title" Required="true" RequiredError="@Loc["Required"]" />
+        <MudTextField T="string" Label="@Loc["AnnouncementTitleAr"]" @bind-Value="Announcement.TitleAr" Required="true" RequiredError="@Loc["Required"]" />
+        <MudTextField T="string" Label="@Loc["AnnouncementDescription"]" @bind-Value="Announcement.Description" Lines="3" Required="true" RequiredError="@Loc["Required"]" />
+        <MudTextField T="string" Label="@Loc["AnnouncementDescriptionAr"]" @bind-Value="Announcement.DescriptionAr" Lines="3" />
+        <MudCheckBox T="bool" @bind-Checked="Announcement.IsActive" Label="@Loc["IsActive"]" Color="Color.Primary" />
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Save</MudButton>
+        <MudButton OnClick="Cancel">@Loc["Cancel"]</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">@Loc["Save"]</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] public MudDialogInstance DialogInstance { get; set; }
 
-    [Parameter] public Announcement Announcement { get; set; } = new Announcement { IsActive = true, CreatedDate = DateTime.Now };
+    [Parameter] public Announcement Announcement { get; set; } = new Announcement();
 
     private async Task Submit()
     {
-        if (string.IsNullOrWhiteSpace(Announcement.Title))
+        if (string.IsNullOrWhiteSpace(Announcement.Title) || string.IsNullOrWhiteSpace(Announcement.TitleAr) || string.IsNullOrWhiteSpace(Announcement.Description))
         {
-            Snackbar.Add("Title is required", Severity.Warning);
+            Snackbar.Add(Loc["RequiredFieldsError"], Severity.Warning);
             return;
         }
-
         try
-        {
-            if (Announcement.AnnouncementId == 0)
+         {
+            if (Announcement.Id == 0)
             {
-                // New
+                // Create
                 Announcement.CreatedDate = DateTime.Now;
                 await AnnouncementsService.CreateAnnouncementAsync(Announcement);
-                Snackbar.Add("Announcement Created", Severity.Success);
+                Snackbar.Add(Loc["AnnouncementCreated"], Severity.Success);
             }
             else
             {
-                // Edit
-                await AnnouncementsService.UpdateAnnouncementAsync(Announcement.AnnouncementId, Announcement);
-                Snackbar.Add("Announcement Updated", Severity.Success);
+                // Update
+                await AnnouncementsService.UpdateAnnouncementAsync(Announcement.Id, Announcement);
+                Snackbar.Add(Loc["AnnouncementUpdated"], Severity.Success);
             }
-            MudDialog.Close(DialogResult.Ok(true));
+            DialogInstance?.Close(DialogResult.Ok(true));
         }
         catch (Exception ex)
         {
@@ -51,5 +55,5 @@
         }
     }
 
-    void Cancel() => MudDialog.Cancel();
+    void Cancel() => DialogInstance?.Cancel();
 }

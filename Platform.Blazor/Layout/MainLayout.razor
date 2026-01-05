@@ -11,6 +11,7 @@
 @inject LayoutService LayoutService
 @implements IDisposable
 @inject IStringLocalizer<AppStrings> Loc
+@inject Platform.Blazor.Services.Employees.IEmployeesService EmployeesService
 
 <MudLayout>
     <style>
@@ -20,98 +21,170 @@
         .mud-drawer.mud-drawer-fixed {
             top: 100px !important;
         }
+
         .mud-nav-link-text {
             font-weight: 700 !important;
             font-size: 1.1rem !important;
             color: @(LayoutService.IsDarkMode ? "#E0E0E0" : "inherit") !important;
         }
         .mud-nav-link.active .mud-nav-link-text {
-            color: #007FFF !important;
+            color: var(--mud-palette-primary) !important;
         }
         .mud-nav-link .mud-nav-link-icon-default {
-            color: #007FFF !important;
+            color: var(--mud-palette-primary) !important;
         }
         .mud-nav-menu {
             padding: 24px !important;
         }
     </style>
-    <MudAppBar Elevation="1" Style="height: 100px; background-color: #007FFF; padding-top: 20px;">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Size="Size.Large" />
-        <MudText Typo="Typo.h6" Class="ml-3" Style="font-size: 1.5rem; font-weight: 700;">Platform</MudText>
+    <MudAppBar Elevation="1" Style="height: 100px; padding-top: 20px; background-color: var(--mud-palette-appbar-background); color: white;">
+   @if (!_isEmployee)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Size="Size.Large" />
+        }
+        <div class="d-flex align-center gap-4">
+             <MudImage Src="images/logo-moi.svg" Alt="Logo" Height="80" />
+             <MudText Typo="Typo.h6">@Loc["AppTitle"]</MudText>
+        </div>
         <MudSpacer />
 
         <MudSpacer />
         @if (!string.IsNullOrEmpty(_username))
         {
-            <MudText Class="mr-4" Style="font-size: 1.2rem; font-weight: 700;">@Loc["Welcome"], @_username</MudText>
+            <MudStack Spacing="0" Class="mr-4" AlignItems="AlignItems.End">
+                <MudText Style="font-size: 1.2rem; font-weight: 700;">@Loc["Welcome"], @_username</MudText>
+                @if (!string.IsNullOrEmpty(_userRole))
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Text" Class="ma-0">@_userRole</MudChip>
+                }
+            </MudStack>
             <MudIconButton Icon="@(LayoutService.IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)" Color="Color.Inherit" OnClick="ToggleDarkMode" Size="Size.Large" />
             <MudIconButton Icon="@Icons.Material.Filled.Language" Color="Color.Inherit" OnClick="ToggleLanguage" Size="Size.Large" />
         }
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End">
-            <MudMenuItem OnClick="Logout">@Loc["Logout"]</MudMenuItem>
-        </MudMenu>
+            <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" OnClick="@(() => Nav.NavigateTo("/employee-home"))" Size="Size.Large" Title="@Loc["Home"]" />
+            <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" OnClick="Logout" Size="Size.Large" Title="@Loc["Logout"]" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+    @if (!_isEmployee)
+    {
+        <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
-            <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
-            <MudNavGroup Title="@Loc["HierarchiesManagement"]" Icon="@Icons.Material.Filled.AccountTree">
-                <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">@Loc["Levels"]</MudNavLink>
-                <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.Schema">@Loc["Hierarchies"]</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="@Loc["Events"]" Icon="@Icons.Material.Filled.Event">
-                <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">@Loc["Calendar"]</MudNavLink>
-                <MudNavLink Href="/upcoming-events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Upcoming">@Loc["UpcomingEvents"]</MudNavLink>
-                <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">@Loc["EventTypes"]</MudNavLink>
-            </MudNavGroup>
+             <AuthorizeView Roles="Admin,HR">
+                 <MudNavLink Href="/dashboard" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">@Loc["Dashboard"]</MudNavLink>
+             </AuthorizeView>
 
-            <MudNavGroup Title="@Loc["HRManagement"]" Icon="@Icons.Material.Filled.People">
-                <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.Badge">@Loc["Employees"]</MudNavLink>
-                <MudNavLink Href="/assets" Icon="@Icons.Material.Filled.Devices">@Loc["Assets"]</MudNavLink>
-                <MudNavLink Href="/documents" Icon="@Icons.Material.Filled.Folder">@Loc["Documents"]</MudNavLink>
-                <MudNavLink Href="/accounts" Icon="@Icons.Material.Filled.ManageAccounts">@Loc["Accounts"]</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="@Loc["Configurations"]" Icon="@Icons.Material.Filled.Settings">
-                <MudNavLink Href="/asset-statuses" Icon="@Icons.Material.Filled.List">@Loc["AssetStatuses"]</MudNavLink>
-                <MudNavLink Href="/asset-types" Icon="@Icons.Material.Filled.Category">@Loc["AssetTypes"]</MudNavLink>
-                <MudNavLink Href="/document-types" Icon="@Icons.Material.Filled.Description">@Loc["DocumentTypes"]</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="@Loc["Polls"]" Icon="@Icons.Material.Filled.Poll">
-                <MudNavLink Href="/polls-management" Icon="@Icons.Material.Filled.List">@Loc["Management"]</MudNavLink>
-                <MudNavLink Href="/poll-vote" Icon="@Icons.Material.Filled.HowToVote">@Loc["Vote"]</MudNavLink>
-            </MudNavGroup>
-            <MudNavGroup Title="@Loc["TimeAttendance"]" Icon="@Icons.Material.Filled.AccessTime">
-                <MudNavLink Href="/attendance/checkin" Icon="@Icons.Material.Filled.Timer">@Loc["CheckInOut"]</MudNavLink>
-                <MudNavLink Href="/attendance/report" Icon="@Icons.Material.Filled.Assessment">@Loc["AttendanceReport"]</MudNavLink>
+             <AuthorizeView Roles="HR">
+                <MudNavLink Href="/hierarchies" Icon="@Icons.Material.Filled.AccountTree">@Loc["Hierarchies"]</MudNavLink>
+                <MudNavLink Href="/events" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">@Loc["EventCalendarTitle"]</MudNavLink>
+                <MudNavLink Href="/polls-management" Icon="@Icons.Material.Filled.List">@Loc["Polls"]</MudNavLink>
+                
+                 <MudNavGroup Title="@Loc["HRManagement"]" Icon="@Icons.Material.Filled.People">
+                    <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.Badge">@Loc["Employees"]</MudNavLink>
+                    <MudNavLink Href="/assets" Icon="@Icons.Material.Filled.Devices">@Loc["Assets"]</MudNavLink>
+                    <MudNavLink Href="/documents" Icon="@Icons.Material.Filled.Folder">@Loc["Documents"]</MudNavLink>
+                    <MudNavLink Href="/leave-approvals" Icon="@Icons.Material.Filled.Approval">@Loc["LeavesReportsAndApprovals"]</MudNavLink>
+                    <MudNavLink Href="/attendance/report" Icon="@Icons.Material.Filled.Assessment">@Loc["AttendanceReport"]</MudNavLink>
+                 </MudNavGroup>
+
+                 <MudNavLink Href="/announcements" Icon="@Icons.Material.Filled.Announcement">@Loc["Announcements"]</MudNavLink>
+             </AuthorizeView>
+
+            <AuthorizeView Roles="Admin">
+                <MudNavGroup Title="@Loc["SystemManagement"]" Icon="@Icons.Material.Filled.Settings">
+                    <MudNavLink Href="/leave-configuration" Icon="@Icons.Material.Filled.Settings">@Loc["LeaveConfiguration"]</MudNavLink>
+                    <MudNavLink Href="/event-types" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">@Loc["EventTypes"]</MudNavLink>
+                    <MudNavLink Href="/asset-statuses" Icon="@Icons.Material.Filled.List">@Loc["AssetStatuses"]</MudNavLink>
+                    <MudNavLink Href="/asset-types" Icon="@Icons.Material.Filled.Category">@Loc["AssetTypes"]</MudNavLink>
+                    <MudNavLink Href="/document-types" Icon="@Icons.Material.Filled.Description">@Loc["DocumentTypes"]</MudNavLink>
+                    <MudNavLink Href="/hierarchy-levels" Icon="@Icons.Material.Filled.List">@Loc["Levels"]</MudNavLink>
                 </MudNavGroup>
-            <MudNavGroup Title="Leaves Management" Icon="@Icons.Material.Filled.DateRange">
-                <MudNavLink Href="/my-leaves" Icon="@Icons.Material.Filled.EventNote">My Leaves</MudNavLink>
-                <MudNavLink Href="/leave-approvals" Icon="@Icons.Material.Filled.Approval">Approvals</MudNavLink>
-                <MudNavLink Href="/leave-configuration" Icon="@Icons.Material.Filled.Settings">Configuration</MudNavLink>
-                </MudNavGroup>
-            <MudNavGroup Title="Time Attendance" Icon="@Icons.Material.Filled.AccessTime">
-                <MudNavLink Href="/attendance/checkin" Icon="@Icons.Material.Filled.Timer">Check In/Out</MudNavLink>
-                <MudNavLink Href="/attendance/report" Icon="@Icons.Material.Filled.Assessment">Attendance Report</MudNavLink>
-            </MudNavGroup>
-            <MudNavLink Href="/announcements" Icon="@Icons.Material.Filled.Announcement">@Loc["Announcements"]</MudNavLink>
+            </AuthorizeView>
+
         </MudNavMenu>
     </MudDrawer>
+    }
     <MudMainContent>
         <img src="images/MOISkyline.jpg" style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 70%; height: 70%; object-fit: contain; opacity: 0.3; z-index: -1; pointer-events: none; mix-blend-mode: @(LayoutService.IsDarkMode ? "multiply" : "normal");" />
         <MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
             @Body
         </MudContainer>
     </MudMainContent>
+    
+    <MudThemeProvider @ref="@_mudThemeProvider" Theme="@LayoutService.CurrentTheme" IsDarkMode="@LayoutService.IsDarkMode" />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+    <MudPopoverProvider />
 </MudLayout>
 
 @code {
     bool _drawerOpen = true;
+    bool _isEmployee = false;
     string? _username;
+    string? _userRole;
+    MudThemeProvider _mudThemeProvider;
 
-    protected override async Task OnInitializedAsync()
+     protected override async Task OnInitializedAsync()
     {
         LayoutService.OnMajorUpdate += StateHasChanged;
         var state = await AuthStateProvider.GetAuthenticationStateAsync();
-        _username = state.User.Identity?.Name;
+        var user = state.User;
+        _username = user.Identity?.Name;
+        
+        // Try to get employee name
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            try
+            {
+                var employeeIdClaim = user.FindFirst(c => c.Type == "EmployeeId")?.Value;
+                if (!string.IsNullOrEmpty(employeeIdClaim) && int.TryParse(employeeIdClaim, out var empId))
+                {
+                    var emp = await EmployeesService.GetEmployeeInfoByIdAsync(empId);
+                    if (emp != null)
+                    {
+                        _username = emp.FullName;
+                        if (!string.IsNullOrEmpty(emp.Role))
+                        {
+                            _userRole = emp.Role;
+                        }
+                        return; // Found and set
+                    }
+                }
+
+                // Fallback using User ID (sub)
+                var userId = user.FindFirst(c => c.Type == "sub")?.Value 
+                             ?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                             
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var allEmployees = await EmployeesService.GetAllEmployeesAsync();
+                    var linkedEmployee = allEmployees.FirstOrDefault(e => e.AspnetusersId == userId);
+                    if (linkedEmployee != null)
+                    {
+                        _username = linkedEmployee.FullName;
+                        if (!string.IsNullOrEmpty(linkedEmployee.Role))
+                        {
+                            _userRole = linkedEmployee.Role;
+                        }
+                    }
+                }
+            }
+            catch {}
+        }
+
+        if (user.IsInRole("Employee") && !user.IsInRole("Admin") && !user.IsInRole("HR"))
+        {
+            _isEmployee = true;
+            _drawerOpen = false;
+        }
+
+        // Get Role from claims if not found via employee
+        if (string.IsNullOrEmpty(_userRole))
+        {
+             var roleClaim = user.FindFirst(ClaimTypes.Role) ?? user.FindFirst("role");
+             if (roleClaim != null)
+             {
+                 _userRole = roleClaim.Value;
+             }
+        }
     }
 
     void DrawerToggle()

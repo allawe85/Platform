@@ -1,79 +1,156 @@
 ﻿@page "/dashboard"
 @using System.Globalization
 @using Platform.Data.DTOs
-@using Platform.Blazor.Services.Announcements
+@using Platform.Blazor.Services.Employees
+@using Platform.Blazor.Services.Leaves
+@using Platform.Blazor.Services.Polls
+@using Platform.Blazor.Services.Events
+@using Platform.Blazor.Services.Hierarchies
 @using Microsoft.Extensions.Localization
 @using Platform.Blazor.Resources
-@inject IAnnouncementsService AnnouncementsService
+@inject IEmployeesService EmployeesService
+@inject LeaveService LeavesService
+@inject IPollsService PollsService
+@inject IEventsService EventsService
+@inject IHierarchiesService HierarchiesService
 @inject IStringLocalizer<AppStrings> Loc
 @inject ISnackbar Snackbar
+@inject NavigationManager Nav
 @attribute [Authorize]
 
-<MudText Typo="Typo.h3" GutterBottom="true">@Loc["Dashboard"]</MudText>
-<MudText Class="mb-8">@Loc["DashboardWelcome"]</MudText>
-<MudAlert Severity="Severity.Normal" Class="mud-width-full" Style="text-align: right;">
-    <div dir="@(CultureInfo.CurrentCulture.TextInfo.IsRightToLeft ? "rtl" : "ltr")">
-        @Loc["LoggedInAlert"]
-    </div>
-</MudAlert>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">@Loc["Dashboard"]</MudText>
+    <MudText Class="mb-8">@Loc["DashboardWelcome"]</MudText>
 
-<MudGrid Class="mt-4">
-    <MudItem xs="12" md="6">
-        <MudCard>
-            <MudCardHeader>
-                <CardHeaderContent>
-                    <MudText Typo="Typo.h6">@Loc["Latest Updates"] (@(_announcements?.Count ?? 0))</MudText>
-                </CardHeaderContent>
-            </MudCardHeader>
-            <MudCardContent>
-                @if (_announcements == null)
-                {
-                    <MudProgressCircular Indeterminate="true" />
-                }
-                else if (!_announcements.Any())
-                {
-                    <MudText>No new updates.</MudText>
-                }
-                else
-                {
-                    <div class="d-flex flex-column gap-2">
-                        @foreach (var item in _announcements)
-                        {
-                            <div class="pa-2">
-                                <div class="d-flex justify-space-between align-center">
-                                    <MudText Typo="Typo.subtitle2">@item.Title</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Default">@item.CreatedDate.ToString("g")</MudText>
-                                </div>
-                                <MudText Typo="Typo.body2" Class="mt-1">@item.Description</MudText>
-                            </div>
-                            @if (item != _announcements.Last())
-                            {
-                                <MudDivider />
-                            }
-                        }
-                    </div>
-                }
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-</MudGrid>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <!-- Top Row: Summary Cards -->
+        <MudGrid Class="mb-8">
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="d-flex flex-column align-center justify-center py-8 mud-elevation-4">
+                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Primary" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@_totalEmployees</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@Loc["Employees"]</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="d-flex flex-column align-center justify-center py-8 mud-elevation-4">
+                    <MudIcon Icon="@Icons.Material.Filled.TimeToLeave" Size="Size.Large" Color="Color.Warning" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@_pendingLeavesCount</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@Loc["PendingLeaves"]</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="d-flex flex-column align-center justify-center py-8 mud-elevation-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Poll" Size="Size.Large" Color="Color.Success" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@_activePollsCount</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@Loc["ActivePolls"]</MudText>
+                </MudPaper>
+            </MudItem>
+             <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="d-flex flex-column align-center justify-center py-8 mud-elevation-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Large" Color="Color.Info" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@_upcomingEventsCount</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@Loc["UpcomingEvents"]</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="d-flex flex-column align-center justify-center py-8 mud-elevation-4">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Large" Color="Color.Tertiary" />
+                    <MudText Typo="Typo.h4" Class="mt-2">@_totalHierarchies</MudText>
+                    <MudText Typo="Typo.subtitle2" Color="Color.Secondary">@Loc["Hierarchies"]</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid>
+            <!-- Middle Row: Left Column (Quick Actions & Pending Leaves) -->
+            <MudItem xs="12">
+                <MudGrid>
+                    <!-- Quick Actions -->
+                    <AuthorizeView Roles="HR" Context="authContext">
+                        <MudItem xs="12">
+                            <MudCard Elevation="4">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">@Loc["QuickActions"]</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <div class="d-flex gap-4 flex-wrap">
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/employees"))">
+                                            @Loc["AddEmployee"]
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Announcement" Color="Color.Secondary" OnClick="@(() => Nav.NavigateTo("/announcements"))">
+                                            @Loc["NewAnnouncement"]
+                                        </MudButton>
+                                         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Event" Color="Color.Info" OnClick="@(() => Nav.NavigateTo("/events"))">
+                                            @Loc["NewEvent"]
+                                        </MudButton>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Poll" Color="Color.Success" OnClick="@(() => Nav.NavigateTo("/polls-management"))">
+                                            @Loc["CreatePoll"]
+                                        </MudButton>
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </AuthorizeView>
+
+
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
 
 @code {
-    private List<Announcement> _announcements;
+    private bool _isLoading = true;
+    private int _totalEmployees;
+    private int _pendingLeavesCount;
+    private int _activePollsCount;
+    private int _upcomingEventsCount;
+    private int _totalHierarchies;
+
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        _isLoading = true;
         try
         {
-            var all = await AnnouncementsService.GetAnnouncementsAsync();
-            _announcements = all.OrderByDescending(a => a.CreatedDate)
-                                .Take(5)
-                                .ToList();
+            var tEmployees = EmployeesService.GetAllEmployeesAsync();
+            var tLeaves = LeavesService.GetPendingLeaves();
+            var tPolls = PollsService.GetActivePollsAsync();
+            var tEvents = EventsService.GetEventsAsync();
+            var tHierarchies = HierarchiesService.GetHierarchiesAsync();
+
+            await Task.WhenAll(tEmployees, tLeaves, tPolls, tEvents, tHierarchies);
+
+            _totalEmployees = (await tEmployees)?.Count ?? 0;
+            
+            var leaves = await tLeaves ?? new List<Leave>();
+            _pendingLeavesCount = leaves.Count;
+
+            _activePollsCount = (await tPolls)?.Count ?? 0;
+            _upcomingEventsCount = (await tEvents)?.Count(e => e.StartDate >= DateTime.Now) ?? 0;
+            _totalHierarchies = (await tHierarchies)?.Count ?? 0;
+            
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading updates: {ex.Message}", Severity.Error);
-            _announcements = new List<Announcement>();
+            Snackbar.Add($"Error loading dashboard: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 }

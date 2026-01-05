@@ -1,0 +1,4 @@
+
+  update [PlatformDB].[dbo].[AspNetUserRoles]
+    set [RoleId] = 1
+    where [UserId] = '822df960-a4c8-4bad-86a9-bba02751a0c2'

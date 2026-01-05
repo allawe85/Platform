@@ -14,19 +14,19 @@ namespace Platform.Data.DTOs
         public int? LeaveTypeId { get; set; }
 
         [ForeignKey(nameof(LeaveTypeId))]
-        public LeaveType LeaveType { get; set; }
+        public LeaveType? LeaveType { get; set; }
 
         [Column("employee_id")]
         public int? EmployeeId { get; set; }
 
         [ForeignKey(nameof(EmployeeId))]
-        public Employee Employee { get; set; }
+        public Employee? Employee { get; set; }
 
         [Column("leave_status_id")]
         public int? LeaveStatusId { get; set; }
 
         [ForeignKey(nameof(LeaveStatusId))]
-        public LeaveStatus LeaveStatus { get; set; }
+        public LeaveStatus? LeaveStatus { get; set; }
 
         [Column("start_date")]
         public DateTime StartDate { get; set; }

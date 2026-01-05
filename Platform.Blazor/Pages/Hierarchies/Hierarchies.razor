@@ -1,6 +1,4 @@
 @page "/hierarchies"
-@implements IAsyncDisposable
-@using Microsoft.JSInterop
 @using Platform.Blazor.Pages.Hierarchies.Components
 @using Platform.Blazor.Services.Auth
 @using Platform.Blazor.Services.Hierarchies
@@ -9,9 +7,15 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
+@inject IJSRuntime JSRuntime
 @inject LayoutService LayoutService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@using System.Security.Claims
+@using Microsoft.AspNetCore.WebUtilities
 
 <MudText Typo="Typo.h5" Class="mb-4">@Loc["Hierarchies"]</MudText>
+<MudAlert Severity="Severity.Info" Variant="Variant.Filled" Class="mb-4">@_debugMsg</MudAlert>
 
 <MudPaper Class="pa-4">
     <MudToolBar>
@@ -25,22 +29,47 @@
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomIn" OnClick="ZoomIn" Color="Color.Secondary" />
                 <MudIconButton Icon="@Icons.Material.Filled.ZoomOut" OnClick="ZoomOut" Color="Color.Secondary" />
                 <MudButton OnClick="ResetZoom" Variant="Variant.Text" Size="Size.Small">@Loc["Reset"]</MudButton>
-                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" OnClick="OpenInNewWindow" Color="Color.Primary" Title="@Loc["OpenInNewWindow"]" />
             }
             <MudIconButton Icon="@Icons.Material.Filled.Print" OnClick="Print" Color="Color.Default" Variant="Variant.Outlined" Title="Print" Class="ml-2"/>
+            
+            @if (!_isReadOnly) 
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew"
+                               OnClick="OpenInNewWindow"
+                               Color="Color.Default"
+                               Variant="Variant.Outlined"
+                               Title="@Loc["OpenInNewWindow"]"
+                               Class="ml-2" />
+            }
         </div>
         <MudSpacer />
+        
+        <MudSelect T="int?" Label="@Loc["Sector"]" Value="_selectedSectorId" 
+                   ValueChanged="OnSectorSelected"
+                   Variant="Variant.Outlined" Dense="true" Class="ms-8 me-4" Style="max-width: 200px;"
+                   Clearable="true" AnchorOrigin="Origin.BottomCenter" PopOverInheritStyle="true">
+            @foreach (var sector in _sectorLevelHierarchies)
+            {
+                <MudSelectItem T="int?" Value="@((int?)sector.Id)">
+                    @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(sector.NameAr) ? sector.NameAr : sector.Name)
+                </MudSelectItem>
+            }
+        </MudSelect>
+
         <MudTextField @bind-Value="_searchQuery" Placeholder="@Loc["SearchPlaceholder"]" Adornment="Adornment.Start" 
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mr-4"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="me-8"
                       Clearable="true" OnClearButtonClick="HandleSearchClear"
                       OnKeyUp="HandleSearchKeyUp"
                       Style="max-width: 300px; font-size: 1.1rem; font-weight: 700;" />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="BuildTree" Class="mr-2">@Loc["Search"]</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">@Loc["AddRoot"]</MudButton>
-         @if (!_isChartView) {
-            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">@Loc["AddChild"]</MudButton>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="EditSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Edit"]" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Delete"]" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ExecuteSearch" Class="mr-2">@Loc["Search"]</MudButton>
+
+         @if (CanEdit) {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRootHierarchy" Class="mr-2">@Loc["AddRoot"]</MudButton>
+            @if (!_isChartView) {
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="AddChildHierarchy" Disabled="@(_selectedHierarchy == null)">@Loc["AddChild"]</MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="EditSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Edit"]" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="DeleteSelectedHierarchy" Disabled="@(_selectedHierarchy == null)" Title="@Loc["Delete"]" />
+             }
          }
     </MudToolBar>
 
@@ -52,16 +81,17 @@
     {
         @if (_isChartView)
         {
-        @if (_isChartView)
-        {
             <HierarchyChart Roots="TreeRoots" 
                             LevelColors="_levelColors" 
                             @bind-ZoomLevel="_zoomLevel"
+                            @ref="_chartComponent"
+                            SelectedNodeId="_selectedHierarchy?.Id"
+                            IsDarkMode="@LayoutService.IsDarkMode"
+                            ReadOnly="@(!CanEdit)"
                             OnNodeSelect="OnSelectNode" 
                             OnAddChild="AddChildToNode"
                             OnEdit="EditHierarchy"
                             OnDelete="DeleteHierarchy" />
-        }
         }
         else
         {
@@ -71,16 +101,15 @@
                     <MudTreeViewItem Items="@item.Children" Value="@item.Value" @bind-Expanded="@item.Expanded">
                         <Content>
                             <div class="@($"modern-tree-item {(_selectedHierarchy?.Id == item.Value.Id ? "selected" : "")}")" 
-                                 style="@($"--level-color: {GetLevelColor(item.Value.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; background: {(LayoutService.IsDarkMode ? "var(--mud-palette-surface)" : "white")}; border-left-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; border-right-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)};")"
-                                 @onclick="@(() => HandleItemClick(item))">
-                                <div class="level-indicator-bar" style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}")"></div>
+                                  style="@($"--level-color: {GetLevelColor(item.Value.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(item.Value.HierarchyLevelId)}; background: {GetLevelColor(item.Value.HierarchyLevelId)}; border-color: rgba(255,255,255,0.2);")"
+                                  @onclick="@(() => HandleItemClick(item))">
                                 
                                 <div class="node-info-group">
                                     <div class="expand-icon-wrapper">
                                          @if (item.Children?.Any() == true)
                                          {
                                              <MudIcon Icon="@Icons.Material.Filled.ChevronRight" 
-                                                      Style="@($"transform: rotate({(item.Expanded ? "90deg" : "0deg")}); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: var(--mud-palette-text-secondary);")" />
+                                                      Style="@($"transform: rotate({(item.Expanded ? "90deg" : "0deg")}); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: white;")" />
                                          }
                                     </div>
                                     
@@ -89,14 +118,14 @@
                                     </div>
                                     
                                     <div class="node-main-text">
-                                        <span class="node-name-primary">
-                                            @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(item.Value.NameAr) ? item.Value.NameAr : item.Value.Name)
+                                        <span class="node-name-primary" style="color: white !important; font-weight: 800; font-size: 1.3rem; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+                                            @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(item.Value.NameAr) ? item.Value.NameAr : item.Value.Name)
                                         </span>
                                     </div>
                                 </div>
 
-                                <div class="node-level-tag" style="@($"background: {GetLevelColor(item.Value.HierarchyLevelId)}")">
-                                    @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(item.Value.HierarchyLevel?.NameAr) ? item.Value.HierarchyLevel.NameAr : item.Value.HierarchyLevel?.Name ?? "")
+                                <div class="node-level-tag" style="background: rgba(0,0,0,0.15); color: white !important; font-weight: 700; border: none;">
+                                    @(System.Globalization.CultureInfo.CurrentUICulture.Name.StartsWith("ar") && !string.IsNullOrEmpty(item.Value.HierarchyLevel?.NameAr) ? item.Value.HierarchyLevel.NameAr : item.Value.HierarchyLevel?.Name ?? "")
                                 </div>
                             </div>
                         </Content>
@@ -118,22 +147,21 @@
                  DefaultParentId="_targetParentId"
                  OnClose="OnDialogClose" />
 
-@inject NavigationManager NavigationManager
-
 @code {
-    // Component References removed as they are now inside HierarchyChart
-    // private ElementReference _chartContainer; ... removed
-    // private IJSObjectReference? _chartModule; ... removed 
-    
+    private string _debugMsg = "Loading...";
     private List<Hierarchy> HierarchyList = new();
     private List<Hierarchy> TreeRoots = new();
     private HashSet<TreeItemData<Hierarchy>> TreeItems = new();
     private List<HierarchyLevel> Levels = new();
     private bool _loading = true;
+    private bool _isReadOnly = false;
+    private bool _isAdminOrHR = false;
+    private bool CanEdit => _isAdminOrHR && !_isReadOnly;
 
     // View State
     private bool _isChartView = true;
     private double _zoomLevel = 1.0;
+    private HierarchyChart? _chartComponent;
 
     // Dialog State
     private bool _showDialog;
@@ -145,19 +173,40 @@
 
     // Search
     private string _searchQuery = "";
+    private int? _selectedSectorId;
+    private List<Hierarchy> _sectorLevelHierarchies = new();
 
-    private void HandleSearchKeyUp(KeyboardEventArgs e)
+    private async Task HandleSearchKeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
         {
-            BuildTree();
+            await ExecuteSearch();
         }
     }
 
-    private void HandleSearchClear()
+    private async Task HandleSearchClear()
     {
         _searchQuery = "";
+        await ExecuteSearch();
+    }
+
+    private async Task ExecuteSearch()
+    {
         BuildTree();
+        if (_isChartView && _chartComponent != null)
+        {
+            await Task.Delay(150); // Allow tree to render
+            if (!string.IsNullOrWhiteSpace(_searchQuery) && TreeRoots.Any())
+            {
+                // Center on the first matching root
+                await _chartComponent.CenterView(TreeRoots.First().Id);
+            }
+            else
+            {
+                // Reset to center the whole tree
+                await _chartComponent.CenterView();
+            }
+        }
     }
 
     // Colors mapping
@@ -187,8 +236,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadHierarchies();
+        LayoutService.OnMajorUpdate += StateHasChanged;
+        
+        // Parse Query String
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("readonly", out var ro))
+        {
+             bool.TryParse(ro, out _isReadOnly);
+        }
+
+        // Check Roles
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+             _isAdminOrHR = user.IsInRole("Admin") || user.IsInRole("HR");
+        }
+
         await LoadLevels();
+        await LoadHierarchies();
     }
 
     private async Task LoadHierarchies()
@@ -197,10 +263,44 @@
         try
         {
             HierarchyList = await HierarchiesService.GetHierarchiesAsync();
+            
+            // Identify levels that match "Sector" or "قطاع"
+            var sectorLevels = Levels.Where(l => (l.Name != null && l.Name.Contains("Sector", StringComparison.OrdinalIgnoreCase)) || 
+                                                 (l.NameAr != null && l.NameAr.Contains("قطاع", StringComparison.OrdinalIgnoreCase)))
+                                     .Select(l => l.Id)
+                                     .ToList();
+            
+            if (sectorLevels.Any())
+            {
+                _sectorLevelHierarchies = HierarchyList.Where(x => sectorLevels.Contains(x.HierarchyLevelId)).OrderBy(x => x.Name).ToList();
+            }
+            else
+            {
+                // Fallback: Check if there's a Level 2, or use roots
+                var level2Exists = HierarchyList.Any(x => x.HierarchyLevelId == 2);
+                if (level2Exists)
+                {
+                    _sectorLevelHierarchies = HierarchyList.Where(x => x.HierarchyLevelId == 2).OrderBy(x => x.Name).ToList();
+                    _debugMsg += $" | Fallback to Level 2, Matches: {_sectorLevelHierarchies.Count}";
+                }
+                else 
+                {
+                    _debugMsg += " | Level 2 has no items";
+                }
+            }
+
+            // Attempt 3: Fallback to Roots (if previous attempts failed)
+            if (!_sectorLevelHierarchies.Any())
+            {
+                _sectorLevelHierarchies = HierarchyList.Where(x => x.ParentId == 0).OrderBy(x => x.Name).ToList();
+                _debugMsg += $" | Fallback to Roots (ParentId=0), Matches: {_sectorLevelHierarchies.Count}";
+            }
+            
             BuildTree();
         }
         catch (Exception ex)
         {
+            _debugMsg = $"Error: {ex.Message}";
             Snackbar.Add($"Error loading hierarchies: {ex.Message}", Severity.Error);
         }
         finally
@@ -216,19 +316,40 @@
          var filteredList = HierarchyList;
          if (!string.IsNullOrWhiteSpace(_searchQuery))
          {
-             filteredList = HierarchyList.Where(x => 
+             var initialMatches = HierarchyList.Where(x => 
                 (x.Name != null && x.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)) ||
                 (x.NameAr != null && x.NameAr.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
              ).ToList();
+
+             // Include all descendants of matching nodes
+             var allMatches = new HashSet<int>();
+             foreach (var match in initialMatches)
+             {
+                 AddNodeAndDescendants(match.Id, allMatches);
+             }
+
+             filteredList = HierarchyList.Where(x => allMatches.Contains(x.Id)).ToList();
 
              // When searching, we include root nodes that match OR have matching children
              // But simpler: just show matching nodes as roots if their parent is NOT in the filtered set.
              TreeRoots = filteredList.Where(x => x.ParentId == 0 || !filteredList.Any(p => p.Id == x.ParentId)).ToList();
          }
-         else
-         {
-             TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
-         }
+          else if (_selectedSectorId.HasValue)
+          {
+              var sector = HierarchyList.FirstOrDefault(x => x.Id == _selectedSectorId.Value);
+              if (sector != null)
+              {
+                  TreeRoots = new List<Hierarchy> { sector };
+              }
+              else
+              {
+                  TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
+              }
+          }
+          else
+          {
+              TreeRoots = HierarchyList.Where(x => x.ParentId == 0).ToList();
+          }
 
          foreach(var item in filteredList)
          {
@@ -241,6 +362,18 @@
          
          CalculateHierarchyNumbers();
          UpdateTreeItems();
+    }
+
+    private void AddNodeAndDescendants(int nodeId, HashSet<int> resultSet)
+    {
+        if (resultSet.Contains(nodeId)) return;
+        resultSet.Add(nodeId);
+        
+        var children = HierarchyList.Where(x => x.ParentId == nodeId).ToList();
+        foreach (var child in children)
+        {
+            AddNodeAndDescendants(child.Id, resultSet);
+        }
     }
 
     private Dictionary<int, string> _hierarchyNumbers = new();
@@ -368,10 +501,10 @@
         EditHierarchy(_selectedHierarchy);
     }
     
-    private void DeleteSelectedHierarchy()
+    private async Task DeleteSelectedHierarchy()
     {
         if (_selectedHierarchy == null) return;
-        DeleteHierarchy(_selectedHierarchy);
+        await DeleteHierarchy(_selectedHierarchy);
     }
 
     private void EditHierarchy(Hierarchy hierarchy)
@@ -392,7 +525,7 @@
     {
         bool? result = await DialogService.ShowMessageBox(
             Loc["Warning"], 
-            string.Format(Loc["ConfirmDelete"].ToString(), hierarchy.Name), 
+            string.Format(Loc["ConfirmDelete"], $"({(System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar") ? hierarchy.NameAr : hierarchy.Name)})"), 
             yesText: Loc["Delete"], cancelText: Loc["Cancel"]);
 
         if (result == true)
@@ -435,16 +568,41 @@
         _zoomLevel = 1.0; 
     }
     
+    private async Task OnSectorSelected(int? sectorId)
+    {
+        _selectedSectorId = sectorId;
+        BuildTree();
+        
+        if (_selectedSectorId.HasValue)
+        {
+            var sector = HierarchyList.FirstOrDefault(h => h.Id == _selectedSectorId.Value);
+            if (sector != null)
+            {
+                _selectedHierarchy = sector;
+                if (_chartComponent != null && _isChartView)
+                {
+                    await Task.Delay(100); // Allow UI to update
+                    await _chartComponent.CenterView(sectorId);
+                }
+            }
+        }
+    }
+
     // JS Event initialization removed (handled by component)
     
     public ValueTask DisposeAsync()
     {
+        LayoutService.OnMajorUpdate -= StateHasChanged;
         return ValueTask.CompletedTask;
     }
 
     private void ZoomIn() => _zoomLevel = Math.Min(_zoomLevel + 0.1, 2.0);
-    private void ZoomOut() => _zoomLevel = Math.Max(_zoomLevel - 0.1, 0.4);
-    private void ResetZoom() => _zoomLevel = 1.0;
+    private void ZoomOut() => _zoomLevel = Math.Max(_zoomLevel - 0.1, 0.2);
+    private async Task ResetZoom() 
+    {
+        _zoomLevel = 1.0;
+        if (_chartComponent != null) await _chartComponent.CenterView();
+    }
     
     private async Task OpenInNewWindow()
     {
@@ -456,7 +614,49 @@
         await JSRuntime.InvokeVoidAsync("print");
     }
 
-    // RenderChartTree removed (moved to component)
+    // --- Renderers ---
+
+    // 1. Chart Render
+    private RenderFragment RenderChartTree(List<Hierarchy> nodes) => __builder =>
+    {
+        foreach (var node in nodes)
+        {
+            <li style="@($"--level-color: {GetLevelColor(node.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(node.HierarchyLevelId)};")">
+                <div class="@GetNodeClass(node)" 
+                     style="@($"--level-color: {GetLevelColor(node.HierarchyLevelId)}; --level-solid-color: {GetLevelSolidColor(node.HierarchyLevelId)};")"
+                     @onclick="() => OnSelectNode(node)"
+                     @onclick:stopPropagation="true">
+                    
+                    <div class="node-title">
+                        @(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(node.NameAr) ? node.NameAr : node.Name)
+                    </div>
+                    <div class="node-subtitle">@(System.Globalization.CultureInfo.CurrentCulture.Name == "ar-EG" && !string.IsNullOrEmpty(node.HierarchyLevel?.NameAr) ? node.HierarchyLevel.NameAr : node.HierarchyLevel?.Name ?? "")</div>
+                    
+                    <div class="node-actions">
+                         @if (CanEdit) 
+                         {
+                             <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" 
+                                            Variant="Variant.Text" Color="Color.Primary" 
+                                            OnClick="@(() => AddChildToNode(node))" Title="@Loc["AddChild"]" />
+                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                                            Variant="Variant.Text" Color="Color.Default" 
+                                            OnClick="@(() => EditHierarchy(node))" Title="@Loc["Edit"]" />
+                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" 
+                                            Variant="Variant.Text" Color="Color.Error" 
+                                            OnClick="@(() => DeleteHierarchy(node))" Title="@Loc["Delete"]" />
+                         }
+                    </div>
+                </div>
+                @if (node.Children != null && node.Children.Count > 0)
+                {
+                    <ul>
+                      @RenderChartTree(node.Children)
+                    </ul>
+                }
+            </li>
+        }
+    };
+
     private string GetNodeClass(Hierarchy node)
     {
         return (_selectedHierarchy != null && _selectedHierarchy.Id == node.Id) ? "node-card selected" : "node-card";

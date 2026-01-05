@@ -1,0 +1,69 @@
+@using Platform.Data.DTOs
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@inject NavigationManager Nav
+
+<MudCard Style="height: 100%;">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">@Loc["UpcomingEvents"]</MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+             <MudIconButton Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Default" OnClick="@(() => Nav.NavigateTo("/events"))" />
+        </CardHeaderActions>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Events == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else
+        {
+            var nextEvent = Events.Where(e => e.StartDate >= DateTime.Now).OrderBy(e => e.StartDate).FirstOrDefault();
+
+            if (nextEvent == null)
+            {
+                <MudText>@Loc["NoEvents"]</MudText>
+            }
+            else
+            {
+                var isArabic = System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase);
+                var name = isArabic && !string.IsNullOrEmpty(nextEvent.NameAr) ? nextEvent.NameAr : nextEvent.Name;
+                var location = isArabic && !string.IsNullOrEmpty(nextEvent.LocationAr) ? nextEvent.LocationAr : nextEvent.Location;
+                var description = isArabic && !string.IsNullOrEmpty(nextEvent.DescriptionAr) ? nextEvent.DescriptionAr : nextEvent.Description;
+
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6" Color="Color.Primary">@name</MudText>
+                    
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Event" Size="Size.Small" Color="Color.Default" />
+                        <MudText Typo="Typo.body2">@nextEvent.StartDate.ToString("g")</MudText>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(location))
+                    {
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Default" />
+                            <MudText Typo="Typo.body2">@location</MudText>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(description))
+                    {
+                         <MudText Typo="Typo.body2" Class="mt-2">
+                             @(description.Length > 100 ? description.Substring(0, 100) + "..." : description)
+                         </MudText>
+                    }
+                </MudStack>
+            }
+        }
+    </MudCardContent>
+    <MudCardActions Class="justify-end">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/events"))">@Loc["ViewCalendar"]</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public List<Event> Events { get; set; }
+}

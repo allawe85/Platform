@@ -1,0 +1,51 @@
+@using Platform.Data.DTOs
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
+@inject IStringLocalizer<AppStrings> Loc
+@inject NavigationManager Nav
+
+<MudCard Style="height: 100%;">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">@Loc["ActivePolls"]</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        @if (Polls == null)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (!Polls.Any())
+        {
+            <MudText>@Loc["NoActivePolls"]</MudText>
+        }
+        else
+        {
+            <MudCarousel Class="mud-width-full" Style="height:200px;" ShowArrows="true" ShowBullets="true" AutoCycle="true" TData="object">
+                @foreach (var item in Polls)
+                {
+                    <MudCarouselItem Transition="Transition.Slide">
+                        <div class="d-flex flex-column justify-center align-center pa-4" style="height:100%">
+                            @if (System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ar", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(item.QuestionAr))
+                            {
+                                <MudText Typo="Typo.h6" Align="Align.Center">@item.QuestionAr</MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.h6" Align="Align.Center">@item.Question</MudText>
+                            }
+                            <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Class="mt-2">@Loc["NeedsVoting"]</MudChip>
+                        </div>
+                    </MudCarouselItem>
+                }
+            </MudCarousel>
+        }
+    </MudCardContent>
+    <MudCardActions Class="justify-end">
+        <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/poll-vote"))">@Loc["VoteNow"]</MudButton>
+    </MudCardActions>
+</MudCard>
+
+@code {
+    [Parameter] public List<Poll> Polls { get; set; }
+}
