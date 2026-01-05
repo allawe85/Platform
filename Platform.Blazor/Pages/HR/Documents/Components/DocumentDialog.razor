@@ -3,11 +3,14 @@
 @using Platform.Blazor.Services.Documents
 @using Platform.Blazor.Services.Lookups
 @using Platform.Blazor.Services.Employees
+@using Microsoft.Extensions.Localization
+@using Platform.Blazor.Resources
 @using MudBlazor
 @inject IDocumentsService DocumentsService
 @inject ILookupsService LookupsService
 @inject IEmployeesService EmployeesService
 @inject ISnackbar Snackbar
+@inject IStringLocalizer<AppStrings> Loc
 
 <MudOverlay @bind-Visible="Visible" DarkBackground="true" AutoClose="false" ZIndex="9999">
     <MudPaper Class="pa-4" Style="width: 400px; max-width: 90vw;">

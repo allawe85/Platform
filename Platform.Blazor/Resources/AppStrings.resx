@@ -391,8 +391,8 @@
   <data name="EventTypes" xml:space="preserve">
     <value>Event Types</value>
   </data>
-  <data name="UpcomingEvents" xml:space="preserve">
-    <value>Upcoming Events</value>
+  <data name="AddAsset" xml:space="preserve">
+    <value>Add Asset</value>
   </data>
   <data name="NoUpcomingEventsFound" xml:space="preserve">
     <value>No upcoming events found.</value>
